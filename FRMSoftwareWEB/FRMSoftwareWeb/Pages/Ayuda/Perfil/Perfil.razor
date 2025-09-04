@@ -1,0 +1,61 @@
+﻿@page "/Ayuda/Perfil/Perfil"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4"><i class="bi bi-person-circle"></i> Mi Perfil</h2>
+
+    <p>La sección <strong>Mi Perfil</strong> permite al usuario consultar y actualizar sus datos personales, como el número telefónico, correo electrónico o contraseña.</p>
+
+    <h4 class="fw-bold mt-4">Campos del formulario</h4>
+    <p>El formulario incluye los siguientes campos:</p>
+    <ul>
+        <li><strong>Usuario:</strong> Nombre de usuario asignado (solo lectura).</li>
+        <li><strong>Nombre:</strong> Nombre completo del usuario (solo lectura).</li>
+        <li><strong>Teléfono:</strong> Editable al activar el modo de edición.</li>
+        <li><strong>Correo electrónico:</strong> Editable al activar el modo de edición.</li>
+        <li><strong>Rol:</strong> Rol asignado al usuario (solo lectura).</li>
+        <li><strong>Estatus:</strong> Estado actual del usuario en el sistema (solo lectura).</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Botones disponibles</h4>
+    <ul>
+        <li><strong>Modificar:</strong> Activa el modo de edición, permitiendo cambiar datos personales y acceder al botón para cambiar contraseña.</li>
+        <li><strong>Guardar:</strong> Guarda los cambios realizados (disponible solo en modo de edición).</li>
+        <li><strong>Cancelar:</strong> Cancela cualquier modificación pendiente (solo en modo de edición).</li>
+        <li><strong>Cambiar contraseña:</strong> Abre un modal para actualizar la contraseña del usuario. Disponible solo en modo de edición.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Cambio de contraseña</h4>
+    <p>Al hacer clic en <strong>Cambiar contraseña</strong>, se abre un modal que solicita:</p>
+    <ul>
+        <li>La contraseña actual.</li>
+        <li>La nueva contraseña.</li>
+        <li>Confirmar la nueva contraseña.</li>
+    </ul>
+    <p>Si los datos son válidos y coinciden, el modal se cierra. Para aplicar la nueva contraseña, es necesario pulsar el botón <strong>Guardar</strong> en el formulario principal.</p>
+    <p><strong>Nota:</strong> No es necesario cambiar la contraseña para modificar otros datos como correo o teléfono.</p>
+
+    <h4 class="fw-bold mt-5">Imágenes de la sección</h4>
+
+    <div class="mb-4">
+        <img src="images/Ayuda/Perfil/Perfil01.png" alt="Vista general del formulario de perfil (modo lectura)" style="max-width: 700px; width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">Formulario en estado base, con campos bloqueados y botón "Modificar".</p>
+    </div>
+
+    <div class="mb-4">
+        <img src="images/Ayuda/Perfil/Perfil02.png" alt="Formulario en modo edición" style="max-width: 700px; width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">Formulario en modo edición, con campos habilitados y acceso a "Cambiar contraseña".</p>
+    </div>
+
+    <div class="mb-4">
+        <img src="images/Ayuda/Perfil/Perfil03.png" alt="Modal para cambiar contraseña" style="max-width: 600px; width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">Modal emergente para ingresar y confirmar la nueva contraseña.</p>
+    </div>
+
+    <div class="mb-4">
+        <img src="images/Ayuda/Perfil/Perfil04.png" alt="Indicador para guardar cambios después de cambiar la contraseña" style="max-width: 600px; width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">Mensaje que indica que debe presionarse el botón "Guardar" para aplicar los cambios luego de modificar la contraseña.</p>
+    </div>
+</div>
+
+@code {
+}

@@ -1,0 +1,207 @@
+﻿/* Estilos de navegación navbar - Integrado */
+
+/* Navbar toggler */
+.navbar-toggler {
+    appearance: none;
+    cursor: pointer;
+    width: 3.5rem;
+    height: 2.5rem;
+    color: white;
+    position: absolute;
+    top: 0.5rem;
+    right: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.55%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") no-repeat center/1.75rem rgba(255, 255, 255, 0.1);
+}
+
+    .navbar-toggler:checked {
+        background-color: rgba(255, 255, 255, 0.5);
+    }
+
+/* Top row y elementos principales */
+.top-row {
+    height: 3.5rem;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.navbar-brand {
+    font-size: 1.1rem;
+}
+
+/* Estilos base para iconos Bootstrap */
+.bi {
+    display: inline-block;
+    position: relative;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-right: 0.75rem;
+    top: -1px;
+    background-size: cover;
+}
+
+/* Elementos de navegación */
+.nav-item {
+    font-size: 0.9rem;
+    padding-bottom: 0.5rem;
+    cursor: pointer;
+    width: 100%; /* Asegura que ocupe todo el ancho */
+}
+
+    .nav-item:first-of-type {
+        padding-top: 1rem;
+    }
+
+    .nav-item:last-of-type {
+        padding-bottom: 1rem;
+    }
+
+    /* Gestiona diseño de items del navbar */
+    .nav-item ::deep a {
+        color: white;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 4px;
+        height: 3rem;
+        display: flex;
+        align-items: center;
+        line-height: 3rem;
+        width: 100%; /* Ocupar todo el ancho */
+    }
+
+        /* Gestiona el botón Home y efectos hover */
+        .nav-item ::deep a:hover,
+        .nav-item.open ::deep a {
+            background-color: rgba(255, 255, 255, 0.30);
+            color: white;
+        }
+
+        .nav-item ::deep a.active {
+            background-color: rgba(255, 255, 255, 0);
+            color: white;
+        }
+
+/* Estilos para corregir la alineación de iconos en el menú de navegación */
+.nav-link {
+    display: flex;
+    align-items: center;
+    width: 100%; /* Ocupar todo el ancho disponible */
+}
+
+    /* Estilo unificado y optimizado para iconos en la navegación */
+    .nav-link .bi {
+        font-size: 16px;
+        width: 24px;
+        height: 16px;
+        text-align: center;
+        margin-right: 8px;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        top: 0; /* Corrige el top:-1px del .bi general */
+        position: relative; /* Mantiene la posición relativa */
+    }
+
+/* Manejar la flecha de los dropdown */
+.dropdown-toggle::after {
+    margin-left: auto;
+}
+
+/* Estilos mejorados para los dropdowns */
+.nav-item.dropdown {
+    position: relative;
+    width: 100%;
+}
+
+/* Menú desplegable - versión mejorada */
+.nav-item .dropdown-menu {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(5px);
+    font-weight: bold;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 0;
+    width: 250px;
+    max-height: 40vh;
+    overflow-x: hidden; /* Elimina scroll horizontal */
+    overflow-y: auto; /* Mantiene scroll vertical */
+    left: 5%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+    /* Items del dropdown - versión multilínea */
+    .nav-item .dropdown-menu ::deep a {
+        color: black;
+        padding: 8px 16px;
+        display: block;
+        font-weight: normal;
+        white-space: normal;
+        word-wrap: break-word;
+        line-height: 1;
+        width: 100%;
+        box-sizing: border-box;
+        height: 40px;
+        align-items: center;
+    }
+
+        /* Efecto hover */
+        .nav-item .dropdown-menu ::deep a:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+            color: #00cc66;
+        }
+
+    /* Barra de scroll estilizada */
+    .nav-item .dropdown-menu::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .nav-item .dropdown-menu::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.05);
+        border-radius: 3px;
+    }
+
+    .nav-item .dropdown-menu::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.15);
+        border-radius: 3px;
+    }
+
+        .nav-item .dropdown-menu::-webkit-scrollbar-thumb:hover {
+            background: rgba(0,0,0,0.25);
+        }
+/* Alineación de los items en el dropdown */
+.dropdown-item {
+    padding-left: 1rem;
+    width: 100%;
+
+}
+
+/* Hover effect for dropdown toggle when active */
+.nav-item.open .nav-link.dropdown-toggle {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: black;
+}
+
+/* Comportamiento responsive */
+.nav-scrollable {
+    display: none;
+    min-width: 250px;
+}
+
+.navbar-toggler:checked ~ .nav-scrollable {
+    display: block;
+}
+
+@media (min-width: 700px) {
+    .navbar-toggler {
+        display: none;
+    }
+
+    .nav-scrollable {
+        /* Never collapse the sidebar for wide screens */
+        display: block;
+        /* Allow sidebar to scroll for tall menus */
+        height: calc(100vh - 3.5rem);
+        overflow-y: auto;
+    }
+}

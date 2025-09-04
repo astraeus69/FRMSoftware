@@ -1,0 +1,1151 @@
+﻿@page "/Movimientos/ClasificarProceso"
+
+@using FRMSoftware.Data
+@inject Services.Catalogos.CultivoService cultivoService
+@inject Services.Catalogos.ViverosService viveroService
+@inject FRMSoftware.Services.Movimientos.GestionPlantacionesService plantacionesService
+@inject Services.Catalogos.RanchosService ranchoService
+@inject FRMSoftware.Services.Movimientos.GestionLlavesService llavesService
+@inject FRMSoftware.Services.Movimientos.GestionCosechasService cosechasService
+@inject FRMSoftware.Services.Movimientos.ProcesosService procesosService
+@inject FRMSoftware.Services.Movimientos.GestionViajesService viajesService
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+@inject NavigationManager Navigation
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+	<div class="row justify-content-center align-items-start mt-4">
+		<h2 class="text-center fw-bold" style="margin-bottom: 20px">Clasificación de proceso</h2>
+
+		<!-- Primera columna: Cosecha y Producción -->
+		<div class="col-lg-3">
+			<!-- Viaje -->
+			<div class="card shadow-sm mb-3 same-height-Proceso-Col01">
+				<div class="card-body">
+					<EditForm Model="viaje">
+
+						<h5 class="text-center fw-bold">Viaje</h5>
+
+						<!-- Fecha de viaje -->
+						<div class="mb-1">
+							<label class="form-label">Fecha de viaje:</label>
+							<InputDate id="FechaSalida" class="form-control" @bind-Value="viaje.FechaSalida" disabled="true" />
+						</div>
+
+						<div class="mb-1">
+							<label class="form-label">Número de semana:</label>
+							<InputNumber class="form-control" @bind-Value="viaje.NumSemViaje" disabled="true" />
+						</div>
+
+						<div class="mb-1">
+							<label class="form-label">Kilos de proceso de viaje:</label>
+							<InputNumber class="form-control" @bind-Value="tarima.KilosProcesoViaje" disabled="true" />
+						</div>
+
+						<div class="d-flex justify-content-center">
+							<button class="btn fixed-size-btn btn-seleccion mx-2" @onclick="AbrirModalViaje" disabled="@deshabilitarGuardar">
+								Seleccionar
+							</button>
+						</div>
+					</EditForm>
+
+				</div>
+			</div>
+
+
+			<!-- CULTIVO -->
+			<div class="card shadow-sm mb-3">
+				<div class="card-body">
+					<EditForm Model="cultivo">
+
+						<h5 class="text-center fw-bold">Cultivo</h5>
+						<div class="mb-1">
+							<label class="form-label">Tipo de berry:</label>
+							<InputText class="form-control" @bind-Value="cultivo.TipoBerry" disabled="true" />
+						</div>
+						<div class="mb-1">
+							<label class="form-label">Variedad de berry:</label>
+							<InputText class="form-control" @bind-Value="cultivo.Variedad" disabled="true" />
+						</div>
+					</EditForm>
+
+				</div>
+			</div>
+
+		</div>
+
+
+		<!-- Segunda columna: Proceso y plantación -->
+		<div class="col-lg-3">
+			<!-- Cosecha -->
+			<div class="card shadow-sm mb-3 same-height-Proceso-Col02">
+				<div class="card-body">
+					<EditForm Model="cosecha">
+
+						<h5 class="text-center fw-bold">Cosecha</h5>
+
+						<!-- Fecha de cosecha -->
+						<div class="mb-1">
+							<label class="form-label">Fecha de cosecha:</label>
+							<InputDate id="FechaCosecha" class="form-control" @bind-Value="cosecha.FechaCosecha" disabled="true" />
+						</div>
+
+						<div class="mb-1">
+							<label class="form-label">Número de semana:</label>
+							<InputNumber class="form-control" @bind-Value="cosecha.NumSemCosecha" disabled="true" />
+						</div>
+					</EditForm>
+
+
+					<EditForm Model="produccion">
+						<h5 class="text-center fw-bold margenProduccionProceso" style="margin-top:30px">Producción</h5>
+
+						<!-- Tipo de caja -->
+						<div class="mb-1">
+							<label class="form-label">Tipo de clamshell:</label>
+							<InputText class="form-control" @bind-Value="produccion.TipoCaja" disabled="true" />
+						</div>
+
+						<!-- Cantidad de cajas -->
+						<div class="mb-1">
+							<label class="form-label">Cantidad de cajas:</label>
+							<InputNumber class="form-control" @bind-Value="produccion.CantidadCajas" disabled="true" />
+						</div>
+
+						<!-- Kilos de proceso -->
+						<div class="mb-1">
+							<label class="form-label">Kilos de proceso totales:</label>
+							<InputNumber class="form-control" @bind-Value="produccion.KilosProceso" disabled="true" />
+						</div>
+
+					</EditForm>
+				</div>
+			</div>
+		</div>
+
+
+		<!-- Tercera columna: Cultivos y proceso -->
+		<div class="col-lg-3">
+
+			<!-- CLASIFICACIÓN DE PROCESO -->
+			<div class="card shadow-sm mb-3 same-height-Proceso-Col03">
+				<div class="card-body">
+					<EditForm Model="proceso" OnValidSubmit="GrabarRegistro" id="procesoForm">
+						<DataAnnotationsValidator />
+
+						<h5 class="text-center fw-bold">Clasificar proceso</h5>
+						<!-- ID de plantación (Oculto) -->
+						<input type="hidden" @bind="proceso.IdViaje" />
+
+						<!-- Kilos de proceso A-->
+						<div class="mb-1">
+							<label class="form-label">Clase A (kg):</label>
+							<InputNumber class="form-control" @bind-Value="proceso.ClaseAkg" disabled="@deshabilitarFormulario" />
+							<ValidationMessage For="@(() => proceso.ClaseAkg)" class="text-danger" />
+
+						</div>
+
+
+						<!-- Kilos de proceso B-->
+						<div class="mb-1">
+							<label class="form-label">Clase B (kg):</label>
+							<InputNumber class="form-control" @bind-Value="proceso.ClaseBkg" disabled="@deshabilitarFormulario" />
+							<ValidationMessage For="@(() => proceso.ClaseBkg)" class="text-danger" />
+
+						</div>
+
+
+						<!-- Kilos de proceso C-->
+						<div class="mb-1">
+							<label class="form-label">Clase C (kg):</label>
+							<InputNumber class="form-control" @bind-Value="proceso.ClaseCkg" disabled="@deshabilitarFormulario" />
+							<ValidationMessage For="@(() => proceso.ClaseCkg)" class="text-danger" />
+
+						</div>
+
+						<!-- Kilos de proceso rechazado-->
+						<div class="mb-1">
+							<label class="form-label">Rechazo (kg):</label>
+							<InputNumber class="form-control" @bind-Value="proceso.Rechazo" disabled="@deshabilitarFormulario" />
+							<ValidationMessage For="@(() => proceso.Rechazo)" class="text-danger" />
+						</div>
+					</EditForm>
+
+				</div>
+			</div>
+		</div>
+
+		<!-- Cuarta columna: Ranchos  y llaves-->
+		<div class="col-lg-3">
+			<div class="card shadow-sm mb-3 same-height-Proceso-Col04">
+				<div class="card-body">
+					<!-- RANCHO -->
+					<EditForm Model="rancho">
+
+						<h5 class="text-center fw-bold">Rancho</h5>
+						<div class="mb-1">
+							<label class="form-label">Nombre del rancho:</label>
+							<InputText class="form-control" @bind-Value="rancho.NombreRancho" disabled="true" />
+						</div>
+						<div class="mb-1">
+							<label class="form-label">Número de rancho:</label>
+							<InputText class="form-control" @bind-Value="rancho.NumeroRancho" disabled="true" />
+						</div>
+					</EditForm>
+
+					<!-- LLAVES -->
+					<EditForm Model="llave">
+
+						<h5 class="text-center fw-bold margenLlaveProceso" style="margin-top:30px">Llave</h5>
+						<div class="mb-1">
+							<label class="form-label">Nombre de la llave:</label>
+							<InputText class="form-control" @bind-Value="llave.NombreLlave" disabled="true" />
+						</div>
+						<div class="mb-1">
+							<label class="form-label">Superficie (Ha):</label>
+							<InputNumber class="form-control" @bind-Value="llave.SuperficieHa" disabled="true" />
+						</div>
+						<div class="mb-1">
+							<label class="form-label">Superficie (Acres):</label>
+							<InputNumber class="form-control" @bind-Value="llave.SuperficieAcres" disabled="true" />
+						</div>
+					</EditForm>
+
+
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+
+<!-- Botones -->
+<div class="container-fluid">
+	<div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+
+		@if (UserSession.Rol == "Admin" || UserSession.Rol == "Editor")
+		{
+			<button class="btn fixed-size-btn mx-2" @onclick="NuevoRegistro" disabled="@deshabilitarNuevo">Nuevo</button>
+			<button class="btn fixed-size-btn mx-2" type="submit" form="procesoForm" disabled="@deshabilitarGuardar">Guardar</button>
+			<button class="btn fixed-size-btn mx-2" @onclick="AbrirModalProceso" disabled="@deshabilitarModificar">Modificar</button>
+			<button class="btn fixed-size-btn mx-2" @onclick="Cancelar" disabled="@deshabilitarCancelar">Cancelar</button>
+		}
+
+		@if (UserSession.Rol == "Admin" || UserSession.Rol == "Consultor")
+		{
+			<button class="btn fixed-size-btn mx-2" @onclick="RedirigirAConsulta" disabled="@deshabilitarConsultar">Consultar</button>
+		}
+
+	</div>
+</div>
+
+
+<!-- MODAL para mostrar la tabla de modificación -->
+@if (mostrarModalProceso)
+{
+	<div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+		<div class="modal-dialog modal-xl" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3 class="modal-title" style="font-weight: bold;">Lista de procesos</h3>
+					<button type="button" class="btn-close" @onclick="CerrarModalProceso"></button>
+				</div>
+				<div class="modal-body">
+					<!-- Contenedor para alinear horizontalmente -->
+					<div class="row mb-3 align-items-center">
+						<div class="col-auto">
+							<input @bind="searchTermProceso" placeholder="Buscar proceso..." class="form-control" />
+						</div>
+						<div class="col-auto">
+							<button class="btn fixed-size-btn" @onclick="AplicarFiltroProcesos">Buscar</button>
+						</div>
+					</div>
+
+					<!-- Contenedor de la tabla con scroll -->
+					<div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+						<table class="table table-striped table-bordered">
+							<thead class="table-dark">
+								<tr>
+									<th style="width: 10%;">Acciones</th>
+
+									<th>ID Proceso</th>
+									<th>Clase A (kg)</th>
+									<th>Clase B (kg)</th>
+									<th>Clase C (kg)</th>
+									<th>Rechazo (kg)</th>
+
+									<th>ID Viaje</th>
+									<th>Fecha de viaje</th>
+
+                                    <th>Kilos de proceso</th>
+
+									<th>ID Cosecha</th>
+									<th>Fecha de cosecha</th>
+
+									<th>ID Producción</th>
+									<th>Tipo de clamshell</th>
+									<th>Cantidad de cajas</th>
+									<th>Kilos de proceso</th>
+
+									<th>ID Cultivo</th>
+									<th>Tipo de berry</th>
+									<th>Variedad</th>
+
+									<th>ID Rancho</th>
+									<th>Nombre del rancho</th>
+									<th>Número del rancho</th>
+
+									<th>ID Llave</th>
+									<th>Nombre de llave</th>
+									<th>Superficie (HA)</th>
+									<th>Superficie (Acres)</th>
+								</tr>
+							</thead>
+							<tbody>
+								@foreach (var item in filteredProcesos)
+								{
+									<tr>
+										<td>
+											<div class="d-flex gap-2">
+												<button class="btn editar" @onclick="() => SeleccionarProceso(item)">Editar</button>
+												@if (UserSession.Rol == "Admin")
+												{
+													<button class="btn btn-red editar" @onclick="() => ConfirmarEliminar(item.IdProceso)">Eliminar</button>
+												}
+											</div>
+										</td>
+
+										<td>@item.IdProceso</td>
+										<td>@item.ClaseAkg</td>
+										<td>@item.ClaseBkg</td>
+										<td>@item.ClaseCkg</td>
+										<td>@item.Rechazo</td>
+
+										<td>@item.IdViaje</td>
+                                        <td>@item.FechaSalida.ToString("dd/MM/yyyy")</td>
+                                        <td>@item.KilosProceso</td>
+
+										<td>@item.IdCosecha</td>
+										<td>@item.FechaCosecha.ToString("dd/MM/yyyy")</td>
+
+										<td>@item.IdProduccion</td>
+										<td>@item.TipoCaja</td>
+										<td>@item.CantidadCajas</td>
+										<td>@item.KilosProceso</td>
+
+										<td>@item.IdCultivo</td>
+										<td>@item.TipoBerry</td>
+										<td>@item.Variedad</td>
+
+										<td>@item.IdRancho</td>
+										<td>@item.NombreRancho</td>
+										<td>@item.NumeroRancho</td>
+
+										<td>@item.IdLlave</td>
+										<td>@item.NombreLlave</td>
+										<td>@item.SuperficieHa</td>
+										<td>@item.SuperficieAcres</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+<!-- Modal de confirmación de eliminación -->
+@if (mostrarConfirmacion)
+{
+	<div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+		<div class="modal-dialog modal-dialog-centered" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Confirmar eliminación</h5>
+				</div>
+				<div class="modal-body">
+					<p>¿Está seguro de que desea eliminar este proceso?</p>
+				</div>
+				<div class="modal-footer">
+					<button class="btn" @onclick="CancelarEliminar">Cancelar</button>
+					<button class="btn btn-red" @onclick="EliminarProcesoConfirmado">Eliminar</button>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+
+
+<!-- Modal para mostrar mensajes -->
+@if (mostrarMensajeModal)
+{
+	<div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+		<div class="modal-dialog modal-dialog-centered" role="document">
+			<!-- Agregar modal-dialog-centered -->
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">@mensajeTitulo</h5>
+					<button type="button" class="btn-close" @onclick="CerrarMensajeModal"></button>
+				</div>
+				<div class="modal-body">
+					<p>@mensajeContenido</p>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-red" @onclick="CerrarMensajeModal">Cerrar</button>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+
+<!-- MODAL para mostrar la tabla de detalles de viajes -->
+@if (mostrarModalViaje)
+{
+	<div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+		<div class="modal-dialog modal-xl" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3 class="modal-title" style="font-weight: bold;">Lista de viajes</h3>
+					<button type="button" class="btn-close" @onclick="CerrarModalViaje"></button>
+				</div>
+				<div class="modal-body">
+
+					<!-- Contenedor para alinear horizontalmente -->
+					<div class="row mb-3 align-items-center">
+						<div class="col-auto">
+							<input @bind="searchTermViajes" placeholder="Buscar viajes..." class="form-control" />
+						</div>
+						<div class="col-auto">
+							<button class="btn fixed-size-btn" @onclick="AplicarFiltroViajes">Buscar</button>
+						</div>
+					</div>
+
+
+					<!-- Contenedor de la tabla con scroll -->
+					<div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+						<table class="table table-striped table-bordered">
+							<thead class="table-dark">
+								<tr>
+									<th>ID Viaje</th>
+									<th>Fecha de salida</th>
+									<th>Número de semana</th>
+
+									<th>Kilos proceso</th>
+
+									<th>ID Cosecha</th>
+									<th>Fecha de cosecha</th>
+									<th>Número de semana</th>
+
+									<th>ID Producción</th>
+									<th>Tipo de clamshell</th>
+									<th>Cantidad de cajas</th>
+									<th>Kilos de proceso</th>
+
+									<th>ID Cultivo</th>
+									<th>Tipo de berry</th>
+									<th>Variedad</th>
+
+									<th>ID Rancho</th>
+									<th>Nombre del rancho</th>
+									<th>Número del rancho</th>
+
+									<th>ID Empleado</th>
+									<th>Nombre del empleado</th>
+									<th>Teléfono</th>
+
+									<th>ID Vehículo</th>
+									<th>Placas</th>
+									<th>Modelo</th>
+									<th>Marca</th>
+								</tr>
+							</thead>
+							<tbody>
+								@foreach (var item in filteredViajes)
+								{
+									<tr @onclick="() => SeleccionarViaje(item)" class="fila-seleccionable">
+										<td>@item.IdViaje</td>
+										<td>@item.FechaSalida.ToString("dd/MM/yyyy")</td>
+                                        <td>@item.NumSemViaje</td>
+
+										<td>@item.KilosProcesoViaje</td>
+
+										<td>@item.IdCosecha</td>
+										<td>@item.FechaCosecha.ToString("dd/MM/yyyy")</td>
+										<td>@item.NumSemCosecha</td>
+
+										<td>@item.IdProduccion</td>
+										<td>@item.TipoCaja</td>
+										<td>@item.CantidadCajas</td>
+										<td>@item.KilosProceso</td>
+
+										<td>@item.IdCultivo</td>
+										<td>@item.TipoBerry</td>
+										<td>@item.Variedad</td>
+
+										<td>@item.IdRancho</td>
+										<td>@item.NombreRancho</td>
+										<td>@item.NumeroRancho</td>
+
+										<td>@item.IdEmpleado</td>
+										<td>@item.Nombre</td>
+										<td>@item.Telefono</td>
+
+										<td>@item.IdVehiculo</td>
+										<td>@item.Placas</td>
+										<td>@item.Modelo</td>
+										<td>@item.Marca</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+
+
+@code {
+	private PlantacionesDetallesDto plantacion = new PlantacionesDetallesDto();
+	private List<PlantacionesDetallesDto> plantaciones = new();
+
+	private CultivosDto cultivo = new CultivosDto();
+	private List<CultivosDto> cultivos = new();
+
+	private RanchosDto rancho = new RanchosDto();
+	private List<RanchosDto> ranchos = new();
+
+	private LlavesDto llave = new LlavesDto();
+	private List<LlavesDto> llaves = new();
+
+	private CosechasDto cosecha = new CosechasDto();
+	private ProduccionDto produccion = new ProduccionDto();
+
+	private List<CosechasProduccionDto> cosechas = new();
+
+	private ProcesoDto proceso = new ProcesoDto();
+	private List<ProcesoDetallesDto> procesos = new();
+
+	private ViajesDto viaje = new ViajesDto();
+	private List<ViajesDto> viajes = new();
+	private List<ViajesDetallesDto> viajesDetalles = new();
+
+	private TarimasDto tarima = new TarimasDto();
+	private List<TarimasDto> tarimas = new();
+
+	// MODALES
+	private bool mostrarModalProceso = false;
+	private bool mostrarConfirmacion = false;
+
+	// FORMULARIO
+	private bool deshabilitarFormulario = true;
+
+	// BOTONES
+	private bool deshabilitarNuevo = false;
+	private bool deshabilitarGuardar = true;
+	private bool deshabilitarModificar = false;
+	private bool deshabilitarCancelar = true;
+	private bool deshabilitarConsultar = false;
+
+	private int idProcesoEliminar;
+
+	// BÚSQUEDA INPUT
+	private string searchTermProceso = string.Empty;  // Campo de búsqueda
+	private List<ProcesoDetallesDto> filteredProcesos = new(); // Lista filtrada
+
+	// MENSAJES
+	private bool mostrarMensajeModal = false;
+	private string mensajeTitulo = string.Empty;
+	private string mensajeContenido = string.Empty;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await ConsultarViajes();
+		await ConsultarProcesos();
+	}
+
+	private async Task ConsultarProcesos()
+	{
+		try
+		{
+			procesos = await procesosService.GetProcesosDetallesAsync();
+
+			// Verificar existencia de datos
+			if (procesos == null || !procesos.Any())
+			{
+				MostrarMensajeModal("Sin datos", "No se encontró proceso.");
+				return;
+			}
+
+
+			filteredProcesos = procesos.OrderBy(p => p.IdProceso).ToList(); // Inicializa con la lista completa
+			StateHasChanged(); // Fuerza el refresco de la UI después de consultar
+		}
+		catch (Exception ex)
+		{
+			// Registrar el error en la base de datos usando el servicio ErrorLogService
+			await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+				{
+					UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+					ErrorMessage = ex.Message,
+					ErrorProcedure = "ConsultarProcesos",
+					ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+					ErrorTime = DateTime.UtcNow
+				});
+
+			// Mostrar el mensaje de error al usuario
+			MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+		}
+	}
+
+	private void AplicarFiltroProcesos()
+	{
+
+		filteredProcesos = string.IsNullOrEmpty(searchTermProceso) ?
+			procesos :
+			procesos.Where(pr =>
+				// Datos del Proceso
+				pr.IdProceso.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+				pr.ClaseAkg.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+				pr.ClaseBkg.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+				pr.ClaseCkg.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+				pr.Rechazo.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+
+				// Datos del Viaje
+				pr.IdViaje.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+				pr.FechaSalida.ToString("dd/MM/yyyy").Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                pr.NumSemViaje.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                pr.KilosProceso.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+
+				// Datos de la Cosecha
+				pr.IdCosecha.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+				pr.FechaCosecha.ToString("dd/MM/yyyy").Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+
+				// Datos de la Producción
+				pr.IdProduccion.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+				pr.TipoCaja.Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+				pr.CantidadCajas.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+				pr.KilosProceso.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+
+
+				// Datos del Cultivo
+				pr.IdCultivo.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+				pr.TipoBerry.Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+				pr.Variedad.Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+
+				// Datos de la Llave
+				pr.IdLlave.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+				pr.NombreLlave.Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+				pr.SuperficieHa.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+				pr.SuperficieAcres.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+				pr.Disponibilidad.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+
+				// Datos del Rancho
+				pr.IdRancho.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+				pr.NombreRancho.Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+				pr.NumeroRancho.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase)
+
+			).ToList();
+
+	}
+
+
+
+	private void NuevoRegistro()
+	{
+		deshabilitarFormulario = false;
+		deshabilitarGuardar = false;
+		deshabilitarNuevo = true;
+		deshabilitarModificar = true;
+		deshabilitarConsultar = true;
+		deshabilitarCancelar = false;
+	}
+
+	private void Cancelar()
+	{
+		plantacion = new PlantacionesDetallesDto();
+		cultivo = new CultivosDto();
+		llave = new LlavesDto();
+		rancho = new RanchosDto();
+		cosecha = new CosechasDto();
+		proceso = new ProcesoDto();
+		viaje = new ViajesDto();
+		tarima = new TarimasDto();
+
+		deshabilitarFormulario = true;
+		deshabilitarGuardar = true;
+		deshabilitarNuevo = false;
+		deshabilitarModificar = false;
+		deshabilitarConsultar = false;
+		deshabilitarCancelar = true;
+	}
+
+
+
+	private async Task GrabarRegistro()
+	{
+		if (cosecha == null || cosecha.IdCosecha == 0 ||
+			produccion == null || produccion.IdProduccion == 0 ||
+			plantacion == null || plantacion.IdPlantacion == 0 ||
+			rancho == null || rancho.IdRancho == 0 ||
+			cultivo == null || cultivo.IdCultivo == 0 ||
+			llave == null || llave.IdLlave == 0 ||
+			viaje == null || viaje.IdViaje == 0 ||
+			tarima == null || tarima.IdTarima == 0)
+		{
+			MostrarMensajeModal("Error", "Debe seleccionar todos los datos antes de continuar.");
+			return;
+		}
+
+			decimal? sumaKilosProceso = proceso.ClaseAkg + proceso.ClaseBkg + proceso.ClaseCkg + proceso.Rechazo;
+			if (sumaKilosProceso > tarima.KilosProcesoViaje)
+			{
+				MostrarMensajeModal("Error", "La suma de de los procesos clase A, B, C y rechazo no puede ser mayor a los kilos del proceso registrado en el viaje. Existe un exceso de " + (sumaKilosProceso - produccion.KilosProceso) + "kg.");
+				return;
+			}
+		// Validar que la suma de las clases y rechazo no exceda los kilos de proceso
+
+
+		try
+		{
+			bool success;
+			string message;
+
+			if (proceso.IdProceso == 0)
+			{
+				var resultProceso = await procesosService.CreateProcesoAsync(proceso);
+				success = resultProceso.Success;
+				message = resultProceso.Message;
+			}
+			else
+			{
+				success = await procesosService.UpdateProcesoAsync(proceso.IdProceso, proceso);
+				message = success ? "Actualización exitosa." : "Error al actualizar el registro.";
+			}
+
+			if (success)
+			{
+				await ConsultarProcesos();
+				await ConsultarViajes();
+
+				deshabilitarFormulario = true;
+				deshabilitarGuardar = true;
+				deshabilitarNuevo = false;
+				deshabilitarModificar = false;
+				deshabilitarCancelar = true;
+				deshabilitarConsultar = false;
+
+				plantacion = new PlantacionesDetallesDto();
+				cultivo = new CultivosDto();
+				llave = new LlavesDto();
+				rancho = new RanchosDto();
+				cosecha = new CosechasDto();
+				produccion = new ProduccionDto();
+				proceso = new ProcesoDto();
+				viaje = new ViajesDto();
+                tarima = new TarimasDto();
+
+				MostrarMensajeModal("Éxito", message);
+			}
+			else
+			{
+				MostrarMensajeModal("Error", message);
+			}
+		}
+		catch (Exception ex)
+		{
+			// Registrar el error en la base de datos usando el servicio ErrorLogService
+			await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+				{
+					UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+					ErrorMessage = ex.Message,
+					ErrorProcedure = "GrabarRegistroCalificarProceso",
+					ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+					ErrorTime = DateTime.UtcNow
+				});
+
+			// Mostrar el mensaje de error al usuario
+			MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+		}
+	}
+
+
+	private void MostrarMensajeModal(string titulo, string contenido)
+	{
+		mensajeTitulo = titulo;
+		mensajeContenido = contenido;
+		mostrarMensajeModal = true;
+	}
+
+	private void CerrarMensajeModal()
+	{
+		mostrarMensajeModal = false;
+	}
+
+	private void AbrirModalProceso()
+	{
+		mostrarModalProceso = true;
+	}
+
+	private void CerrarModalProceso()
+	{
+		mostrarModalProceso = false;
+		searchTermProceso = string.Empty;
+	}
+
+	private async Task SeleccionarProceso(ProcesoDetallesDto selectedProceso)
+	{
+		try
+		{
+			// Asignar datos de proceso
+			proceso = new ProcesoDto
+				{
+					IdProceso = selectedProceso.IdProceso,
+					IdViaje = selectedProceso.IdViaje,
+					ClaseAkg = selectedProceso.ClaseAkg,
+					ClaseBkg = selectedProceso.ClaseBkg,
+					ClaseCkg = selectedProceso.ClaseCkg,
+					Rechazo = selectedProceso.Rechazo
+				};
+
+			// Cargar los datos relacionados con la cosecha, producción, cultivo, etc.
+
+			viaje = await viajesService.GetViajePorIdAsync(selectedProceso.IdViaje);
+            if (viaje != null)
+            {
+                viaje.FechaSalida = viaje.FechaSalida;
+                viaje.NumSemViaje = viaje.NumSemViaje;
+            }
+
+            tarima = await viajesService.GetTarimaPorIdViajeAsync(viaje.IdViaje);
+            if (tarima != null)
+            {
+                tarima.KilosProcesoViaje = tarima.KilosProcesoViaje;
+            }
+
+			cosecha = await cosechasService.GetCosechaPorIdAsync(selectedProceso.IdCosecha);
+			if (cosecha != null)
+			{
+				cosecha.FechaCosecha = cosecha.FechaCosecha;
+                cosecha.NumSemCosecha = cosecha.NumSemCosecha;
+			}
+
+			produccion = await cosechasService.GetProduccionPorIdAsync(selectedProceso.IdProduccion);
+			if (produccion != null)
+			{
+				produccion.TipoCaja = produccion.TipoCaja;
+				produccion.CantidadCajas = produccion.CantidadCajas;
+				produccion.KilosProceso = produccion.KilosProceso;
+			}
+
+			cultivo = await cultivoService.GetCultivos(selectedProceso.IdCultivo);
+			if (cultivo != null)
+			{
+				cultivo.TipoBerry = cultivo.TipoBerry;
+				cultivo.Variedad = cultivo.Variedad;
+			}
+
+			plantacion = await plantacionesService.GetPlantacionPorIdAsync(selectedProceso.IdPlantacion);
+
+			llave = await llavesService.GetLlave(plantacion.IdLlave);
+			if (llave != null)
+			{
+				llave.NombreLlave = llave.NombreLlave;
+				llave.Disponibilidad = llave.Disponibilidad;
+			}
+
+			rancho = await ranchoService.GetRancho(llave.IdRancho);
+			if (rancho != null)
+			{
+				rancho.NombreRancho = rancho.NombreRancho;
+				rancho.NumeroRancho = rancho.NumeroRancho;
+			}
+
+			// Actualizar el formulario con los datos obtenidos
+			deshabilitarFormulario = false;
+			deshabilitarGuardar = false;
+			deshabilitarNuevo = true;
+			deshabilitarModificar = true;
+			deshabilitarCancelar = false;
+			deshabilitarConsultar = true;
+			mostrarModalProceso = false;
+
+			proceso.IdViaje = selectedProceso.IdViaje;
+		}
+		catch (Exception ex)
+		{
+			// Registrar el error en la base de datos usando el servicio ErrorLogService
+			await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+				{
+					UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+					ErrorMessage = ex.Message,
+					ErrorProcedure = "SeleccionarProceso",
+					ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+					ErrorTime = DateTime.UtcNow
+				});
+
+			// Mostrar el mensaje de error al usuario
+			MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+		}
+	}
+
+
+
+
+	private void ConfirmarEliminar(int id)
+	{
+		idProcesoEliminar = id;
+		mostrarConfirmacion = true;
+	}
+
+	private void CancelarEliminar()
+	{
+		mostrarConfirmacion = false;
+	}
+
+	private async Task EliminarProcesoConfirmado()
+	{
+		try
+		{
+			mostrarConfirmacion = false;
+
+			// Eliminar el proceso
+			bool success = await procesosService.DeleteProcesoAsync(idProcesoEliminar);
+			if (success)
+			{
+				await ConsultarProcesos();
+			}
+		}
+		catch (Exception ex)
+		{
+			// Registrar el error en la base de datos usando el servicio ErrorLogService
+			await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+				{
+					UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+					ErrorMessage = ex.Message,
+					ErrorProcedure = "EliminarProcesoConfirmado",
+					ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+					ErrorTime = DateTime.UtcNow
+				});
+
+			// Mostrar el mensaje de error al usuario
+			MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+		}
+	}
+
+
+	private void RedirigirAConsulta()
+	{
+		Navigation.NavigateTo("/Movimientos/ClasificarProcesoConsulta");
+	}
+
+	// MODALES
+
+	// BUSQUEDA INPUT
+	private string searchTermViajes = string.Empty;
+	private List<ViajesDetallesDto> filteredViajes = new();
+
+	private async Task ConsultarViajes()
+	{
+		try
+		{
+			viajesDetalles = await viajesService.GetViajesDetallesAsync();
+			filteredViajes = viajesDetalles.OrderBy(c => c.IdViaje).ToList(); // Inicializa  con la lista completa
+			FiltrarViajes(); 
+			StateHasChanged(); // Fuerza el refresco de la UI después de consultar
+		}
+		catch (Exception ex)
+		{
+			// Registrar el error en la base de datos usando el servicio ErrorLogService
+			await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+				{
+					UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+					ErrorMessage = ex.Message,
+					ErrorProcedure = "ConsultarViajesDetalles",
+					ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+					ErrorTime = DateTime.UtcNow
+				});
+
+			// Mostrar el mensaje de error al usuario
+			MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+		}
+	}
+
+	private void FiltrarViajes()
+	{
+		// Filtrar solo los que tienen CantidadCajasViaje y Licencia en 0 o vacío
+		filteredViajes = viajesDetalles.Where(v => v.CantidadCajasViaje == 0 && v.Licencia == 0).ToList();
+		
+	}
+
+
+
+	private void AplicarFiltroViajes()
+	{
+		var listaBase = viajesDetalles;
+
+		listaBase = listaBase.Where(v => v.CantidadCajasViaje == 0 && v.Licencia == 0).ToList();
+
+
+		// Aplicar búsqueda sobre la lista filtrada
+		filteredViajes = string.IsNullOrEmpty(searchTermViajes)
+			? listaBase
+			: listaBase.Where(v =>
+
+				// Datos del Viaje
+				v.IdViaje.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+				v.FechaSalida.ToString("dd/MM/yyyy").Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+				v.CantidadCajasViaje.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+				v.Licencia.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+				v.KilosProcesoViaje.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+
+				// Datos de la Cosecha
+				v.IdCosecha.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+				v.FechaCosecha.ToString("dd/MM/yyyy").Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+
+				// Datos de la Producción
+				v.IdProduccion.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+				v.TipoCaja.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+				(v.CantidadCajas?.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ?? false) ||
+				(v.KilosProceso?.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ?? false) ||
+
+				// Datos del Cultivo
+				v.IdCultivo.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+				(v.TipoBerry?.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ?? false) ||
+				(v.Variedad?.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ?? false) ||
+
+				// Datos del Rancho
+				v.IdRancho.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+				(v.NombreRancho?.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ?? false) ||
+				(v.NumeroRancho?.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ?? false) ||
+
+				// Datos del Empleado
+				v.IdEmpleado.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+				v.Nombre.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+				v.Telefono.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+
+				// Datos del Vehículo
+				v.IdVehiculo.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+				v.Placas.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+				v.Modelo.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+				v.Marca.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase)
+
+			).ToList();
+	}
+
+
+	private async Task SeleccionarViaje(ViajesDetallesDto selectedViaje)
+	{
+		try
+		{
+			// Asignar datos del viaje
+			viaje = new ViajesDto
+				{
+					IdViaje = selectedViaje.IdViaje,
+					IdVehiculo = selectedViaje.IdVehiculo,
+					IdConductor = selectedViaje.IdEmpleado,
+					FechaSalida = selectedViaje.FechaSalida,
+                    NumSemViaje = selectedViaje.NumSemViaje,
+				};
+
+
+            cosecha = await cosechasService.GetCosechaPorIdAsync(selectedViaje.IdCosecha);
+            if (cosecha != null)
+            {
+                cosecha.FechaCosecha = cosecha.FechaCosecha;
+                cosecha.NumSemCosecha = cosecha.NumSemCosecha;
+            }
+
+			produccion = await cosechasService.GetProduccionPorIdAsync(selectedViaje.IdProduccion);
+			if (produccion != null)
+			{
+				produccion.TipoCaja = produccion.TipoCaja;
+				produccion.CantidadCajas = produccion.CantidadCajas;
+				produccion.KilosProceso = produccion.KilosProceso;
+			}
+
+			cultivo = await cultivoService.GetCultivos(selectedViaje.IdCultivo);
+			if (cultivo != null)
+			{
+				cultivo.TipoBerry = cultivo.TipoBerry;
+				cultivo.Variedad = cultivo.Variedad;
+			}
+
+            plantacion = await plantacionesService.GetPlantacionPorIdAsync(cosecha.IdPlantacion);
+
+			rancho = await ranchoService.GetRancho(selectedViaje.IdRancho);
+			if (rancho != null)
+			{
+				rancho.NombreRancho = rancho.NombreRancho;
+				rancho.NumeroRancho = rancho.NumeroRancho;
+			}
+
+			llave = await llavesService.GetLlave(plantacion.IdLlave);
+            if (llave != null)
+            {
+                llave.NombreLlave = llave.NombreLlave;
+                llave.SuperficieHa = llave.SuperficieHa;
+                llave.SuperficieAcres = llave.SuperficieAcres;
+            }
+
+            tarima = await viajesService.GetTarimaPorIdViajeAsync(selectedViaje.IdViaje);
+            if (tarima != null)
+            {
+                tarima.KilosProcesoViaje = selectedViaje.KilosProcesoViaje;
+            }
+
+
+			StateHasChanged(); // Forzar actualización de la UI
+
+			// Actualizar el formulario con los datos obtenidos
+			deshabilitarFormulario = false;
+			deshabilitarGuardar = false;
+			deshabilitarNuevo = true;
+			deshabilitarModificar = true;
+			deshabilitarCancelar = false;
+			deshabilitarConsultar = true;
+			mostrarModalViaje = false;
+
+            proceso.IdViaje = selectedViaje.IdViaje;
+		}
+		catch (Exception ex)
+		{
+			MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+
+			// Registrar el error inesperado
+			await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+				{
+					UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+					ErrorMessage = ex.Message,
+					ErrorProcedure = "SeleccionarViaje",
+					ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+					ErrorTime = DateTime.UtcNow
+				});
+		}
+	}
+
+	bool mostrarModalViaje = false;
+
+	private void AbrirModalViaje()
+	{
+		mostrarModalViaje = true;
+	}
+
+	private void CerrarModalViaje()
+	{
+		mostrarModalViaje = false;
+		searchTermViajes = string.Empty;
+	}
+
+
+}

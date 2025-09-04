@@ -1,0 +1,47 @@
+﻿@page "/Ayuda/Utilidades/CopiaSeguridad"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4"><i class="bi bi-cloud-download"></i> Copia de Seguridad</h2>
+
+    <p>
+        Esta funcionalidad permite generar y descargar una copia de seguridad del sistema de forma sencilla. Es una herramienta útil para realizar respaldos periódicos de los datos almacenados.
+    </p>
+
+    <h4 class="fw-bold mt-4">¿Cómo funciona?</h4>
+    <ul>
+        <li>Pulsa el botón <strong>Descargar</strong> para generar una copia de seguridad.</li>
+        <li>El sistema comenzará a procesar la solicitud y generará el archivo comprimido correspondiente.</li>
+        <li>Una vez lista la copia, se mostrará un mensaje confirmando si la descarga fue exitosa o si ocurrió un error.</li>
+        <li>En caso de éxito, puedes pulsar el botón <strong>Abrir carpeta</strong> para ir directamente a la ubicación del archivo descargado.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Ejemplos visuales</h4>
+
+    <h5 class="mt-4">Estado inicial</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Utilidades/CopiaSeguridad01.png" alt="Estado inicial de copia de seguridad"
+             style="max-width: 600px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Pantalla principal donde se muestra únicamente el botón <strong>Descargar</strong>. Al pulsarlo, se genera la copia de seguridad.
+        </p>
+    </div>
+
+    <h5 class="mt-4">Modal de resultado</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Utilidades/CopiaSeguridad02.png" alt="Modal de resultado"
+             style="max-width: 600px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Una vez finalizada la operación, se muestra este modal indicando si la descarga fue exitosa o fallida. En caso exitoso, se habilita el botón <strong>Abrir carpeta</strong> para dirigirse a la dirección donde se descargó.
+        </p>
+    </div>
+
+    <h4 class="fw-bold mt-4">Consejos de uso</h4>
+    <ul>
+        <li>Realiza copias de seguridad antes de realizar cambios importantes en el sistema.</li>
+        <li>Guarda los archivos de respaldo en una ubicación segura, preferentemente externa al sistema.</li>
+        <li>Verifica siempre que el mensaje indique éxito antes de cerrar la ventana modal.</li>
+    </ul>
+</div>
+
+@code {
+}

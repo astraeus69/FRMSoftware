@@ -1,0 +1,1078 @@
+﻿@page "/Movimientos/PersonalCosecha"
+
+@using FRMSoftware.Data
+@inject FRMSoftware.Services.Catalogos.CultivoService cultivoService
+@inject FRMSoftware.Services.Catalogos.EmpleadosService empleadosService
+@inject FRMSoftware.Services.Movimientos.GestionPlantacionesService plantacionesService
+@inject FRMSoftware.Services.Movimientos.GestionCosechasService cosechasService
+@inject FRMSoftware.Services.Movimientos.GestionPersonalCosechaService personalCosechaService
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+
+@inject NavigationManager Navigation
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <div class="row justify-content-center align-items-start mt-4">
+        <h2 class="text-center fw-bold" style="margin-bottom: 20px">Registro de jarras</h2>
+
+        <!-- Primera columna: Selección de Empleado -->
+        <div class="col-lg-6">
+            <!-- EMPLEADO -->
+            <EditForm Model="empleado">
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <h3 class="text-center my-4 fw-bold">Empleado</h3>
+
+                        <div class="mb-1">
+                            <label for="Nombre" class="form-label">Nombre:</label>
+                            <InputText id="Nombre" class="form-control" @bind-Value="empleado.Nombre" disabled="true" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Telefono" class="form-label">Teléfono:</label>
+                            <InputText id="Telefono" class="form-control" @bind-Value="empleado.Telefono" disabled="true" />
+                        </div>
+
+                        <div class="d-flex justify-content-center">
+                            <button class="btn fixed-size-btn selectRancho mx-2" @onclick="AbrirModalEmpleados" disabled="@deshabilitarGuardar">
+                                Seleccionar
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </EditForm>
+
+
+            <!-- Datos de Jarras -->
+            <div class="card shadow-sm mb-3 same-height-PC">
+                <div class="card-body">
+                    <EditForm Model="personalCosecha" OnValidSubmit="GrabarRegistro" id="personalCosecha">
+                        <DataAnnotationsValidator />
+
+                        <h5 class="text-center fw-bold">Datos de jarras</h5>
+
+                        <!-- ID de personal cosecha (Oculto) -->
+                        <input type="hidden" @bind="personalCosecha.IdPersonalCosecha" />
+                        <!-- ID de cosecha (Oculto) -->
+                        <input type="hidden" @bind="personalCosecha.IdCosecha" />
+                        <!-- ID de empleado (Oculto) -->
+                        <input type="hidden" @bind="personalCosecha.IdEmpleado" />
+
+                        <!-- Jarras -->
+                        <div class="mb-1">
+                            <label class="form-label">Cantidad de jarras:</label>
+                            <InputNumber class="form-control" @bind-Value="personalCosecha.Jarras" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => personalCosecha.Jarras)" class="text-danger" />
+                        </div>
+
+                        <!-- Precio Jarra -->
+                        <div class="mb-1">
+                            <label class="form-label">Precio por jarra ($):</label>
+                            <InputNumber class="form-control" @bind-Value="personalCosecha.PrecioJarra" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => personalCosecha.PrecioJarra)" class="text-danger" />
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <!-- Segunda columna: Datos de Cosecha, Cultivo y Jarras -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm mb-3 mt-4 mt-lg-0 same-height-PC">
+                <div class="card-body">
+                    <!-- Fecha de cosecha -->
+                    <EditForm Model="cosecha">
+                    <h5 class="text-center fw-bold">Cosecha</h5>
+                        <div class="mb-1">
+                            <label class="form-label">Fecha de cosecha:</label>
+                            <InputDate class="form-control" @bind-Value="cosecha.FechaCosecha" disabled="true" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label class="form-label">Número de semana:</label>
+                            <InputNumber class="form-control" @bind-Value="cosecha.NumSemCosecha" disabled="true" />
+                        </div>
+
+                        <div class="d-flex justify-content-center">
+                            <button class="btn fixed-size-btn selectRancho mx-2" @onclick="AbrirModalCosecha" disabled="@deshabilitarGuardar">
+                                Seleccionar
+                            </button>
+                        </div>
+                    </EditForm>
+
+                    <!-- Datos de Cultivo -->
+                    <EditForm Model="cultivo">
+                        <h5 class="text-center fw-bold margenCultivoPC" style="margin-top:30px">Cultivo</h5>
+                        <div class="mb-1">
+                            <label class="form-label">Tipo de berry:</label>
+                            <InputText class="form-control" @bind-Value="cultivo.TipoBerry" disabled="true" />
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label">Variedad de berry:</label>
+                            <InputText class="form-control" @bind-Value="cultivo.Variedad" disabled="true" />
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Botones -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Editor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="NuevoRegistro" disabled="@deshabilitarNuevo">Nuevo</button>
+            <button class="btn fixed-size-btn mx-2" type="submit" form="personalCosecha" disabled="@deshabilitarGuardar">Guardar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="AbrirModalPersonalCosecha" disabled="@deshabilitarModificar">Modificar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="Cancelar" disabled="@deshabilitarCancelar">Cancelar</button>
+        }
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Consultor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="RedirigirAConsulta" disabled="@deshabilitarConsultar">Consultar</button>
+        }
+
+    </div>
+</div>
+
+
+
+<!-- MODAL para mostrar la tabla -->
+@if (mostrarModalEmpleado)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Lista de empleados</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModalEmpleados"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Contenedor para alinear horizontalmente -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <input @bind="searchTermEmpleados" placeholder="Buscar empleados..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltroEmpleados">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor de la tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID Empleado</th>
+                                    <th>Nombre</th>
+                                    <th>Departamento</th>
+                                    <th>Puesto</th>
+                                    <th>Estado</th>
+                                    <th>Municipio</th>
+                                    <th>Estatus</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in filteredEmpleados)
+                                {
+                                    <tr @onclick="() => SeleccionarEmpleado(item)" class="fila-seleccionable">
+                                        <td>@item.IdEmpleado</td>
+                                        <td>@item.Nombre</td>
+                                        <td>@item.Departamento</td>
+                                        <td>@item.Puesto</td>
+                                        <td>@item.Estado</td>
+                                        <td>@item.Municipio</td>
+                                        <td>@item.Estatus</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+<!-- MODAL para mostrar la tabla de cosechas -->
+@if (mostrarModalCosecha)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Lista de cosechas</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModalCosecha"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Contenedor para alinear horizontalmente -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <input @bind="searchTermCosecha" placeholder="Buscar cosechas..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltroCosechas">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor de la tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID Cosecha</th>
+                                    <th>Fecha de cosecha</th>
+                                    <th>Número de semana</th>
+
+                                    <th>ID Producción</th>
+                                    <th>Tipo de caja</th>
+                                    <th>Cantidad de cajas</th>
+                                    <th>Kilos de proceso</th>
+
+                                    <th>ID Plantación</th>
+                                    <th>Fecha de plantación</th>
+                                    <th>Número de semana</th>
+                                    <th>Estatus de plantación</th>
+
+                                    <th>ID Cultivo</th>
+                                    <th>Tipo de berry</th>
+                                    <th>Variedad</th>
+
+                                    <th>ID Rancho</th>
+                                    <th>Nombre del rancho</th>
+                                    <th>Número del rancho</th>
+
+                                    <th>ID Llave</th>
+                                    <th>Nombre de llave</th>
+                                    <th>Superficie (HA)</th>
+                                    <th>Superficie (Acres)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in filteredCosechas)
+                                {
+                                    <tr @onclick="() => SeleccionarCosecha(item)" class="fila-seleccionable">
+                                        <td>@item.IdCosecha</td>
+                                        <td>@item.FechaCosecha.ToString("dd/MM/yyyy")</td>
+                                        <td>@item.NumSemCosecha</td>
+
+                                        <td>@item.IdProduccion</td>
+                                        <td>@item.TipoCaja</td>
+                                        <td>@item.CantidadCajas</td>
+                                        <td>@item.KilosProceso</td>
+
+                                        <td>@item.IdPlantacion</td>
+                                        <td>@item.FechaPlantacion.ToString("dd/MM/yyyy")</td>
+                                        <td>@item.NumSemPlantacion</td>
+                                        <td>@item.EstatusPlantacion</td>
+
+                                        <td>@item.IdCultivo</td>
+                                        <td>@item.TipoBerry</td>
+                                        <td>@item.Variedad</td>
+
+                                        <td>@item.IdRancho</td>
+                                        <td>@item.NombreRancho</td>
+                                        <td>@item.NumeroRancho</td>
+
+                                        <td>@item.IdLlave</td>
+                                        <td>@item.NombreLlave</td>
+                                        <td>@item.SuperficieHa</td>
+                                        <td>@item.SuperficieAcres</td>
+
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+<!-- MODAL para mostrar la tabla de modificación -->
+@if (mostrarModalPersonalCosecha)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Lista de cosechas por personal</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModalPersonalCosecha"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Contenedor para alinear horizontalmente -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <input @bind="searchTermPersonalCosechas" placeholder="Buscar personal de cosecha..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltroPersonalCosechas">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor de la tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 10%;">Acciones</th>
+
+                                    <th>ID Personal cosecha</th>
+                                    <th>Jarras</th>
+                                    <th>Precio por jarra</th>
+
+                                    <th>ID Cosecha</th>
+                                    <th>Fecha de cosecha</th>
+
+                                    <th>ID Cultivo</th>
+                                    <th>Tipo de berry</th>
+                                    <th>Variedad</th>
+
+                                    <th>ID Empleado</th>
+                                    <th>Nombre de empleado</th>
+                                    <th>Teléfono</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in filteredPersonalCosechas)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn editar" @onclick="() => SeleccionarPersonalCosecha(item)">Editar</button>
+                                                @if (UserSession.Rol == "Admin")
+                                                {
+                                                    <button class="btn btn-red editar" @onclick="() => ConfirmarEliminar(item.IdPersonalCosecha)">Eliminar</button>
+                                                }
+                                            </div>
+                                        </td>
+
+                                        <td>@item.IdPersonalCosecha</td>
+                                        <td>@item.Jarras</td>
+                                        <td>@item.PrecioJarra</td>
+
+
+                                        <td>@item.IdCosecha</td>
+                                        <td>@item.FechaCosecha.ToString("dd/MM/yyyy")</td>
+
+                                        <td>@item.IdCultivo</td>
+                                        <td>@item.TipoBerry</td>
+                                        <td>@item.Variedad</td>
+
+                                        <td>@item.IdEmpleado</td>
+                                        <td>@item.Nombre</td>
+                                        <td>@item.Telefono</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+<!-- Modal de confirmación de eliminación -->
+@if (mostrarConfirmacion)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar eliminación</h5>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro de que desea eliminar este registro?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" @onclick="CancelarEliminar">Cancelar</button>
+                    <button class="btn btn-red" @onclick="EliminarCosechaConfirmado">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+<!-- Modal para mostrar mensajes -->
+@if (mostrarMensajeModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <!-- Agregar modal-dialog-centered -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@mensajeTitulo</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarMensajeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@mensajeContenido</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-red" @onclick="CerrarMensajeModal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    private CultivosDto cultivo = new CultivosDto();
+    private List<CultivosDto> cultivos = new();
+
+    private CosechasDto cosecha = new CosechasDto();
+    private ProduccionDto produccion = new ProduccionDto();
+
+    private List<CosechasProduccionDto> cosechas = new();
+
+    private PersonalCosechaDto personalCosecha = new PersonalCosechaDto();
+    private List<PersonalCosechaDetallesDto> personalCosechas = new();
+
+    private EmpleadosDto empleado = new EmpleadosDto();
+    private List<EmpleadosDto> empleados = new();
+
+
+    // MODALES
+    private bool mostrarModalCosecha = false;
+    private bool mostrarConfirmacion = false;
+
+    // FORMULARIO
+    private bool deshabilitarFormulario = true;
+
+    // BOTONES
+    private bool deshabilitarNuevo = false;
+    private bool deshabilitarGuardar = true;
+    private bool deshabilitarModificar = false;
+    private bool deshabilitarCancelar = true;
+    private bool deshabilitarConsultar = false;
+
+    private int idPersonalCosechaEliminar;
+
+    // BÚSQUEDA INPUT
+    private string searchTermPersonalCosechas = string.Empty;  // Campo de búsqueda
+    private List<PersonalCosechaDetallesDto> filteredPersonalCosechas = new(); // Lista filtrada
+
+    // MENSAJES
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarEmpleados();
+        await ConsultarCosechas();
+        await ConsultarPersonalCosechas();
+    }
+
+    private async Task ConsultarPersonalCosechas()
+    {
+        try
+        {
+            // Intentamos obtener los detalles del personal de cosechas
+            personalCosechas = await personalCosechaService.GetPersonalCosechaDetallesAsync();
+
+            // Verificar existencia de datos
+            if (personalCosechas == null || !personalCosechas.Any())
+            {
+                MostrarMensajeModal("Sin datos", "No se encontraron registros.");
+                return;
+            }
+
+            filteredPersonalCosechas = personalCosechas.OrderBy(p => p.IdPersonalCosecha).ToList(); // Inicializa con la lista completa
+            StateHasChanged(); // Fuerza el refresco de la UI después de consultar
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en la base de datos usando el servicio ErrorLogService
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarPersonalCosechas",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+
+            // Mostrar el mensaje de error al usuario
+            MostrarMensajeModal("Error", "Ocurrió un problema al obtener los detalles del personal de cosechas.");
+        }
+    }
+
+    private async Task AplicarFiltroPersonalCosechas()
+    {
+        try
+        {
+            filteredPersonalCosechas = string.IsNullOrEmpty(searchTermPersonalCosechas) ?
+                personalCosechas :
+                personalCosechas.Where(pc =>
+                    pc.IdPersonalCosecha.ToString().Contains(searchTermPersonalCosechas, StringComparison.OrdinalIgnoreCase) ||
+                    pc.Jarras.ToString().Contains(searchTermPersonalCosechas, StringComparison.OrdinalIgnoreCase) ||
+                    pc.PrecioJarra.ToString().Contains(searchTermPersonalCosechas, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos de la Cosecha
+                    pc.IdCosecha.ToString().Contains(searchTermPersonalCosechas, StringComparison.OrdinalIgnoreCase) ||
+                    pc.FechaCosecha.ToString("dd/MM/yyyy").Contains(searchTermPersonalCosechas, StringComparison.OrdinalIgnoreCase) ||
+                    pc.NumSemCosecha.ToString().Contains(searchTermPersonalCosechas, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos del Cultivo
+                    pc.IdCultivo.ToString().Contains(searchTermPersonalCosechas, StringComparison.OrdinalIgnoreCase) ||
+                    pc.TipoBerry.Contains(searchTermPersonalCosechas, StringComparison.OrdinalIgnoreCase) ||
+                    pc.Variedad.Contains(searchTermPersonalCosechas, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos del Empleado
+                    pc.IdEmpleado.ToString().Contains(searchTermPersonalCosechas, StringComparison.OrdinalIgnoreCase) ||
+                    pc.Nombre.Contains(searchTermPersonalCosechas, StringComparison.OrdinalIgnoreCase) ||
+                    pc.Telefono.Contains(searchTermPersonalCosechas, StringComparison.OrdinalIgnoreCase)
+                ).ToList();
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en la base de datos usando el servicio ErrorLogService
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "AplicarFiltroPersonalCosechas",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+
+            // Mostrar el mensaje de error al usuario
+            MostrarMensajeModal("Error", "Ocurrió un problema al aplicar el filtro de personal de cosechas.");
+        }
+    }
+
+
+    private async Task SeleccionarPersonalCosecha(PersonalCosechaDetallesDto selectedPersonalCosecha)
+    {
+        try
+        {
+            // Asignar datos de cosecha
+            personalCosecha = new PersonalCosechaDto
+                {
+                    IdPersonalCosecha = selectedPersonalCosecha.IdPersonalCosecha,
+                    IdCosecha = selectedPersonalCosecha.IdCosecha,
+                    IdEmpleado = selectedPersonalCosecha.IdEmpleado,
+                    Jarras = selectedPersonalCosecha.Jarras,
+                    PrecioJarra = selectedPersonalCosecha.PrecioJarra
+                };
+
+            // Cargar los datos de los formularios correspondientes al replante seleccionado
+
+            empleado = await empleadosService.GetEmpleadoPorIdAsync(selectedPersonalCosecha.IdEmpleado);
+            if (empleado != null)
+            {
+                empleado.Nombre = empleado.Nombre;
+                empleado.Telefono = empleado.Telefono;
+            }
+
+            cosecha = await cosechasService.GetCosechaPorIdAsync(selectedPersonalCosecha.IdCosecha);
+            if (cosecha != null)
+            {
+                cosecha.FechaCosecha = cosecha.FechaCosecha;
+                cosecha.NumSemCosecha = cosecha.NumSemCosecha;
+            }
+
+            cultivo = await cultivoService.GetCultivos(selectedPersonalCosecha.IdCultivo);
+            if (cultivo != null)
+            {
+                cultivo.TipoBerry = cultivo.TipoBerry;
+                cultivo.Variedad = cultivo.Variedad;
+            }
+
+            // Actualizar el formulario con los datos obtenidos
+            deshabilitarFormulario = false;
+            deshabilitarGuardar = false;
+            deshabilitarNuevo = true;
+            deshabilitarModificar = true;
+            deshabilitarCancelar = false;
+            deshabilitarConsultar = true;
+            mostrarModalPersonalCosecha = false;
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en la base de datos usando el servicio ErrorLogService
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "SeleccionarPersonalCosecha",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+
+            // Mostrar el mensaje de error al usuario
+            MostrarMensajeModal("Error", "Ocurrió un problema al seleccionar los datos del personal de cosecha.");
+        }
+    }
+
+
+
+    private void NuevoRegistro()
+    {
+        deshabilitarFormulario = false;
+        deshabilitarGuardar = false;
+        deshabilitarNuevo = true;
+        deshabilitarModificar = true;
+        deshabilitarConsultar = true;
+        deshabilitarCancelar = false;
+    }
+
+    private void Cancelar()
+    {
+        cultivo = new CultivosDto();
+        cosecha = new CosechasDto();
+        empleado = new EmpleadosDto();
+        personalCosecha = new PersonalCosechaDto();
+
+        deshabilitarFormulario = true;
+        deshabilitarGuardar = true;
+        deshabilitarNuevo = false;
+        deshabilitarModificar = false;
+        deshabilitarConsultar = false;
+        deshabilitarCancelar = true;
+    }
+
+
+
+    private async Task GrabarRegistro()
+    {
+        if (cosecha == null || cosecha.IdCosecha == 0 ||
+            empleado == null || empleado.IdEmpleado == 0 ||
+            cultivo == null || cultivo.IdCultivo == 0
+            )
+        {
+            MostrarMensajeModal("Error", "Debe seleccionar todos los datos antes de continuar.");
+            return;
+        }
+
+        try
+        {
+            bool success = false;
+            string message = string.Empty;
+
+            if (personalCosecha.IdPersonalCosecha == 0)
+            {
+                var resultPersonalCosecha = await personalCosechaService.CreatePersonalCosechaAsync(personalCosecha);
+                success = resultPersonalCosecha.Success;
+                message = resultPersonalCosecha.Message;
+
+            }
+            else
+            {
+                success = await personalCosechaService.UpdatePersonalCosechaAsync(personalCosecha.IdPersonalCosecha, personalCosecha);
+                message = success ? "Actualización exitosa." : "Error al actualizar el registro.";
+            }
+
+            if (success)
+            {
+                await ConsultarPersonalCosechas();
+                deshabilitarFormulario = true;
+                deshabilitarGuardar = true;
+                deshabilitarNuevo = false;
+                deshabilitarModificar = false;
+                deshabilitarCancelar = true;
+                deshabilitarConsultar = false;
+
+                cultivo = new CultivosDto();
+                cosecha = new CosechasDto();
+                empleado = new EmpleadosDto();
+                personalCosecha = new PersonalCosechaDto();
+
+                MostrarMensajeModal("Éxito", message);
+            }
+            else
+            {
+                MostrarMensajeModal("Error", message);
+            }
+
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en la base de datos usando el servicio ErrorLogService
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "GrabarRegistroPersonalCosecha",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+
+            // Mostrar el mensaje de error al usuario
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+        }
+    }
+
+
+
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    private void CerrarMensajeModal()
+    {
+        mostrarMensajeModal = false;
+    }
+
+    bool mostrarModalPersonalCosecha = false;
+
+    private void AbrirModalPersonalCosecha()
+    {
+        mostrarModalPersonalCosecha = true;
+    }
+
+    private void CerrarModalPersonalCosecha()
+    {
+        mostrarModalPersonalCosecha = false;
+        searchTermPersonalCosechas = string.Empty;
+    }
+
+    private void ConfirmarEliminar(int id)
+    {
+        idPersonalCosechaEliminar = id;
+        mostrarConfirmacion = true;
+    }
+
+    private void CancelarEliminar()
+    {
+        mostrarConfirmacion = false;
+    }
+
+    private async Task EliminarCosechaConfirmado()
+    {
+        mostrarConfirmacion = false;
+        bool success = await personalCosechaService.DeletePersonalCosechaAsync(idPersonalCosechaEliminar);
+        if (success)
+        {
+            await ConsultarCosechas();
+        }
+    }
+
+    private void RedirigirAConsulta()
+    {
+        Navigation.NavigateTo("/Movimientos/PersonalCosechaConsulta");
+    }
+
+
+
+
+    // MODAL COSECHAS
+
+    // BÚSQUEDA INPUT
+    private string searchTermCosecha = string.Empty;  // Campo de búsqueda
+    private List<CosechasProduccionDto> filteredCosechas = new(); // Lista filtrada
+
+
+    private async Task ConsultarCosechas()
+    {
+        try
+        {
+            cosechas = await cosechasService.GetCosechasProduccionAsync();
+            filteredCosechas = cosechas.OrderBy(p => p.IdCosecha).ToList(); // Inicializa con la lista completa
+            StateHasChanged(); // Fuerza el refresco de la UI después de consultar
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en la base de datos usando el servicio ErrorLogService
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarCosechas",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+
+            // Mostrar el mensaje de error al usuario
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+        }
+    }
+
+    private async Task AplicarFiltroCosechas()
+    {
+        try
+        {
+            filteredCosechas = string.IsNullOrEmpty(searchTermCosecha) ?
+                cosechas :
+                cosechas.Where(c =>
+                    c.IdCosecha.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.FechaCosecha.ToString("dd/MM/yyyy").Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.NumSemCosecha.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+
+                    c.TipoCaja.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.CantidadCajas.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.KilosProceso.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos de la Plantación
+                    c.IdPlantacion.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.FechaPlantacion.ToString("dd/MM/yyyy").Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.NumSemPlantacion.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.EstatusPlantacion.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos del Cultivo
+                    c.IdCultivo.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.TipoBerry.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.Variedad.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos de la Llave
+                    c.IdLlave.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.NombreLlave.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.SuperficieHa.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.SuperficieAcres.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.Disponibilidad.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos del Rancho
+                    c.IdRancho.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.NombreRancho.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.NumeroRancho.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase)
+                ).ToList();
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en la base de datos usando el servicio ErrorLogService
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "AplicarFiltroCosechas",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+
+            // Mostrar el mensaje de error al usuario
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+        }
+    }
+
+    private async Task SeleccionarCosecha(CosechasProduccionDto selectedCosecha)
+    {
+        try
+        {
+            // Asignar datos de cosecha
+            cosecha = new CosechasDto
+                {
+                    IdCosecha = selectedCosecha.IdCosecha,
+                    IdPlantacion = selectedCosecha.IdPlantacion,
+                    FechaCosecha = selectedCosecha.FechaCosecha,
+                    NumSemCosecha = selectedCosecha.NumSemCosecha
+                };
+
+            // Asignar datos de producción
+            produccion = new ProduccionDto
+                {
+                    IdProduccion = selectedCosecha.IdProduccion,
+                    IdCosecha = selectedCosecha.IdCosecha,
+                    TipoCaja = selectedCosecha.TipoCaja,
+                    CantidadCajas = selectedCosecha.CantidadCajas,
+                    KilosProceso = selectedCosecha.KilosProceso
+                };
+
+            // Cargar los datos de los formularios correspondientes al replante seleccionado
+            cultivo = await cultivoService.GetCultivos(selectedCosecha.IdCultivo);
+            if (cultivo != null)
+            {
+                cultivo.TipoBerry = cultivo.TipoBerry;
+                cultivo.Variedad = cultivo.Variedad;
+            }
+
+            // Actualizar el formulario con los datos obtenidos
+            deshabilitarFormulario = false;
+            deshabilitarGuardar = false;
+            deshabilitarNuevo = true;
+            deshabilitarModificar = true;
+            deshabilitarCancelar = false;
+            deshabilitarConsultar = true;
+            mostrarModalCosecha = false;
+
+            personalCosecha.IdCosecha = selectedCosecha.IdCosecha;
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en la base de datos usando el servicio ErrorLogService
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "SeleccionarCosecha",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+
+            // Mostrar el mensaje de error al usuario
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+        }
+    }
+
+    private void AbrirModalCosecha()
+    {
+        mostrarModalCosecha = true;
+    }
+
+    private void CerrarModalCosecha()
+    {
+        mostrarModalCosecha = false;
+        searchTermCosecha = string.Empty;
+    }
+
+
+    // MODAL EMPLEADOS
+
+    // BÚSQUEDA INPUT
+    private string searchTermEmpleados = string.Empty;  // Campo de búsqueda
+    private List<EmpleadosDto> filteredEmpleados = new(); // Lista filtrada
+
+    // Actualiza la lista de empleados
+    private async Task ConsultarEmpleados()
+    {
+        try
+        {
+            empleados = await empleadosService.GetEmpleadosAsync();
+            filteredEmpleados = empleados.OrderBy(e => e.IdEmpleado).ToList(); // Inicializa con la lista completa
+            StateHasChanged(); // Fuerza el refresco de la UI después de consultar los empleados
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en la base de datos usando el servicio ErrorLogService
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarEmpleados",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+
+            // Mostrar el mensaje de error al usuario
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+            Console.WriteLine($"Error inesperado al consultar los empleados: {ex.Message}");
+        }
+    }
+
+    private async Task AplicarFiltroEmpleados()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(searchTermEmpleados))
+            {
+                filteredEmpleados = empleados;
+            }
+            else
+            {
+                searchTermEmpleados = searchTermEmpleados.Trim();
+
+                filteredEmpleados = empleados.Where(e =>
+                    e.Nombre.Contains(searchTermEmpleados, StringComparison.OrdinalIgnoreCase) ||
+                    e.Departamento.Contains(searchTermEmpleados, StringComparison.OrdinalIgnoreCase) ||
+                    e.Puesto.Contains(searchTermEmpleados, StringComparison.OrdinalIgnoreCase) ||
+                    e.Direccion.Contains(searchTermEmpleados, StringComparison.OrdinalIgnoreCase) ||
+                    e.Colonia.Contains(searchTermEmpleados, StringComparison.OrdinalIgnoreCase) ||
+                    e.CP.Contains(searchTermEmpleados, StringComparison.OrdinalIgnoreCase) ||
+                    e.Municipio.Contains(searchTermEmpleados, StringComparison.OrdinalIgnoreCase) ||
+                    e.Estado.Contains(searchTermEmpleados, StringComparison.OrdinalIgnoreCase) ||
+                    e.Telefono.Contains(searchTermEmpleados, StringComparison.OrdinalIgnoreCase) ||
+                    e.Estatus.Contains(searchTermEmpleados, StringComparison.OrdinalIgnoreCase)
+                ).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en la base de datos usando el servicio ErrorLogService
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "AplicarFiltroEmpleados",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+
+            // Mostrar el mensaje de error al usuario
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+        }
+    }
+
+    // MODIFICAR EMPLEADO (Editar)
+    private async Task SeleccionarEmpleado(EmpleadosDto selectedEmpleado)
+    {
+        try
+        {
+            empleado = new EmpleadosDto
+                {
+                    IdEmpleado = selectedEmpleado.IdEmpleado,
+                    Nombre = selectedEmpleado.Nombre,
+                    Departamento = selectedEmpleado.Departamento,
+                    Puesto = selectedEmpleado.Puesto,
+                    Direccion = selectedEmpleado.Direccion,
+                    Colonia = selectedEmpleado.Colonia,
+                    CP = selectedEmpleado.CP,
+                    Municipio = selectedEmpleado.Municipio,
+                    Estado = selectedEmpleado.Estado,
+                    Telefono = selectedEmpleado.Telefono,
+                    Estatus = selectedEmpleado.Estatus
+                };
+
+            deshabilitarFormulario = false;
+            deshabilitarGuardar = false;
+            deshabilitarNuevo = true;
+            deshabilitarModificar = true;
+            deshabilitarCancelar = false;
+            deshabilitarConsultar = true;
+            mostrarModalEmpleado = false; // Cierra el modal
+
+            personalCosecha.IdEmpleado = selectedEmpleado.IdEmpleado;
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en la base de datos usando el servicio ErrorLogService
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "SeleccionarEmpleado",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+
+            // Mostrar el mensaje de error al usuario
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+        }
+    }
+
+
+    bool mostrarModalEmpleado = false;
+
+    private void AbrirModalEmpleados()
+    {
+        mostrarModalEmpleado = true;
+    }
+
+    private void CerrarModalEmpleados()
+    {
+        mostrarModalEmpleado = false;
+        searchTermEmpleados = string.Empty;
+
+    }
+
+
+}

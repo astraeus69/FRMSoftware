@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>FRM Software</title>
+    <base href="/" />
+    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="FRMSoftwareWeb.styles.css" />
+    <link rel="icon" href="data:,">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Bootstrap JS (necesario para dropdowns) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+
+    <script src="js/ScrollPicker.js"></script>
+
+    <!-- JS Catálogos-->
+    <script src="js/Catalogos/Usuarios.js"></script>
+    <script src="js/Catalogos/Empleados.js"></script>
+    <script src="js/Catalogos/Cultivos.js"></script>
+    <script src="js/Catalogos/Viveros.js"></script>
+    <script src="js/Catalogos/Ranchos.js"></script>
+    <script src="js/Catalogos/Vehiculos.js"></script>
+
+    <!-- JS Movimientos-->
+    <script src="js/Movimientos/GestionLlaves.js"></script>
+    <script src="js/Movimientos/GestionPlantaciones.js"></script>
+    <script src="js/Movimientos/GestionReplantes.js"></script>
+    <script src="js/Movimientos/GestionPodas.js"></script>
+    <script src="js/Movimientos/GestionCosechas.js"></script>
+    <script src="js/Movimientos/RegistroJarras.js"></script>
+    <script src="js/Movimientos/GestionViajes.js"></script>
+    <script src="js/Movimientos/ClasificarProceso.js"></script>
+    <script src="js/Movimientos/RegistroVentas.js"></script>
+
+
+    <!-- JS Gráficos-->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="js/Reportes/ProduccionPorLlave.js"></script>
+    <script src="js/Reportes/ProcesoPorLlave.js"></script>
+
+    <script src="js/Reportes/PlantacionesCultivoVariedad.js"></script>
+    <script src="js/Reportes/ProduccionCultivoVariedad.js"></script>
+    <script src="js/Reportes/ProduccionPeriodo.js"></script>
+
+    <script src="js/Reportes/ProcesoCultivoVariedad.js"></script>
+    <script src="js/Reportes/ReplanteCultivoVariedad.js"></script>
+
+    <script src="js/Reportes/ViajesCajasPeriodo.js"></script>
+    <script src="js/Reportes/ViajesProcesoPeriodo.js"></script>
+    <script src="js/Reportes/ViajeEstatusCajas.js"></script>
+    <script src="js/Reportes/ViajeEstatusProceso.js"></script>
+
+    <script src="js/Reportes/VentasRegistro.js"></script>
+
+    <!-- JS Descargar reporte PDF -->
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- jsPDF AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+
+
+    <script src="js/auth.js"></script>
+
+</head>
+
+<body>
+
+    <div class="status-bar-safe-area"></div>
+
+    <div id="app">Loading...</div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <script src="_framework/blazor.webassembly.js"></script>
+
+</body>
+
+</html>

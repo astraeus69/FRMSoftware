@@ -1,0 +1,299 @@
+﻿@page "/Movimientos/GestionCosechasConsulta"
+@using FRMSoftware.Data
+@inject FRMSoftware.Services.Movimientos.GestionCosechasService cosechasService
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+@inject NavigationManager Navigation
+
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="margin-top:20px">
+        <h2 class="text-center fw-bold" style="margin-bottom: 20px">Consulta de cosechas</h2>
+
+        <div style="height: 140px">
+            <!-- Botones para seleccionar tipo de búsqueda -->
+            <div class="d-flex mb-3">
+                <div class="toggle-container">
+                    <div class="toggle-slider" style='left: @(busquedaGeneral ? "0%" : "50%")'></div>
+                    <button class="toggle-btn @(busquedaGeneral ? "active" : "")" @onclick="() => CambiarTipoBusqueda(true)">
+                        Búsqueda general
+                    </button>
+                    <button class="toggle-btn @(!busquedaGeneral ? "active" : "")" @onclick="() => CambiarTipoBusqueda(false)">
+                        Búsqueda por período
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenedor para búsqueda general (texto) -->
+            @if (busquedaGeneral)
+            {
+                <div class="row mb-3 align-items-center">
+                    <div class="col-auto">
+                        <input @bind="searchTermCosecha" placeholder="Buscar cosechas..." class="form-control" />
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn fixed-size-btn" @onclick="AplicarFiltroCosechas">Buscar</button>
+                    </div>
+                </div>
+            }
+
+            <!-- Contenedor para búsqueda por período (fechas) -->
+            @if (!busquedaGeneral)
+            {
+                <div class="row mb-3 align-items-center">
+                    <div class="col-auto">
+                        <label>Desde:</label>
+                        <InputDate class="form-control" @bind-Value="fechaInicio" />
+                    </div>
+                    <div class="col-auto">
+                        <label>Hasta:</label>
+                        <InputDate class="form-control" @bind-Value="fechaFin" />
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn fixed-size-btn" style="margin-top: 25px" @onclick="AplicarFiltroCosechas">Buscar</button>
+                    </div>
+                </div>
+            }
+        </div>
+
+
+        <!-- Contenedor de la tabla con scroll -->
+        <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+            <table class="table table-striped table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID Cosecha</th>
+                        <th>Fecha de cosecha</th>
+                        <th>Número de semana</th>
+
+                        <th>ID Producción</th>
+                        <th>Tipo de clamshell</th>
+                        <th>Cantidad de cajas</th>
+                        <th>Kilos de proceso</th>
+
+                        <th>ID Plantación</th>
+                        <th>Fecha de plantación</th>
+                        <th>Número de semana</th>
+                        <th>Estatus de plantación</th>
+
+                        <th>ID Cultivo</th>
+                        <th>Tipo de berry</th>
+                        <th>Variedad</th>
+
+                        <th>ID Rancho</th>
+                        <th>Nombre del rancho</th>
+                        <th>Número del rancho</th>
+
+                        <th>ID Llave</th>
+                        <th>Nombre de llave</th>
+                        <th>Superficie (HA)</th>
+                        <th>Superficie (Acres)</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in filteredCosechas)
+                    {
+                        <tr>
+                            <td>@item.IdCosecha</td>
+                            <td>@item.FechaCosecha.ToString("dd/MM/yyyy")</td>
+                            <td>@item.NumSemCosecha</td>
+
+                            <td>@item.IdProduccion</td>
+                            <td>@item.TipoCaja</td>
+                            <td>@item.CantidadCajas</td>
+                            <td>@item.KilosProceso</td>
+
+                            <td>@item.IdPlantacion</td>
+                            <td>@item.FechaPlantacion.ToString("dd/MM/yyyy")</td>
+                            <td>@item.NumSemPlantacion</td>
+                            <td>@item.EstatusPlantacion</td>
+
+                            <td>@item.IdCultivo</td>
+                            <td>@item.TipoBerry</td>
+                            <td>@item.Variedad</td>
+
+                            <td>@item.IdRancho</td>
+                            <td>@item.NombreRancho</td>
+                            <td>@item.NumeroRancho</td>
+
+                            <td>@item.IdLlave</td>
+                            <td>@item.NombreLlave</td>
+                            <td>@item.SuperficieHa</td>
+                            <td>@item.SuperficieAcres</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Botón de regreso -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+        <button class="btn fixed-size-btn mx-2" @onclick="RedirigirCosechas">Regresar</button>
+    </div>
+</div>
+
+@code {
+    private List<CosechasProduccionDto> cosechas = new();
+
+    // BÚSQUEDA INPUT
+    private string searchTermCosecha = string.Empty;  // Campo de búsqueda
+    private List<CosechasProduccionDto> filteredCosechas = new(); // Lista filtrada
+
+    private DateTime? fechaInicio;
+    private DateTime? fechaFin;
+
+    // MENSAJES
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarCosechas();
+    }
+
+    private async Task ConsultarCosechas()
+    {
+        try
+        {
+            cosechas = await cosechasService.GetCosechasProduccionAsync();
+
+            filteredCosechas = cosechas.OrderBy(c => c.IdCosecha).ToList(); // Inicializa  con la lista completa
+            StateHasChanged(); // Fuerza el refresco de la UI después de consultar
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en la base de datos usando el servicio ErrorLogService
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarCosechas",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+
+        }
+    }
+
+    private void AplicarFiltroCosechas()
+    {
+        filteredCosechas =
+            cosechas.Where(c =>
+
+                // Filtro de fechas
+                (!fechaInicio.HasValue || c.FechaCosecha.Date >= fechaInicio.Value.Date) &&
+                (!fechaFin.HasValue || c.FechaCosecha.Date <= fechaFin.Value.Date) &&
+
+                (string.IsNullOrEmpty(searchTermCosecha) ||
+                    c.IdCosecha.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.FechaCosecha.ToString("dd/MM/yyyy").Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.NumSemCosecha.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+
+                    c.TipoCaja.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.CantidadCajas.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.KilosProceso.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos de la Plantación
+                    c.IdPlantacion.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.FechaPlantacion.ToString("dd/MM/yyyy").Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.NumSemPlantacion.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.EstatusPlantacion.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos del Cultivo
+                    c.IdCultivo.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.TipoBerry.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.Variedad.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos de la Llave
+                    c.IdLlave.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.NombreLlave.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.SuperficieHa.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.SuperficieAcres.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.Disponibilidad.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos del Rancho
+                    c.IdRancho.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.NombreRancho.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                    c.NumeroRancho.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) 
+                )
+            ).ToList();
+    }
+
+    private bool busquedaGeneral = true; // true = búsqueda general, false = por período
+
+    private void CambiarTipoBusqueda(bool esGeneral)
+    {
+        busquedaGeneral = esGeneral;
+        // Limpiar filtros al cambiar de tipo
+        if (esGeneral)
+        {
+            fechaInicio = null;
+            fechaFin = null;
+        }
+        else
+        {
+            searchTermCosecha = string.Empty;
+        }
+    }
+
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    private void RedirigirCosechas()
+    {
+        Navigation.NavigateTo("/Movimientos/GestionCosechas");
+    }
+
+
+    private async Task DescargarPDF_GestionCosechas()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarPDF_GestionCosechas");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarPDF - GestionCosechas",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task DescargarExcel_GestionCosechas()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarExcel_GestionCosechas");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarExcel - GestionCosechas",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    [Inject] private IJSRuntime JS { get; set; }
+
+}

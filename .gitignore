@@ -1,0 +1,15 @@
+# Ignore build/output folders
+bin/
+obj/
+*.exe
+*.dll
+*.log
+*.tmp
+
+# Ignore node dependencies if your web project uses Node.js
+node_modules/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+

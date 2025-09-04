@@ -1,0 +1,526 @@
+﻿/*#if (SampleContent)*/
+html, body {
+    font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    padding-bottom: 80px; /* Ajusta el valor según el tamaño de los botones */
+    overflow-y: auto; /* Habilita el scroll cuando el contenido desborde */
+}
+
+/* BOTONES */
+.buttons {
+    padding-top: 10px;
+}
+
+/* Estilo por defecto con margen para el navbar */
+.botones-responsive {
+    width: calc(100% - 250px);
+}
+
+/* Cuando la pantalla es menor a 700px, ocupa todo el ancho */
+@media (max-width: 700px) {
+    .botones-responsive {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+}
+
+    .btn {
+        color: #fff;
+        font-weight: bold;
+        background-color: #53A048 !important;
+        padding: 8px 10px;
+        font-size: 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+        margin-bottom: 10px;
+    }
+        /* Efecto al pasar el mouse */
+        .btn:hover {
+            background-color: #006632 !important;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2) !important;
+            transform: translateY(-1px);
+            color: white;
+        }
+        /* Efecto al hacer clic */
+        button.btn:active {
+            background-color: #3B7A34 !important;
+            border-color: #3B7A34 !important;
+            transform: translateY(0.5px);
+        }
+        /* Accesibilidad: Enfoque con teclado */
+        button.btn:focus {
+            outline: 1px #53A048 !important;
+            border-color: #53A048 !important;
+            box-shadow: 0px 0px 5px 3px rgba(83, 160, 72, 0.5) !important;
+        }
+
+        /* Botones principales */
+        .fixed-size-btn {
+            font-size:14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+            width: 85px;
+                }
+        /* Botones de selección */
+        .btn-seleccion {
+            width: 150px !important;
+            font-size: 14px;
+            height: 30px;
+        }
+
+        .col-auto {
+            position: relative;
+        }
+
+    a, .btn-link {
+        color: #006bb7;
+    }
+
+
+    .btn-close {
+        background-color: white;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+        opacity: 1;
+        border-color: none;
+    }
+        .btn-close:hover {
+            background-color: #D50000;
+            opacity: 1;
+            transform: translateY(-1px);
+        }
+        
+    button.btn-red {
+        background-color: #FF0000 !important;
+        border-color: #FF0000;
+    }
+
+        button.btn-red:hover {
+            background-color: #D50000 !important;
+            box-shadow: 0px 0px 5px 3px rgba(213, 0, 0, 0.6);
+        }
+
+        button.btn-red:active,
+        button.btn-red:focus {
+            border-color: #D50000 !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+    button.editar {
+        font-weight: bold;
+        padding: 4px 8px !important;
+        font-size: 12px !important;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-bottom: 0px !important;
+    }
+
+        button.btn-sm {
+            width: 85px; /* Ajusta este valor según lo necesites */
+        }
+
+
+.btn-abrir-carpeta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 150px;
+}
+
+
+/* TABLAS */
+th:last-child,
+td:last-child {
+    width: 1px; /* Hace que la columna solo ocupe el espacio necesario */
+    text-align: center; /* Centra el contenido */
+}
+
+.error-logs-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+    .error-logs-table th,
+    .error-logs-table td {
+        word-wrap: break-word;
+        white-space: normal;
+    }
+
+    /* FORMULARIOS */
+    .content {
+        padding: 0 !important;
+    }
+
+    /* Cambiar el color del borde cuando el input está enfocado */
+    input:focus,
+    textarea:focus,
+    select:focus {
+        border-color: #53A048 !important; /* Aquí puedes usar el color que desees */
+        box-shadow: 0 0 0 0.2rem rgba(83, 160, 72, 0.25) !important; /* Cambiar el color de la sombra*/
+    }
+
+    /* Cambiar el borde a un color cuando hay texto */
+    input:not(:placeholder-shown),
+    textarea:not(:placeholder-shown),
+    select:not(:placeholder-shown) {
+        border-color: #CED4DA !important; /* El color verde se aplica cuando hay texto */
+    }
+    /* Establece el color del borde original cuando no hay texto */
+    input:placeholder-shown,
+    textarea:placeholder-shown,
+    select:placeholder-shown {
+        border-color: #CED4DA !important; /* Establece el color por defecto cuando no hay texto */
+    }
+    /* Estilos para el select */
+    select.form-control {
+        border-color: #53A048; /* Color del borde */
+        transition: background-color 0.3s, border-color 0.3s;
+        cursor: pointer;
+    }
+
+        /* Estilo para las opciones */
+        select.form-control option {
+            background-color: #ffffff; /* Color de fondo de las opciones */
+            color: #000000; /* Color del texto de las opciones */
+        }
+
+
+
+    /*#endif*/
+    h1:focus {
+        outline: none;
+    }
+
+    .valid.modified:not([type=checkbox]) {
+        outline: 1px solid #26b050;
+    }
+
+    .invalid {
+        outline: 1px solid #e50000;
+    }
+
+    .validation-message {
+        color: #e50000;
+    }
+
+    #blazor-error-ui {
+        background: lightyellow;
+        bottom: 0;
+        box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+        display: none;
+        left: 0;
+        padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+        position: fixed;
+        width: 100%;
+        z-index: 1000;
+    }
+
+        #blazor-error-ui .dismiss {
+            cursor: pointer;
+            position: absolute;
+            right: 0.75rem;
+            top: 0.5rem;
+        }
+
+    .blazor-error-boundary {
+        background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
+        padding: 1rem 1rem 1rem 3.7rem;
+        color: white;
+    }
+
+        .blazor-error-boundary::after {
+            content: "An error has occurred."
+        }
+
+    .error-message {
+        font-size: 14px;
+        color: red;
+    }
+
+    .status-bar-safe-area {
+        display: none;
+    }
+
+    @supports (-webkit-touch-callout: none) {
+        .status-bar-safe-area {
+            display: flex;
+            position: sticky;
+            top: 0;
+            height: env(safe-area-inset-top);
+            background-color: #f7f7f7;
+            width: 100%;
+            z-index: 1;
+        }
+
+        .flex-column, .navbar-brand {
+            padding-left: env(safe-area-inset-left);
+        }
+    }
+
+/* CARDS */
+/* Aplica solo en pantallas grandes hacia arriba (1200px o más) */
+
+@media (min-width: 992px) {
+
+    /* Cartas de llaves */
+    .GllavesCardSize {
+        min-height: 680px; 
+    }
+
+    
+    /* Cartas de plantaciones */
+    .same-height-Plantaciones-1 {
+        min-height: 490px;
+        position: relative;
+    }
+    .same-height-Plantaciones-2 {
+        min-height: 490px; 
+        position: relative;
+    }
+
+
+
+    /* Cartas de replante */
+    .same-height-Replante {
+        min-height: 500px;
+        position: relative;
+    }
+    .margenReplantesVivero {
+        margin-top:86px!important;
+    }
+    .margenReplantesLlaves {
+        margin-top:136px!important;
+    }
+
+
+
+
+    /* Cartas de poda */
+    .same-height-Poda-1 {
+        min-height: 392px; 
+        position: relative;
+    }
+    .margenPodasLlave {
+        margin-top: 38px !important;
+    }
+
+
+
+
+    /* Cartas de cosecha */
+    .same-height-Cosecha-1 {
+        min-height: 162px; 
+        position: relative;
+    }
+    .same-height-Cosecha-2 {
+        min-height: 452px; 
+        position: relative;
+    }
+    .same-height-CosProd {
+        min-height: 452px;
+        position: relative;
+    }
+    .same-height-Cosecha03 {
+        min-height: 214px;
+        position: relative;
+    }
+
+
+
+    /* Cartas de clasificación de proceso */
+    .same-height-Proceso-Col01 {
+        min-height: 268px;
+    }
+    .same-height-Proceso-Col02 {
+        min-height: 442px; 
+    }
+    .margenProduccionProceso {
+        margin-top:40px!important;
+    }
+
+    .same-height-Proceso-Col03 {
+        min-height: 442px; 
+    }
+    .same-height-Proceso-Col04 {
+        min-height: 442px; 
+    }
+    .margenLlaveProceso {
+        margin-top: 40px!important;
+    }
+
+
+    /* Cartas de viajes*/
+    .same-height-Viajes {
+        min-height: 340px; 
+    }
+    .margenProduccionViajes {
+        margin-top: 62px !important;
+    }
+
+
+    /* Cartas de personal cosecha */
+    .same-height-PC-1 {
+        min-height: 484px;
+    }
+    .margenCultivoPC {
+        margin-top: 76px !important;
+    }
+
+    .same-height-PC-2 {
+        min-height: 136px;
+    }
+    .same-height-PC-3 {
+        min-height: 236px;
+    }
+
+
+    /* Cartas de ventas */
+    .same-height-Ventas-1 {
+        min-height: 187px;
+    }
+    .same-height-Ventas-2 {
+        min-height: 610px;
+    }
+    .same-height-Ventas-3 {
+        min-height: 610px;
+    }
+}
+
+
+
+/* MODAL ESTADOS */
+/* Estilo para el contenedor del selector de estados */
+.estado-picker {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Estilo para cada ítem del estado */
+.estado-item {
+    padding: 10px;
+    cursor: pointer;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+    /* Resaltar el estado seleccionado */
+    .estado-item:hover {
+        background-color: #f0f0f0;
+    }
+
+/* Estilo para el input readonly (no editable pero visible habilitado) */
+.readonly-input[readonly] {
+    background-color: white; /* Fondo blanco como si fuera un campo habilitado */
+    border-color: #ced4da; /* Borde del color normal */
+    cursor: pointer; /* Indica que es clickeable, pero no editable */
+}
+
+/* Estilo para el input disabled (totalmente deshabilitado) */
+.form-control:disabled,
+.readonly-input:disabled {
+    background-color: #e9ecef; /* Fondo gris para indicar que está deshabilitado */
+    border-color: #ced4da; /* Borde gris */
+    cursor: not-allowed; /* Cursor bloqueado para indicar que no se puede interactuar */
+}
+
+
+
+/* SELECCIONAR POR FILA EN MODAL */
+.fila-seleccionable {
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+    .fila-seleccionable:hover {
+        background-color: rgba(83, 160, 72, 0.2);
+    }
+
+
+/* TOGGLER DE CONSULTA (VIAJES) */
+.toggle-container {
+    position: relative;
+    display: flex;
+    background: #ddd;
+    border-radius: 25px;
+    width: 400px;
+    height: 40px;
+    overflow: hidden;
+    position: relative;
+}
+
+.toggle-btn {
+    flex: 1;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background: transparent;
+    color: #333;
+    position: relative;
+    z-index: 2; /* Mantiene el texto por encima del slider */
+    transition: color 0.3s ease-in-out;
+}
+
+    /* Aplica color blanco al botón sobre el que está el slider */
+    .toggle-btn.active {
+        color: white !important;
+    }
+
+/* Slider animado */
+.toggle-slider {
+    position: absolute;
+    top: 3px;
+    left: 0;
+    width: 50%;
+    height: calc(100% - 6px);
+    background: #53A048;
+    border-radius: 25px;
+    transition: left 0.3s ease-in-out;
+    z-index: 1;
+}
+
+.toggle-btn:hover {
+    color: black;
+}
+
+.toggle-btn:focus {
+    outline: none;
+}
+
+/* Modal inicio de sesión*/
+
+.modal-backdrop-Login {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5); /* Fondo semi-transparente */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999; /* Mantener el modal arriba de otros elementos */
+}
+
+.modal-content-Login {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.25);
+    width: 100%;
+    max-width: 400px; /* Limitar el ancho */
+    margin: 1rem;
+}
+

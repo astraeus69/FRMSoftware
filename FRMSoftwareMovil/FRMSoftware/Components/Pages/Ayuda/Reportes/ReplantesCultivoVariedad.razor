@@ -1,0 +1,43 @@
+﻿@page "/Ayuda/Reportes/ReporteReplantesPorCultivoVariedad"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4 text-center"><i class="bi bi-bar-chart-line"></i> Reporte de Replantes por Cultivo y Variedad</h2>
+
+    <p>Este reporte muestra los replantes realizados en las diferentes plantaciones, agrupados por tipo de cultivo (berry) y variedad. Permite visualizar el total de replantes efectuados por variedad, así como el detalle de cada registro relacionado con plantaciones, viveros, ranchos y llaves.</p>
+
+    <h4 class="fw-bold mt-4">Exportación</h4>
+    <ul>
+        <li><strong>Descargar PDF:</strong> Genera una versión imprimible del reporte con su formato y estilo.</li>
+        <li><strong>Descargar Excel:</strong> Exporta los datos a un archivo editable para análisis adicional o control interno.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Tabla de Replantes</h4>
+    <p>La tabla se encuentra agrupada por tipo de cultivo. Dentro de cada grupo, los registros están ordenados por variedad. Incluye información detallada sobre cada replante.</p>
+
+    <ul>
+        <li><strong>Replante:</strong> ID, cantidad, fecha y número de semana</li>
+        <li><strong>Plantación:</strong> ID, fecha, número de semana, estatus</li>
+        <li><strong>Cultivo:</strong> ID, tipo de berry y variedad</li>
+        <li><strong>Vivero:</strong> ID, nombre y código</li>
+        <li><strong>Rancho:</strong> ID, nombre y número</li>
+        <li><strong>Llave:</strong> ID, nombre, superficie en hectáreas y acres</li>
+        <li><strong>Total de replantes:</strong> Se calcula por grupo de cultivo</li>
+    </ul>
+
+    <div class="my-4">
+        <img src="images/Ayuda/Reportes/ReplantesCultivoVariedad01.png" alt="Tabla de replantes por cultivo y variedad" class="img-fluid rounded shadow-sm" style="border: 1px solid #ccc;" />
+        <p class="text-muted mt-2">Vista de la tabla agrupada por cultivo con totales de replantes por variedad. También se presenta una gráfica por cultivo que representa visualmente la cantidad de replantes realizados por variedad.</p>
+    </div>
+
+    <ul>
+        <li>Permite identificar qué variedades requieren más replante.</li>
+        <li>Útil para evaluar el comportamiento por tipo de berry.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Recomendaciones de uso</h4>
+    <ul>
+        <li>Monitorea el desempeño de las plantaciones a través del número de replantes por variedad.</li>
+        <li>Identifica oportunidades de mejora en el manejo de viveros y plantación inicial.</li>
+        <li>Exporta los datos para comparativas históricas o análisis técnico en campo.</li>
+    </ul>
+</div>

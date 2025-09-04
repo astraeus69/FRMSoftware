@@ -1,0 +1,50 @@
+﻿@page "/Ayuda/Reportes/ReporteProcesoCultivoVariedad"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4 text-center"><i class="bi bi-bar-chart-steps"></i> Reporte de Proceso por Cultivo y Variedad</h2>
+
+    <p>Este reporte muestra el total de kilos procesados agrupados por tipo de cultivo (berry) y variedad. Ofrece una vista detallada de cada cosecha vinculada a su producción, plantación, rancho y llave, permitiendo identificar el rendimiento del proceso agrícola por variedad.</p>
+
+    <h4 class="fw-bold mt-4">Exportación</h4>
+    <ul>
+        <li><strong>Descargar PDF:</strong> Genera una versión imprimible del reporte para su revisión o presentación.</li>
+        <li><strong>Descargar Excel:</strong> Exporta los datos procesados para un análisis detallado en hojas de cálculo.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Tabla de Procesos Agrícolas</h4>
+    <p>La tabla presenta los datos agrupados por tipo de cultivo. Dentro de cada grupo, se ordenan los registros por variedad.</p>
+
+    <ul>
+        <li><strong>Cosecha:</strong> ID, fecha y número de semana</li>
+        <li><strong>Producción:</strong> ID y kilos procesados</li>
+        <li><strong>Plantación:</strong> ID, fecha, número de semana, estatus</li>
+        <li><strong>Cultivo:</strong> ID, tipo de berry y variedad</li>
+        <li><strong>Rancho:</strong> ID, nombre y número</li>
+        <li><strong>Llave:</strong> ID, nombre y superficie (hectáreas y acres)</li>
+        <li><strong>Total de proceso:</strong> Se calcula por grupo en kilogramos</li>
+    </ul>
+
+    <div class="my-4">
+        <img src="images/Ayuda/Reportes/ProcesoCultivoVariedad01.png" alt="Tabla de proceso por cultivo y variedad" class="img-fluid rounded shadow-sm" style="border: 1px solid #ccc;" />
+        <p class="text-muted mt-2">Vista de la tabla agrupada por cultivo con totales de kilos procesados.</p>
+    </div>
+
+    <h4 class="fw-bold mt-4">Gráficas de Variedades</h4>
+    <p>Después de la tabla se presentan gráficas que muestran los kilos procesados por variedad dentro de cada tipo de cultivo.</p>
+
+    <ul>
+        <li>Facilitan la comparación visual del rendimiento por variedad.</li>
+        <li>Permiten detectar variedades con mayor o menor volumen de procesamiento.</li>
+    </ul>
+
+    <div class="my-4 d-flex justify-content-center">
+        <img src="images/Ayuda/Reportes/ProcesoCultivoVariedad02.png" alt="Gráfica de proceso por variedad" class="img-fluid rounded shadow-sm" style="max-width: 800px; border: 1px solid #ccc;" />
+    </div>
+
+    <h4 class="fw-bold mt-4">Recomendaciones de uso</h4>
+    <ul>
+        <li>Utiliza este reporte para evaluar el desempeño por variedad en el proceso agrícola.</li>
+        <li>Exporta los resultados para hacer presentaciones o reportes técnicos.</li>
+        <li>Complementa este reporte con otros que muestren datos de producción o cosecha.</li>
+    </ul>
+</div>

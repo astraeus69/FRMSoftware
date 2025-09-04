@@ -1,0 +1,108 @@
+﻿@inject FRMSoftware.Data.UserSession UserSession
+
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">FRM Software</a>
+    </div>
+</div>
+
+<!-- Menú hamburguesa para pantallas pequeñas -->
+<input type="checkbox" id="menu-toggle" class="navbar-toggler" title="Navigation menu" />
+
+<!-- Contenedor del menú -->
+<div class="nav-scrollable">
+    <nav class="flex-column">
+
+        <!-- HOME -->
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+
+        <!-- PERFIL -->
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/Perfil">
+                <span class="bi bi-person-circle" aria-hidden="true"></span> Perfil
+            </NavLink>
+        </div>
+
+        <!-- CATÁLOGOS -->
+        <div class="nav-item px-3 dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="bi bi-journal-text" aria-hidden="true"></span> Catálogos
+            </a>
+            <ul class="dropdown-menu">
+                @if (UserSession.Rol == "Admin")
+                {
+                    <li><NavLink class="dropdown-item" href="Catalogos/Usuarios">Usuarios</NavLink></li>
+                }
+                <li><NavLink class="dropdown-item" href="Catalogos/Empleados">Empleados</NavLink></li>
+                <li><NavLink class="dropdown-item" href="Catalogos/Cultivos">Cultivos</NavLink></li>
+                <li><NavLink class="dropdown-item" href="Catalogos/Viveros">Viveros</NavLink></li>
+                <li><NavLink class="dropdown-item" href="Catalogos/Ranchos">Ranchos</NavLink></li>
+                <li><NavLink class="dropdown-item" href="Catalogos/Vehiculos">Vehículos</NavLink></li>
+            </ul>
+        </div>
+
+        <!-- MOVIMIENTOS -->
+        <div class="nav-item px-3 dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="bi bi-stack" aria-hidden="true"></span> Movimientos
+            </a>
+            <ul class="dropdown-menu">
+                <li><NavLink class="dropdown-item" href="Movimientos/GestionLlaves">Gestión de llaves</NavLink></li>
+                <li><NavLink class="dropdown-item" href="Movimientos/GestionPlantaciones">Gestión de plantaciones</NavLink></li>
+                <li><NavLink class="dropdown-item" href="Movimientos/GestionReplantes">Gestión de replantes</NavLink></li>
+                <li><NavLink class="dropdown-item" href="Movimientos/GestionPodas">Gestión de podas</NavLink></li>
+                <li><NavLink class="dropdown-item" href="Movimientos/GestionCosechas">Gestión de cosechas</NavLink></li>
+                <li><NavLink class="dropdown-item" href="Movimientos/PersonalCosecha">Registro de jarras</NavLink></li>
+                <li><NavLink class="dropdown-item" href="Movimientos/GestionViajes">Gestión de viajes</NavLink></li>
+                <li><NavLink class="dropdown-item" href="Movimientos/ClasificarProceso">Clasificar proceso</NavLink></li>
+                <li><NavLink class="dropdown-item" href="Movimientos/RegistroVentas">Registro de ventas</NavLink></li>
+            </ul>
+        </div>
+
+        @* UTILIDADES: Solo visible para rol "Admin" *@
+        @if (UserSession.Rol == "Admin")
+        {
+            <div class="nav-item px-3 dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="bi bi-tools" aria-hidden="true"></span> Utilidades
+                </a>
+                <ul class="dropdown-menu">
+                    <li><NavLink class="dropdown-item" href="Utilidades/Mantenimiento">Bitácora de errores</NavLink></li>
+                    <li><NavLink class="dropdown-item" href="Utilidades/CopiaSeguridad">Copia de seguridad</NavLink></li>
+                    <li><NavLink class="dropdown-item" href="Utilidades/Restauracion">Restaurar base de datos</NavLink></li>
+                    <li><NavLink class="dropdown-item" href="Utilidades/Historicos">Históricos</NavLink></li>
+                </ul>
+            </div>
+        }
+
+        @* REPORTES: Visible para roles "Admin" y "Consultor" *@
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Consultor")
+        {
+            <div class="nav-item px-3">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="bi bi-graph-up-arrow" aria-hidden="true"></span> Reportes
+                </a>
+                <ul class="dropdown-menu">
+                    <li><NavLink class="dropdown-item" href="Reportes/ReporteProduccionPorLlave">Producción por llave</NavLink></li>
+                    <li><NavLink class="dropdown-item" href="Reportes/ReporteProcesoPorLlave">Proceso por llave</NavLink></li>
+                    <li><NavLink class="dropdown-item" href="Reportes/ReportePlantacionesPorCultivoVariedad">Plantaciones por cultivo y variedad</NavLink></li>
+                    <li><NavLink class="dropdown-item" href="Reportes/ReporteProduccionCultivoVariedad">Producción por cultivo y variedad</NavLink></li>
+                    <li><NavLink class="dropdown-item" href="Reportes/ReporteProduccionPeriodo">Producción por periodo</NavLink></li>
+                    <li><NavLink class="dropdown-item" href="Reportes/ReporteProcesoCultivoVariedad">Proceso por cultivo y variedad</NavLink></li>
+                    <li><NavLink class="dropdown-item" href="Reportes/ReporteReplantesPorCultivoVariedad">Replantes por cultivo y variedad</NavLink></li>
+                    <li><NavLink class="dropdown-item" href="Reportes/ReporteViajesCajasPeriodo">Reporte de viajes de cajas por periodo</NavLink></li>
+                    <li><NavLink class="dropdown-item" href="Reportes/ReporteViajesProcesoPeriodo">Reporte de viajes de proceso por periodo</NavLink></li>
+                    <li><NavLink class="dropdown-item" href="Reportes/ReporteViajeEstatusCajas">Reporte de viajes de cajas por estatus</NavLink></li>
+                    <li><NavLink class="dropdown-item" href="Reportes/ReporteViajeEstatusProceso">Reporte de viajes de proceso por estatus</NavLink></li>
+                    <li><NavLink class="dropdown-item" href="Reportes/ReporteVentasPeriodo">Reporte de ventas por periodo</NavLink></li>
+                </ul>
+            </div>
+        }
+
+    </nav>
+</div>

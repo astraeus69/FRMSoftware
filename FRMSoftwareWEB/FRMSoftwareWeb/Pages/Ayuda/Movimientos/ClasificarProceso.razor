@@ -1,0 +1,72 @@
+﻿@page "/Ayuda/Movimientos/ClasificarProceso"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4"><i class="bi bi-bar-chart-steps"></i> Ayuda: Clasificar Proceso</h2>
+
+    <p>
+        Esta pantalla permite clasificar los kilos de berries cosechados en distintas calidades (A, B, C y Rechazo) para cada viaje registrado.
+        El formulario se activa seleccionando un <strong>viaje</strong> mediante el botón <strong>Seleccionar</strong>, lo cual carga automáticamente los datos asociados:
+        <strong>cosecha</strong>, <strong>producción</strong>, <strong>cultivo</strong>, <strong>rancho</strong> y <strong>llave</strong>.
+        Todos estos campos están bloqueados y solo se usan para visualizar la información del viaje.
+        Para entender los botones generales (<strong>Nuevo</strong>, <strong>Guardar</strong>, <strong>Modificar</strong>, <strong>Cancelar</strong> y <strong>Consultar</strong>),
+        visita la sección
+        <a href="/Ayuda/AyudaGeneral/BotonesGenerales" class="text-decoration-underline">Botones Generales</a>.
+    </p>
+
+    <p>
+        Es importante que la suma de los kilos clasificados (A, B, C y Rechazo) coincida con los kilos de proceso totales del viaje,
+        de lo contrario el sistema no permitirá guardar el registro.
+        Para aprender a buscar registros por fechas, revisa
+        <a href="/Ayuda/AyudaGeneral/BusquedaPeriodo" class="text-decoration-underline">Búsqueda por Periodo</a>.
+    </p>
+
+    <h4 class="fw-bold mt-4">Descripción rápida</h4>
+    <ul>
+        <li><strong>Seleccionar viaje:</strong> Abre un modal para elegir un viaje pendiente de clasificación. Al seleccionarlo, se cargan los datos del viaje, cosecha, producción, cultivo, rancho y llave.</li>
+        <li><strong>Clasificación (Clase A/B/C y Rechazo):</strong> Se ingresan los kilos correspondientes a cada categoría. Todos los campos son obligatorios y deben sumar el total de kilos de proceso.</li>
+        <li><strong>Guardar:</strong> Valida y guarda los datos clasificados. Si hay errores en la suma, el sistema muestra mensajes de validación.</li>
+        <li><strong>Modificar:</strong> Permite cargar un registro existente para corregir o actualizar la clasificación.</li>
+        <li><strong>Cancelar:</strong> Limpia el formulario y restaura el estado inicial.</li>
+        <li><strong>Consultar:</strong> Abre una vista para revisar registros previos, con opciones de filtrado y exportación en <strong>PDF</strong> o <strong>Excel</strong>.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-5">Ejemplos visuales</h4>
+
+    <h5 class="mt-4">Estado: Selección de viaje</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/ClasificarProceso01.png" alt="Viaje seleccionado"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Al hacer clic en <strong>Seleccionar</strong>, se muestra un modal con los viajes disponibles. Una vez seleccionado, se cargan todos los datos relacionados.
+        </p>
+    </div>
+
+    <h5 class="mt-4">Estado: Clasificación de proceso</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/ClasificarProceso02.png" alt="Clasificación de proceso"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Con el viaje cargado, se habilitan los campos para capturar los kilos clasificados. Recuerda que la suma de todas las clases debe coincidir con los kilos del viaje.
+        </p>
+    </div>
+
+    <h5 class="mt-4">3. Estado: Modificación de registro existente</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/ClasificarProceso03.png" alt="Modificar clasificación"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Al hacer clic en <strong>Modificar</strong>, puedes cargar una clasificación previamente registrada para editar los valores. Recuerda que al finalizar debes guardar nuevamente los datos modificados.
+        </p>
+    </div>
+
+    <h5 class="mt-4">4. Estado: Consulta de clasificaciones</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/ClasificarProceso04.png" alt="Consulta de clasificaciones"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            En modo consulta puedes revisar los registros existentes. Puedes aplicar filtros por fecha, cultivo o variedad, y exportar la información en distintos formatos.
+        </p>
+    </div></div>
+
+@code {
+}

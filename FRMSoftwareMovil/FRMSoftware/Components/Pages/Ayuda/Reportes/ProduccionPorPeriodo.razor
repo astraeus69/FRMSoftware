@@ -1,0 +1,56 @@
+﻿@page "/Ayuda/Reportes/ReporteProduccionPeriodo"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4 text-center"><i class="bi bi-calendar-range"></i> Reporte de Producción por Periodo</h2>
+
+    <p>Este reporte permite visualizar la producción agrícola durante un periodo de tiempo específico. Los datos están organizados por tipo de cultivo e incluyen información detallada sobre cosechas, producción, plantaciones y ubicación, acompañados de gráficas de análisis por variedad.</p>
+
+    <h4 class="fw-bold mt-4">Filtros del Reporte</h4>
+    <ul>
+        <li><strong>Fecha de inicio y fin:</strong> Permiten delimitar el periodo de análisis.</li>
+        <li><strong>Botón "Filtrar":</strong> Aplica los filtros seleccionados para actualizar los datos mostrados.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Exportación</h4>
+    <ul>
+        <li><strong>Descargar PDF:</strong> Genera una versión del reporte para impresión o revisión offline.</li>
+        <li><strong>Descargar Excel:</strong> Exporta los datos en formato de hoja de cálculo para análisis adicional.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Tabla de Producción</h4>
+    <p>La tabla muestra la información agrupada por tipo de cultivo (berry), ordenada por variedad dentro de cada grupo. Se incluye información completa de cada registro de cosecha.</p>
+
+    <ul>
+        <li><strong>Cosecha:</strong> ID, fecha y número de semana</li>
+        <li><strong>Producción:</strong> ID, tipo de clamshell, cantidad de cajas y kilos procesados</li>
+        <li><strong>Plantación:</strong> ID, fecha, semana y estatus</li>
+        <li><strong>Cultivo:</strong> ID, tipo de berry, variedad</li>
+        <li><strong>Rancho:</strong> ID, nombre, número</li>
+        <li><strong>Llave:</strong> ID, nombre, superficie (hectáreas y acres)</li>
+        <li><strong>Total de cajas:</strong> Se muestra al final de cada grupo</li>
+    </ul>
+
+    <div class="my-4">
+        <img src="images/Ayuda/Reportes/ProduccionPorPeriodo01.png" alt="Tabla de producción por periodo" class="img-fluid rounded shadow-sm" style="border: 1px solid #ccc;" />
+        <p class="text-muted mt-2">Tabla de producción agrupada por tipo de cultivo dentro del periodo seleccionado, incluyendo totales de cajas.</p>
+    </div>
+
+    <h4 class="fw-bold mt-4">Gráficas de Variedades</h4>
+    <p>Debajo de la tabla se genera una gráfica para cada cultivo incluido en el periodo seleccionado, mostrando la producción por variedad.</p>
+
+    <ul>
+        <li>Permite identificar rápidamente qué variedades fueron más productivas.</li>
+        <li>Se actualizan con base en las fechas filtradas.</li>
+    </ul>
+
+    <div class="my-4 d-flex justify-content-center">
+        <img src="images/Ayuda/Reportes/ProduccionPorPeriodo02.png" alt="Gráfica de cajas por variedad" class="img-fluid rounded shadow-sm" style="max-width: 800px; border: 1px solid #ccc;" />
+    </div>
+
+    <h4 class="fw-bold mt-4">Recomendaciones de uso</h4>
+    <ul>
+        <li>Usa este reporte para comparar la producción entre semanas o meses.</li>
+        <li>Exporta los resultados para presentar en juntas de seguimiento o revisión técnica.</li>
+        <li>Combínalo con otros reportes para tener una visión integral del rendimiento agrícola.</li>
+    </ul>
+</div>

@@ -1,0 +1,369 @@
+﻿@page "/Reportes/ReporteViajesCajasPeriodo"
+@using FRMSoftware.Data
+@inject FRMSoftware.Services.Movimientos.GestionViajesService viajesService
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+<div class="container">
+    <!-- Encabezado -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <img src="images/LogoFRM.png" alt="Logo FRM" style="height: 80px;" />
+        <div class="ms-3" style="flex: 1;">
+            <div class="fw-bold fs-5">Frutillos Rojos de México S. de P. R. de R. L.</div>
+            <div class="text-muted fs-6">Calle Zapotlán 193, Lomas de San Cayetano, 49040, Ciudad Guzmán, Jalisco, México</div>
+        </div>
+        <span class="fs-5 fw-semibold">@DateTime.Now.ToString("dd/MM/yyyy")</span>
+    </div>
+
+    <h2 class="text-center fw-bold mb-4">Reporte de viajes de cajas por periodo</h2>
+
+    <!-- Filtros -->
+    <div class="d-flex justify-content-start gap-2 mb-3">
+        <input type="date" class="form-control" @bind="FechaInicio" />
+        <input type="date" class="form-control" @bind="FechaFin" />
+        <button class="btn" @onclick="FiltrarDatos">Filtrar</button>
+    </div>
+
+    <!-- Botones de exportación -->
+    <div class="d-flex justify-content-end gap-2 mb-3">
+        <button class="btn" @onclick="DescargarPDF">Descargar PDF</button>
+        <button class="btn" @onclick="DescargarExcel">Descargar Excel</button>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+        <table class="table table-striped table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID Viaje</th>
+                    <th>Fecha de salida</th>
+                    <th>Número de semana</th>
+                    <th>Estado de aprobación</th>
+
+                    @if (tablaActual != 2)
+                    {
+                        <th>ID Tarima</th>
+                        <th>Cantidad de cajas</th>
+                        <th>Licencia</th>
+                    }
+                    @if (tablaActual != 1)
+                    {
+                        <th>Kilos proceso</th>
+                    }
+
+                    <th>ID Cosecha</th>
+                    <th>Fecha de cosecha</th>
+                    <th>Número de semana</th>
+
+                    <th>ID Producción</th>
+                    <th>Tipo de clamshell</th>
+                    <th>Cantidad de cajas</th>
+                    <th>Kilos de proceso</th>
+
+                    <th>ID Cultivo</th>
+                    <th>Tipo de berry</th>
+                    <th>Variedad</th>
+
+                    <th>ID Rancho</th>
+                    <th>Nombre del rancho</th>
+                    <th>Número del rancho</th>
+
+                    <th>ID Empleado</th>
+                    <th>Nombre del empleado</th>
+                    <th>Teléfono</th>
+
+                    <th>ID Vehículo</th>
+                    <th>Placas</th>
+                    <th>Modelo</th>
+                    <th>Marca</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var grupo in filteredViajes.GroupBy(v => new { v.IdViaje, v.IdProduccion }))
+                {
+                    var primeraTarima = grupo.FirstOrDefault(v => v.IdTarima != null);
+                    bool esPrimeraFila = true;
+
+                    @foreach (var item in grupo)
+                    {
+                        <tr>
+                            @if (tablaActual != 2)
+                            {
+                                <!-- Solo mostramos ID Viaje y Fecha Salida en la primera fila -->
+                                @if (esPrimeraFila)
+                                {
+                                    <td rowspan="@grupo.Count()">@item.IdViaje</td>
+                                    <td rowspan="@grupo.Count()">@item.FechaSalida.ToString("dd/MM/yyyy")</td>
+                                    <td rowspan="@grupo.Count()">@item.NumSemViaje</td>
+                                    <td rowspan="@grupo.Count()">@item.EstadoAprobacion</td>
+                                }
+
+                                <!-- Mostrar solo en la primera fila si hay tarimas -->
+                                @if (esPrimeraFila && primeraTarima != null)
+                                {
+                                    <td>@primeraTarima.IdTarima</td>
+                                    <td>@primeraTarima.CantidadCajasViaje</td>
+                                    <td>@primeraTarima.Licencia</td>
+                                }
+                                else if (!esPrimeraFila)
+                                {
+                                    <td>@item.IdTarima</td>
+                                    <td>@item.CantidadCajasViaje</td>
+                                    <td>@item.Licencia</td>
+                                }
+
+                            }
+
+                            <!-- Datos generales del viaje, solo en la primera fila -->
+                            @if (esPrimeraFila)
+                            {
+
+                                if (tablaActual != 1)
+                                {
+                                    <td rowspan="@grupo.Count()">@item.IdViaje</td>
+                                    <td rowspan="@grupo.Count()">@item.FechaSalida.ToString("dd/MM/yyyy")</td>
+                                    <td rowspan="@grupo.Count()">@item.NumSemViaje</td>
+                                    <td rowspan="@grupo.Count()">@item.EstadoAprobacion</td>
+                                    <td>@item.KilosProcesoViaje</td>
+
+                                }
+
+                                <td rowspan="@grupo.Count()">@item.IdCosecha</td>
+                                <td rowspan="@grupo.Count()">@item.FechaCosecha.ToString("dd/MM/yyyy")</td>
+                                <td rowspan="@grupo.Count()">@item.NumSemCosecha</td>
+
+                                <td rowspan="@grupo.Count()">@item.IdProduccion</td>
+                                <td rowspan="@grupo.Count()">@item.TipoCaja</td>
+                                <td rowspan="@grupo.Count()">@item.CantidadCajas</td>
+                                <td rowspan="@grupo.Count()">@item.KilosProceso</td>
+
+                                <td rowspan="@grupo.Count()">@item.IdCultivo</td>
+                                <td rowspan="@grupo.Count()">@item.TipoBerry</td>
+                                <td rowspan="@grupo.Count()">@item.Variedad</td>
+
+                                <td rowspan="@grupo.Count()">@item.IdRancho</td>
+                                <td rowspan="@grupo.Count()">@item.NombreRancho</td>
+                                <td rowspan="@grupo.Count()">@item.NumeroRancho</td>
+
+                                <td rowspan="@grupo.Count()">@item.IdEmpleado</td>
+                                <td rowspan="@grupo.Count()">@item.Nombre</td>
+                                <td rowspan="@grupo.Count()">@item.Telefono</td>
+
+                                <td rowspan="@grupo.Count()">@item.IdVehiculo</td>
+                                <td rowspan="@grupo.Count()">@item.Placas</td>
+                                <td rowspan="@grupo.Count()">@item.Modelo</td>
+                                <td rowspan="@grupo.Count()">@item.Marca</td>
+                            }
+
+                        </tr>
+                        esPrimeraFila = false;
+                    }
+                }
+
+                @if (filteredViajes.Any())
+                {
+                    var totalCajas = filteredViajes.Sum(v => v.CantidadCajasViaje);
+                    <tr class="table-primary fw-bold text-end">
+                        <td colspan="5">Total general de cajas del periodo:</td>
+                        <td class="text-start">@totalCajas</td>
+                        <td colspan="21"></td>
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Gráficas -->
+    <h3 class="text-center mt-5 fw-bold">Gráfica de cajas por periodo</h3>
+    <div class="d-flex justify-content-center">
+        <canvas id="chartCajasPorPeriodo" width="800" height="400"></canvas>
+    </div>
+
+
+    <h3 class="text-center mt-5 fw-bold">Gráfica de viajes aceptados vs rechazados</h3>
+
+    <div id="resumenEstadoViajesCajas" class="text-center mt-2 fw-semibold"></div>
+
+    <div class="d-flex justify-content-center">
+        <canvas id="chartEstadoViajesCajas" width="40" height="40"></canvas>
+    </div>
+
+</div>
+
+@code {
+
+    private int tablaActual = 1; // 1 para cajas, 2 para proceso
+
+    private List<ViajesDetallesDto> viajes = new();
+    private List<IGrouping<DateOnly, ViajesDetallesDto>> viajesAgrupados = new();
+    private List<ViajesDetallesDto> filteredViajes = new();
+
+    private DateOnly FechaInicio = DateOnly.FromDateTime(DateTime.Today.AddMonths(-1));
+    private DateOnly FechaFin = DateOnly.FromDateTime(DateTime.Today);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await CargarDatos();
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "OnInitializedAsync - ReporteViajesCajasPeriodo",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            viajes = await viajesService.GetViajesDetallesAsync();
+
+            FiltrarYAgrupar();
+            await GenerarGrafica();
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "CargarDatos - ReporteViajesCajasPeriodo",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void FiltrarYAgrupar()
+    {
+        try
+        {
+            var listaBase = viajes;
+            listaBase = listaBase.Where(v => v.KilosProcesoViaje == 0).ToList();
+
+            listaBase = listaBase.Where(v => v.FechaSalida >= FechaInicio && v.FechaSalida <= FechaFin).ToList();
+
+            filteredViajes = listaBase;
+
+            // Agrupar por semana y año
+            viajesAgrupados = listaBase
+                .GroupBy(v => v.FechaSalida)
+                .OrderBy(g => g.Key)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            _ = errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "FiltrarYAgrupar - ReporteViajesCajasPeriodo",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+
+    private async Task FiltrarDatos()
+    {
+        try
+        {
+            FiltrarYAgrupar();
+            await GenerarGrafica();
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "FiltrarDatos - ReporteViajesCajasPeriodo",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+
+    private async Task GenerarGrafica()
+    {
+        try
+        {
+            var labels = viajesAgrupados.Select(g => g.Key.ToString("dd/MM/yyyy")).ToList();
+            var valores = viajesAgrupados.Select(g => g.Sum(v => v.CantidadCajasViaje)).ToList();
+
+            var labelsJson = System.Text.Json.JsonSerializer.Serialize(labels);
+            var valuesJson = System.Text.Json.JsonSerializer.Serialize(valores);
+
+            await JS.InvokeVoidAsync("generarGraficaViajesCajasPeriodo", labelsJson, valuesJson);
+
+            var aceptados = filteredViajes.Count(v => v.EstadoAprobacion == "Aceptado");
+            var rechazados = filteredViajes.Count(v => v.EstadoAprobacion == "Rechazado");
+
+            await JS.InvokeVoidAsync("generarGraficaEstadoViajesCajas", aceptados, rechazados);
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "GenerarGrafica - ReporteViajesCajasPeriodo",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task DescargarPDF()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarPDF_ViajesCajasPorPeriodo");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarPDF - ReporteViajesCajasPeriodo",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task DescargarExcel()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarExcel_ViajesCajasPorPeriodo");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarExcel - ReporteViajesCajasPeriodo",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    [Inject] private IJSRuntime JS { get; set; }
+}

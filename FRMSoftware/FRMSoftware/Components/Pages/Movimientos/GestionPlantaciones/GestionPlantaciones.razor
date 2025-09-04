@@ -1,0 +1,1473 @@
+﻿@page "/Movimientos/GestionPlantaciones"
+
+@using FRMSoftware.Data
+@inject Services.Catalogos.CultivoService cultivoService
+@inject Services.Catalogos.ViverosService viveroService
+@inject FRMSoftware.Services.Movimientos.GestionPlantacionesService plantacionesService
+@inject Services.Catalogos.RanchosService ranchoService
+@inject FRMSoftware.Services.Movimientos.GestionLlavesService llavesService
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+@inject NavigationManager Navigation
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <div class="row justify-content-center align-items-start mt-4">
+        <h2 class="text-center fw-bold" style="margin-bottom: 20px">Gestión de plantaciones</h2>
+
+        <!-- Primera fila -->
+        <!-- CULTIVO -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-3 same-height-Plantaciones-1">
+                <div class="card-body">
+                    <EditForm Model="cultivo">
+
+                        <h5 class="text-center fw-bold">Cultivo</h5>
+                        <div class="mb-1">
+                            <label class="form-label">Tipo de berry:</label>
+                            <InputText class="form-control" @bind-Value="cultivo.TipoBerry" disabled="true" />
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label">Variedad de berry:</label>
+                            <InputText class="form-control" @bind-Value="cultivo.Variedad" disabled="true" />
+                        </div>
+
+                        <div class="d-flex justify-content-center">
+                            <button class="btn fixed-size-btn btn-seleccion mx-2" @onclick="AbrirModalCultivos" disabled="@deshabilitarGuardar">
+                                Seleccionar
+                            </button>
+                        </div>
+
+                        <!-- VIVERO -->
+                        <h5 class="text-center fw-bold mb-3" style="margin-top:30px">Vivero</h5>
+                        <div class="mb-1">
+                            <label class="form-label">Nombre del vivero:</label>
+                            <InputText class="form-control" @bind-Value="vivero.NombreVivero" disabled="true" />
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label">Código de vivero:</label>
+                            <InputText class="form-control" @bind-Value="vivero.CodigoVivero" disabled="true" />
+                        </div>
+
+                        <div class="d-flex justify-content-center">
+                            <button class="btn fixed-size-btn btn-seleccion mx-2" @onclick="AbrirModalViveros" disabled="@deshabilitarGuardar">
+                                Seleccionar
+                            </button>
+                        </div>
+
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <!-- Segunda fila -->
+        <!-- RANCHO -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-3">
+                <div class="card-body d-flex flex-column">
+                    <EditForm Model="rancho">
+
+                        <h5 class="text-center fw-bold">Rancho</h5>
+                        <!-- ID de rancho (Oculto) -->
+                        <input type="hidden" @bind="rancho.IdRancho" />
+
+                        <div class="mb-1">
+                            <label class="form-label">Nombre del rancho:</label>
+                            <InputText class="form-control" @bind-Value="rancho.NombreRancho" disabled="true" />
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label">Número de rancho:</label>
+                            <InputText class="form-control" @bind-Value="rancho.NumeroRancho" disabled="true" />
+                        </div>
+
+                        <div class="mt-auto d-flex justify-content-center">
+                            <button class="btn fixed-size-btn btn-seleccion mx-2" @onclick="AbrirModalRancho" disabled="@deshabilitarGuardar">
+                                Seleccionar
+                            </button>
+                        </div>
+                    </EditForm>
+
+                    <EditForm Model="llave">
+                        <h5 class="text-center fw-bold mb-3" style="margin-top:30px">Llave</h5>
+                        <!-- ID de rancho (Oculto) -->
+                        <input type="hidden" @bind="llave.IdRancho" />
+
+                        <div class="mb-1">
+                            <label class="form-label">Nombre de la llave:</label>
+                            <InputText class="form-control" @bind-Value="llave.NombreLlave" disabled="true" />
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label">Superficie (Ha):</label>
+                            <InputNumber class="form-control" @bind-Value="llave.SuperficieHa" disabled="true" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label class="form-label">Superficie (Acres):</label>
+                            <InputNumber class="form-control" @bind-Value="llave.SuperficieAcres" disabled="true" />
+                        </div>
+
+                        <div class="mt-auto d-flex justify-content-center">
+                            <button class="btn fixed-size-btn btn-seleccion mx-2" @onclick="AbrirModalLlaves" disabled="@deshabilitarGuardar">
+                                Seleccionar
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- PLANTACIÓN -->
+        <div class="col-lg-4">
+            <EditForm Model="plantacion" OnValidSubmit="OnValidSubmitHandler" id="plantacionForm">
+                <DataAnnotationsValidator />
+                <div class="card shadow-sm mb-3 same-height-Plantaciones-2">
+                    <div class="card-body">
+                        <h5 class="text-center fw-bold">Plantación</h5>
+                        <!-- ID de plantación (Oculto) -->
+                        <input type="hidden" @bind="plantacion.IdPlantacion" />
+                        <!-- ID del Cultivo (Oculto) -->
+                        <input type="hidden" @bind="plantacion.IdCultivo" />
+                        <!-- ID del Vivero (Oculto) -->
+                        <input type="hidden" @bind="plantacion.IdVivero" />
+                        <!-- ID del Llave (Oculto) -->
+                        <input type="hidden" @bind="plantacion.IdLlave" />
+
+                        <div class="mb-1">
+                            <label class="form-label">Cantidad de plantas:</label>
+                            <InputNumber id="CantidadPlantas" class="form-control" @bind-Value="plantacion.CantidadPlantas" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => plantacion.CantidadPlantas)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label class="form-label">Plantas por metro:</label>
+                            <InputNumber id="PlantasPorMetro" class="form-control" @bind-Value="plantacion.PlantasPorMetro" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => plantacion.PlantasPorMetro)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label class="form-label">Fecha de plantación:</label>
+                            <InputDate id="FechaPlantacion"
+                                       class="form-control"
+                                       @bind-Value="plantacion.FechaPlantacion"
+                                       @oninput="CalcularSemanaPlantacion"
+                                       disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => plantacion.FechaPlantacion)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label class="form-label">Número de semana:</label>
+                            <InputNumber id="NumSemPlantacion" class="form-control" @bind-Value="plantacion.NumSemPlantacion" disabled="true" />
+                            <ValidationMessage For="@(() => plantacion.NumSemPlantacion)" class="text-danger" />
+                        </div>
+
+
+                        <div class="mb-1">
+                            <label class="form-label">Estatus de plantación:</label>
+                            <InputSelect id="EstatusPlantacion" class="form-control" @bind-Value="plantacion.EstatusPlantacion" disabled="@deshabilitarFormulario">
+                                <option disabled selected value="">Seleccione una opción:</option>
+                                <option value="Activa">Activa</option>
+                                @if (plantacion.IdPlantacion != 0)
+                                {
+                                    <option value="Inactiva">Inactiva</option>
+                                }
+
+                            </InputSelect>
+                            <ValidationMessage For="@(() => plantacion.EstatusPlantacion)" class="text-danger" />
+                        </div>
+
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Botones -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Editor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="NuevoRegistro" disabled="@deshabilitarNuevo">Nuevo</button>
+            <button class="btn fixed-size-btn mx-2" type="submit" form="plantacionForm" disabled="@deshabilitarGuardar">Guardar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="AbrirModal" disabled="@deshabilitarModificar">Modificar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="Cancelar" disabled="@deshabilitarCancelar">Cancelar</button>
+        }
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Consultor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="RedirigirAConsulta" disabled="@deshabilitarConsultar">Consultar</button>
+        }
+
+    </div>
+</div>
+
+
+
+<!-- MODAL para mostrar la tabla de seleccionar cultivos -->
+@if (mostrarModalCultivo)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Lista de cultivos</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModalCultivo"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Filtro de búsqueda -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <input @bind="searchTermCultivo" placeholder="Buscar cultivos..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltroCultivos">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tipo de berry</th>
+                                    <th>Variedad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in filteredCultivos)
+                                {
+                                    <tr @onclick="() => SeleccionarCultivo(item)" class="fila-seleccionable">
+                                        <td>@item.IdCultivo</td>
+                                        <td>@item.TipoBerry</td>
+                                        <td>@item.Variedad</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- MODAL para mostrar la tabla de seleccionar viveros -->
+@if (mostrarModalVivero)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Lista de viveros</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModalVivero"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Filtro de búsqueda -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <input @bind="searchTermVivero" placeholder="Buscar viveros..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltroViveros">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre del vivero</th>
+                                    <th>Código del vivero</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in filteredViveros)
+                                {
+                                    <tr @onclick="() => SeleccionarVivero(item)" class="fila-seleccionable">
+                                        <td>@item.IdVivero</td>
+                                        <td>@item.NombreVivero</td>
+                                        <td>@item.CodigoVivero</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+<!-- MODAL para mostrar la tabla de seleccionar ranchos -->
+@if (mostrarModalRancho)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Lista de ranchos</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModalRancho"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Seleccione un rancho para continuar. Considere lo siguiente:</p>
+                    <ul>
+                        <li>El rancho debe tener al menos una llave asociada.</li>
+                        <li>Si no encuentra el rancho deseado, verifique que tenga llaves registradas.</li>
+                    </ul>
+                    <!-- Contenedor para alinear horizontalmente -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <input @bind="searchTermRancho" placeholder="Buscar ranchos..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltroRanchos">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor de la tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre del rancho</th>
+                                    <th>Número del rancho</th>
+                                    <th>Superficie (HA)</th>
+                                    <th>Superficie (Acres)</th>
+                                    <th>Municipio</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in filteredRanchos)
+                                {
+                                    <tr @onclick="() => SeleccionarRancho(item)" class="fila-seleccionable">
+                                        <td>@item.IdRancho</td>
+                                        <td>@item.NombreRancho</td>
+                                        <td>@item.NumeroRancho</td>
+                                        <td>@item.SuperficieHa</td>
+                                        <td>@item.SuperficieAcres</td>
+                                        <td>@item.Municipio</td>
+                                        <td>@item.Estado</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- MODAL para mostrar la tabla de seleccionar llaves -->
+@if (mostrarModalLlave)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Lista de llaves</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModalLlave"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Seleccione una llave para continuar. Considere lo siguiente:</p>
+                    <ul>
+                        <li>La lista sólo muestra llaves asociadas al rancho seleccionado y con disponibilidad.</li>
+                        <li>Si no encuentra la llave que busca, verifique su disponibilidad y su existencia en el  movimiento "gestión de llaves".</li>
+                    </ul>
+                    <!-- Filtro de búsqueda -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <input @bind="searchTermLlave" placeholder="Buscar llaves..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltroLlaves">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID Llave</th>
+                                    <th>ID Rancho</th>
+                                    <th>Nombre de llave</th>
+                                    <th>Superficie (HA)</th>
+                                    <th>Superficie (Acres)</th>
+                                    <th>Cantidad de túneles</th>
+                                    <th>Disponibilidad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in filteredLlaves)
+                                {
+                                    <tr @onclick="() => SeleccionarLlave(item)" class="fila-seleccionable">
+                                        <td>@item.IdLlave</td>
+                                        <td>@item.IdRancho</td>
+                                        <td>@item.NombreLlave</td>
+                                        <td>@item.SuperficieHa</td>
+                                        <td>@item.SuperficieAcres</td>
+                                        <td>@item.CantidadTuneles</td>
+                                        <td>@item.Disponibilidad</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+<!-- MODAL para mostrar la tabla de modificación -->
+@if (mostrarModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Lista de plantaciones</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Contenedor para alinear horizontalmente -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                                <input @bind="searchTerm" placeholder="Buscar plantaciones..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltro">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor de la tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 10%;">Acciones</th>
+
+                                    <th>ID Plantación</th>
+                                    <th>Cantidad de plantas</th>
+                                    <th>Plantas por metro</th>
+                                    <th>Fecha de plantación</th>
+                                    <th>Número de semana</th>
+                                    <th>Estatus de plantación</th>
+
+                                    <th>ID Cultivo</th>
+                                    <th>Tipo de berry</th>
+                                    <th>Variedad</th>
+
+                                    <th>ID Vivero</th>
+                                    <th>Nombre del vivero</th>
+                                    <th>Código del vivero</th>
+ 
+                                    <th>ID Rancho</th>
+                                    <th>Nombre del rancho</th>
+                                    <th>Número del rancho</th>
+
+                                    <th>ID Llave</th>
+                                    <th>Nombre de llave</th>
+                                    <th>Superficie (Ha)</th>
+                                    <th>Superficie (Acres)</th>
+
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in filteredPlantaciones)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                @if (item.EstatusPlantacion != "Inactiva")
+                                                {
+                                                    <button class="btn editar" @onclick="() => SeleccionarPlantacion(item)">Editar</button>
+                                                    @if (UserSession.Rol == "Admin")
+                                                    {
+                                                        <button class="btn btn-red editar" @onclick="() => ConfirmarEliminar(item.IdPlantacion)">Eliminar</button>
+                                                    }
+                                                }
+                                            </div>
+                                        </td>
+
+                                        <td>@item.IdPlantacion</td>
+                                        <td>@item.CantidadPlantas</td>
+                                        <td>@item.PlantasPorMetro</td>
+                                        <td>@item.FechaPlantacion.ToString("dd/MM/yyyy")</td>
+                                        <td>@item.NumSemPlantacion</td>
+                                        <td>@item.EstatusPlantacion</td>
+
+                                        <td>@item.IdCultivo</td>
+                                        <td>@item.TipoBerry</td>
+                                        <td>@item.Variedad</td>
+
+                                        <td>@item.IdVivero</td>
+                                        <td>@item.NombreVivero</td>
+                                        <td>@item.CodigoVivero</td>
+
+                                        <td>@item.IdRancho</td>
+                                        <td>@item.NombreRancho</td>
+                                        <td>@item.NumeroRancho</td>
+
+                                        <td>@item.IdLlave</td>
+                                        <td>@item.NombreLlave</td>
+                                        <td>@item.SuperficieHa</td>
+                                        <td>@item.SuperficieAcres</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal de confirmación de eliminación -->
+@if (mostrarConfirmacion)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar eliminación</h5>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro de que desea eliminar esta plantación?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" @onclick="CancelarEliminar">Cancelar</button>
+                    <button class="btn btn-red" @onclick="EliminarPlantacionConfirmado">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@if (mostrarConfirmacionPlantacion)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar cambio de estatus</h5>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro de que desea cambiar el estatus de esta plantación a Inactiva? Una vez guardado, no podrá modificarla.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" @onclick="() => ConfirmarGrabado(false)">Cancelar</button>
+                    <button class="btn btn-red" @onclick=" () => ConfirmarGrabado(true)" >Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+
+<!-- Modal para mostrar mensajes -->
+@if (mostrarMensajeModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <!-- Agregar modal-dialog-centered -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@mensajeTitulo</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarMensajeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@mensajeContenido</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-red" @onclick="CerrarMensajeModal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    private CultivosDto cultivo = new CultivosDto();
+    private List<CultivosDto> cultivos = new();
+
+    private ViverosDto vivero = new ViverosDto();
+    private List<ViverosDto> viveros = new();
+    
+    private PlantacionesDto plantacion = new PlantacionesDto();
+    private List<PlantacionesDetallesDto> plantaciones = new();
+    
+    private RanchosDto rancho = new RanchosDto();
+    private List<RanchosDto> ranchos = new();
+
+    private LlavesDto llave = new LlavesDto();
+    private List<LlavesDto> llaves = new();
+
+
+
+    // MODALES
+    private bool mostrarModal = false;
+    private bool mostrarConfirmacion = false;
+
+    private bool mostrarConfirmacionPlantacion = false;
+    private bool confirmarModPlantacion = false;
+
+
+    // FORMULARIO
+    private bool deshabilitarFormulario = true;
+
+    // BOTONES
+    private bool deshabilitarNuevo = false;
+    private bool deshabilitarGuardar = true;
+    private bool deshabilitarModificar = false;
+    private bool deshabilitarCancelar = true;
+    private bool deshabilitarConsultar = false;
+    private int idPlantacionEliminar;
+
+    // BÚSQUEDA INPUT
+    private string searchTerm = string.Empty;  // Campo de búsqueda
+    private List<PlantacionesDetallesDto> filteredPlantaciones = new(); // Lista filtrada
+
+    // MENSAJES
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarPlantacion();
+
+        await ConsultarCultivos();
+        await ConsultarViveros();
+        await ConsultarRanchos();
+		await ConsultarLlaves();
+
+    }
+
+    private async Task ConsultarPlantacion()
+    {
+        try
+        {
+            plantaciones = await plantacionesService.GetPlantacionesDetalles();
+
+            // Verificar existencia de datos
+            if (plantaciones == null || !plantaciones.Any())
+            {
+                MostrarMensajeModal("Sin datos", "No se encontraron plantaciones.");
+                return;
+            }
+
+            filteredPlantaciones = plantaciones.OrderBy(p => p.IdPlantacion).ToList(); // Inicializa con la lista completa
+            StateHasChanged(); // Fuerza el refresco de la UI después de consultar
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+
+            // Registrar el error inesperado
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+            {
+                UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                ErrorMessage = ex.Message,
+                ErrorProcedure = "ConsultarPlantacion",
+                ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                ErrorTime = DateTime.UtcNow
+            });
+        }
+    }
+
+    private void AplicarFiltro()
+    {
+        filteredPlantaciones = string.IsNullOrEmpty(searchTerm) ?
+            plantaciones :
+            plantaciones.Where(p =>
+                p.IdPlantacion.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+
+                p.IdCultivo.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                p.TipoBerry.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                p.Variedad.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+
+                p.IdLlave.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                p.NombreLlave.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                p.SuperficieHa.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                p.SuperficieAcres.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                p.Disponibilidad.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+
+                p.IdRancho.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                p.NombreRancho.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                p.NumeroRancho.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+
+                p.IdVivero.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                p.NombreVivero.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                p.CodigoVivero.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+
+                p.CantidadPlantas.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                p.PlantasPorMetro.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                p.FechaPlantacion.ToString("dd/MM/yyyy").Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                p.NumSemPlantacion.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                p.EstatusPlantacion.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+    }
+
+
+
+    private void NuevoRegistro()
+    {
+        cultivo = new CultivosDto();
+        vivero = new ViverosDto();
+        plantacion = new PlantacionesDto();
+        llave = new LlavesDto();
+        rancho = new RanchosDto();
+        deshabilitarFormulario = false;
+        deshabilitarGuardar = false;
+        deshabilitarNuevo = true;
+        deshabilitarModificar = true;
+        deshabilitarConsultar = true;
+        deshabilitarCancelar = false;
+    }
+
+    private void Cancelar()
+    {
+        cultivo = new CultivosDto();
+        vivero = new ViverosDto();
+        plantacion = new PlantacionesDto();
+        llave = new LlavesDto();
+        rancho = new RanchosDto();
+        deshabilitarFormulario = true;
+        deshabilitarGuardar = true;
+        deshabilitarNuevo = false;
+        deshabilitarModificar = false;
+        deshabilitarConsultar = false;
+        deshabilitarCancelar = true;
+    }
+
+    private bool requiereConfirmacion = false;
+
+    private async Task OnValidSubmitHandler()
+    {
+        // Si requiere confirmación (estatus Inactiva)
+        if (plantacion.EstatusPlantacion == "Inactiva")
+        {
+            // Mostrar el modal de confirmación
+            mostrarConfirmacionPlantacion = true;
+            requiereConfirmacion = true;
+            return;
+        }
+    
+        // Si no requiere confirmación, graba directamente
+        await GrabarRegistro();
+    }
+
+    private async Task ConfirmarGrabado(bool confirmacion)
+    {
+        // Si el usuario confirma la acción
+        if (confirmacion)
+        {
+            // Llama al método de grabación
+            await GrabarRegistro();
+        }
+        // Independientemente de si confirmó o no, oculta el modal
+        mostrarConfirmacionPlantacion = false;
+    }
+
+
+
+    private async Task GrabarRegistro()
+    {
+        if (rancho == null || rancho.IdRancho == 0 ||
+            cultivo == null || cultivo.IdCultivo == 0 ||
+            vivero == null || vivero.IdVivero == 0 ||
+            llave == null || llave.IdLlave == 0)
+        {
+            MostrarMensajeModal("Error", "Debe seleccionar todos los datos antes de continuar.");
+            return;
+        }
+
+        bool success;
+        string message;
+
+        try
+        {
+            if (plantacion.IdPlantacion == 0)
+            {
+                var result = await plantacionesService.CreatePlantacionAsync(plantacion);
+                success = result.Success;
+                message = result.Message;
+            }
+            else
+            {
+                success = await plantacionesService.UpdatePlantacionAsync(plantacion.IdPlantacion, plantacion);
+                message = success ? "Actualización exitosa." : "Error al actualizar el registro.";
+            }
+
+            if (success)
+            {
+                await ConsultarPlantacion();
+                deshabilitarFormulario = true;
+                deshabilitarGuardar = true;
+                deshabilitarNuevo = false;
+                deshabilitarModificar = false;
+                deshabilitarCancelar = true;
+                deshabilitarConsultar = false;
+
+                // Limpia el formulario
+                cultivo = new CultivosDto();
+                vivero = new ViverosDto();
+                llave = new LlavesDto();
+                rancho = new RanchosDto();
+                plantacion = new PlantacionesDto();
+
+                MostrarMensajeModal("Éxito", message);
+            }
+            else
+            {
+                MostrarMensajeModal("Error", message);
+            }
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+
+            // Registrar el error inesperado
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+            {
+                UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                ErrorMessage = ex.Message,
+                ErrorProcedure = "GrabarRegistroPlantaciones",
+                ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                ErrorTime = DateTime.UtcNow
+            });
+        }
+    }
+
+
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    private void CerrarMensajeModal()
+    {
+        mostrarMensajeModal = false;
+    }
+
+    private void AbrirModal()
+    {
+        mostrarModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+        searchTerm = string.Empty;
+    }
+
+    private async Task SeleccionarPlantacion(PlantacionesDetallesDto selectedPlantacion)
+    {
+        try
+        {
+            // Asignar los datos de la plantación seleccionada
+            plantacion = new PlantacionesDto
+            {
+                IdPlantacion = selectedPlantacion.IdPlantacion,
+                IdCultivo = selectedPlantacion.IdCultivo,
+                IdVivero = selectedPlantacion.IdVivero,
+                IdLlave = selectedPlantacion.IdLlave,
+                CantidadPlantas = selectedPlantacion.CantidadPlantas,
+                PlantasPorMetro = selectedPlantacion.PlantasPorMetro,
+                FechaPlantacion = selectedPlantacion.FechaPlantacion,
+                NumSemPlantacion = selectedPlantacion.NumSemPlantacion,
+                EstatusPlantacion = selectedPlantacion.EstatusPlantacion
+            };
+
+            // Cargar los datos del cultivo correspondiente a la plantación seleccionada
+            cultivo = await cultivoService.GetCultivos(selectedPlantacion.IdCultivo);
+            if (cultivo != null)
+            {
+                cultivo.TipoBerry = cultivo.TipoBerry;
+                cultivo.Variedad = cultivo.Variedad;
+            }
+
+            // Cargar los datos de la llave correspondiente a la plantación seleccionada
+            llave = await llavesService.GetLlave(selectedPlantacion.IdLlave);
+            if (llave != null)
+            {
+                llave.NombreLlave = llave.NombreLlave;
+                llave.Disponibilidad = llave.Disponibilidad;
+            }
+
+            // Cargar los datos del rancho correspondiente a la plantación seleccionada
+            rancho = await ranchoService.GetRancho(selectedPlantacion.IdRancho);
+            if (rancho != null)
+            {
+                rancho.NombreRancho = rancho.NombreRancho;
+                rancho.NumeroRancho = rancho.NumeroRancho;
+            }
+
+            // Cargar los datos del vivero correspondiente a la plantación seleccionada
+            vivero = await viveroService.GetVivero(selectedPlantacion.IdVivero);
+            if (vivero != null)
+            {
+                vivero.NombreVivero = vivero.NombreVivero;
+                vivero.CodigoVivero = vivero.CodigoVivero;
+            }
+
+            // Actualizar el formulario con los datos obtenidos
+            deshabilitarFormulario = false;
+            deshabilitarGuardar = false;
+            deshabilitarNuevo = true;
+            deshabilitarModificar = true;
+            deshabilitarCancelar = false;
+            deshabilitarConsultar = true;
+            mostrarModal = false;
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+
+            // Registrar el error inesperado
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+            {
+                UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                ErrorMessage = ex.Message,
+                ErrorProcedure = "SeleccionarPlantacion",
+                ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                ErrorTime = DateTime.UtcNow
+            });
+        }
+    }
+
+
+
+    private void ConfirmarEliminar(int id)
+    {
+        idPlantacionEliminar = id;
+        mostrarConfirmacion = true;
+    }
+
+    private void CancelarEliminar()
+    {
+        mostrarConfirmacion = false;
+    }
+
+    private async Task EliminarPlantacionConfirmado()
+    {
+        try
+        {
+            mostrarConfirmacion = false;
+            bool success = await plantacionesService.DeletePlantacionAsync(idPlantacionEliminar);
+        
+            if (success)
+            {
+                // Si la eliminación fue exitosa, actualizar la lista de plantaciones
+                await ConsultarPlantacion();
+            }
+            else
+            {
+                MostrarMensajeModal("Error", "No se pudo eliminar la plantación.");
+            }
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+
+            // Registrar el error inesperado
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+            {
+                UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                ErrorMessage = ex.Message,
+                ErrorProcedure = "EliminarPlantacionConfirmado",
+                ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                ErrorTime = DateTime.UtcNow
+            });
+        }
+    }
+
+    private void RedirigirAConsulta()
+    {
+        Navigation.NavigateTo("/Movimientos/GestionPlantacionesConsulta");
+    }
+
+
+    // MODALES DE SELECCIÓN
+
+    // MODAL PARA SELECCIONAR CULTIVO
+    // BÚSQUEDA INPUT
+    private bool mostrarModalCultivo = false;
+
+    private string searchTermCultivo = string.Empty;  // Campo de búsqueda
+    private List<CultivosDto> filteredCultivos = new(); // Lista filtrada
+
+	// Función para consultar los cultivos
+    private async Task ConsultarCultivos()
+    {
+        try
+        {
+            cultivos = await cultivoService.GetCultivosAsync();
+            filteredCultivos = cultivos; // Inicializa filteredCultivos con la lista completa
+            StateHasChanged(); // Fuerza el refresco de la UI después de consultar
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+
+            // Registrar el error inesperado
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+            {
+                UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                ErrorMessage = ex.Message,
+                ErrorProcedure = "ConsultarCultivos",
+                ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                ErrorTime = DateTime.UtcNow
+            });
+        }
+    }
+
+
+	// Función para aplicar el filtro de búsqueda
+    private void AplicarFiltroCultivos()
+    {
+        if (string.IsNullOrEmpty(searchTermCultivo))
+        {
+            filteredCultivos = cultivos;
+        }
+        else
+        {
+            searchTermCultivo = searchTermCultivo.Trim();
+
+            filteredCultivos = cultivos.Where(c =>
+                c.TipoBerry.Contains(searchTermCultivo, StringComparison.OrdinalIgnoreCase) ||
+                c.Variedad.Contains(searchTermCultivo, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+        }
+    }
+
+	// Carga los datos del cultivo seleccionado en el formulario
+    private void SeleccionarCultivo(CultivosDto selectedCultivo)
+    {
+        cultivo = new CultivosDto
+            {
+                IdCultivo = selectedCultivo.IdCultivo,
+                TipoBerry = selectedCultivo.TipoBerry,
+                Variedad = selectedCultivo.Variedad
+            };
+
+        plantacion.IdCultivo = selectedCultivo.IdCultivo;  // Se asigna automáticamente el ID al formulario de llaves
+
+        mostrarModalCultivo = false;
+    }
+
+    private void AbrirModalCultivos()
+    {
+        mostrarModalCultivo = true;
+    }
+
+    private void CerrarModalCultivo()
+    {
+        mostrarModalCultivo = false;
+        searchTermCultivo = string.Empty;
+    }
+
+    // MODAL PARA SELECCIONAR VIVERO
+    private bool mostrarModalVivero = false;
+    private string searchTermVivero = string.Empty;
+    private List<ViverosDto> filteredViveros = new(); // Lista filtrada
+
+    // Función para consultar los viveros
+    private async Task ConsultarViveros()
+    {
+        try
+        {
+            viveros = await viveroService.GetViverosAsync();
+            filteredViveros = viveros.OrderBy(v => v.IdVivero).ToList(); // Inicializa con la lista completa
+            StateHasChanged(); // Refresca la UI después de la consulta
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+
+            // Registrar el error inesperado en la tabla de errores
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+            {
+                UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                ErrorMessage = ex.Message,
+                ErrorProcedure = "ConsultarViveros",
+                ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                ErrorTime = DateTime.UtcNow
+            });
+        }
+    }
+
+    // Función para aplicar el filtro de búsqueda
+    private void AplicarFiltroViveros()
+    {
+        if (string.IsNullOrEmpty(searchTermVivero))
+        {
+            filteredViveros = viveros;
+        }
+        else
+        {
+            searchTermVivero = searchTermVivero.Trim();
+            filteredViveros = viveros.Where(v =>
+                v.NombreVivero.Contains(searchTermVivero, StringComparison.OrdinalIgnoreCase) ||
+                v.CodigoVivero.Contains(searchTermVivero, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+        }
+    }
+
+    // Carga los datos del vivero seleccionado en el formulario
+    private void SeleccionarVivero(ViverosDto selectedVivero)
+    {
+        vivero = new ViverosDto
+            {
+                IdVivero = selectedVivero.IdVivero,
+                NombreVivero = selectedVivero.NombreVivero,
+                CodigoVivero = selectedVivero.CodigoVivero
+            };
+
+        plantacion.IdVivero = selectedVivero.IdVivero; // Se asigna automáticamente el ID
+
+        mostrarModalVivero = false;
+    }
+
+    // Funciones para abrir y cerrar el modal
+    private void AbrirModalViveros() => mostrarModalVivero = true;
+    private void CerrarModalVivero()
+    {
+        mostrarModalVivero = false;
+        vivero = new ViverosDto();
+        searchTermVivero = string.Empty;
+    }
+
+
+    // MODAL PARA SELECCIONAR RANCHO
+    
+    // BÚSQUEDA INPUT
+    private bool mostrarModalRancho = false;
+
+    private string searchTermRancho = string.Empty;  // Campo de búsqueda
+    private List<RanchosDto> filteredRanchos = new(); // Lista filtrada
+
+
+    // Método para obtener los ranchos a partir del IdRancho que se encuentra en las llaves
+    public async Task<List<RanchosDto>> ObtenerRanchosDesdeLlaves()
+    {
+        try
+        {
+            // Consultar todas las llaves
+            llaves = await llavesService.GetLlavesAsync(); // Asumiendo que este método obtiene todas las llaves
+            if (llaves == null || !llaves.Any())
+            {
+                return new List<RanchosDto>(); // Retorna una lista vacía si no hay llaves
+            }
+
+            // Extraer los IdRancho de las llaves y eliminar duplicados
+            var idsRanchos = llaves
+                .Where(llave => llave.IdRancho > 0)
+                .Select(llave => llave.IdRancho)
+                .Distinct()
+                .ToList();
+
+            // Lista para almacenar la información completa de los ranchos
+            List<RanchosDto> ranchosCompletos = new();
+
+            // Consultar la información de cada rancho
+            foreach (var idRancho in idsRanchos)
+            {
+                var rancho = await ranchoService.GetRancho(idRancho);
+                if (rancho != null)
+                {
+                    ranchosCompletos.Add(rancho);
+                }
+            }
+
+            return ranchosCompletos; // Retorna la lista con los ranchos completos
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error", $"Error al obtener los ranchos desde las llaves: {ex.Message}");
+
+            // Registrar el error en la tabla de errores
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+            {
+                UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                ErrorMessage = ex.Message,
+                ErrorProcedure = "ObtenerRanchosDesdeLlaves",
+                ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                ErrorTime = DateTime.UtcNow
+            });
+
+            return new List<RanchosDto>(); // En caso de error, retorna una lista vacía
+        }
+    }
+
+
+
+    private async Task ConsultarRanchos()
+    {
+        try
+        {
+            // Obtiene los ranchos a partir de las llaves
+            ranchos = await ObtenerRanchosDesdeLlaves();
+            filteredRanchos = ranchos.OrderBy(r => r.IdRancho).ToList(); // Inicializa con la lista completa
+            StateHasChanged(); // Refresca la UI después de la consulta
+        }
+        catch (Exception ex)
+        {
+            // Mostrar mensaje de error al usuario
+            MostrarMensajeModal("Error", $"Error al consultar los ranchos: {ex.Message}");
+
+            // Registrar el error en la tabla de errores
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+            {
+                UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                ErrorMessage = ex.Message,
+                ErrorProcedure = "ConsultarRanchos",
+                ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                ErrorTime = DateTime.UtcNow
+            });
+        }
+    }
+
+
+    private void AplicarFiltroRanchos()
+    {
+        if (string.IsNullOrEmpty(searchTermRancho))
+        {
+            filteredRanchos = ranchos;
+        }
+        else
+        {
+            searchTerm = searchTerm.Trim(); // Elimina espacios en blanco al inicio y al final
+
+            filteredRanchos = ranchos.Where(r =>
+                r.NombreRancho.Contains(searchTermRancho, StringComparison.OrdinalIgnoreCase) ||
+                r.NumeroRancho.Contains(searchTermRancho, StringComparison.OrdinalIgnoreCase) ||
+                r.SuperficieHa.ToString().Contains(searchTermRancho, StringComparison.OrdinalIgnoreCase) ||
+                r.SuperficieAcres.ToString().Contains(searchTermRancho, StringComparison.OrdinalIgnoreCase) ||
+                r.Direccion.Contains(searchTermRancho, StringComparison.OrdinalIgnoreCase) ||
+                r.CP.Contains(searchTermRancho, StringComparison.OrdinalIgnoreCase) ||
+                r.Municipio.Contains(searchTermRancho, StringComparison.OrdinalIgnoreCase) ||
+                r.Estado.Contains(searchTermRancho, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+        }
+    }
+
+    private async Task SeleccionarRancho(RanchosDto selectedRancho)
+    {
+        rancho = new RanchosDto
+            {
+                IdRancho = selectedRancho.IdRancho,
+                NombreRancho = selectedRancho.NombreRancho,
+                NumeroRancho = selectedRancho.NumeroRancho,
+                SuperficieHa = selectedRancho.SuperficieHa,
+                SuperficieAcres = selectedRancho.SuperficieAcres,
+                Direccion = selectedRancho.Direccion,
+                CP = selectedRancho.CP,
+                Municipio = selectedRancho.Municipio,
+                Estado = selectedRancho.Estado
+            };
+
+            
+        rancho.IdRancho = selectedRancho.IdRancho;
+        llave.IdRancho = selectedRancho.IdRancho;  // Se asigna automáticamente el ID al formulario de llaves
+
+        
+        // Obtener las llaves del rancho seleccionado
+        llaves = await ObtenerLlavesPorRancho(rancho.IdRancho);
+    
+        // Actualizar la lista filtrada de llaves
+        filteredLlaves = llaves;  
+
+
+        mostrarModalRancho = false;
+    }
+
+
+    private void AbrirModalRancho()
+    {
+        mostrarModalRancho = true;
+    }
+
+    private void CerrarModalRancho()
+    {
+        mostrarModalRancho = false;
+        searchTermRancho = string.Empty;
+    }
+
+
+    // MODAL PARA SELECCIONAR LLAVE
+    private bool mostrarModalLlave = false;
+    private string searchTermLlave = string.Empty;
+    private List<LlavesDto> filteredLlaves = new(); // Lista filtrada
+
+
+    
+    // Método para filtrar las llaves dependiendo del rancho seleccionado
+    private async Task<List<LlavesDto>> ObtenerLlavesPorRancho(int idRancho)
+    {
+        try
+        {
+            // Llamada al servicio para obtener todas las llaves
+            llaves = await llavesService.GetLlavesAsync();
+
+            // Obtener los IdPlantacion que ya están en uso
+            var idsPlantacionesOcupadas = plantaciones
+                        .Where(p => p.IdLlave != null && p.EstatusPlantacion.Equals("Activa")) // Asegurarse que la plantación esté activa
+                        .Select(p => p.IdLlave)
+                        .ToHashSet();
+
+            // Filtrar las llaves disponibles por rancho y que **no estén** ya asignadas a una plantación
+            llaves = llaves
+                .Where(l =>
+                    l.IdRancho == idRancho &&
+                    l.Disponibilidad.Equals("Sí", StringComparison.OrdinalIgnoreCase) &&
+                    !idsPlantacionesOcupadas.Contains(l.IdLlave) // Excluir llaves ya en uso
+                )
+                .ToList();
+            return llaves;
+        }
+        catch (Exception ex)
+        {
+            // Mostrar mensaje de error al usuario
+            MostrarMensajeModal("Error", $"Error al obtener las llaves del rancho: {ex.Message}");
+
+            // Registrar el error en la tabla de errores
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+            {
+                UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                ErrorMessage = ex.Message,
+                ErrorProcedure = "ObtenerLlavesPorRancho",
+                ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                ErrorTime = DateTime.UtcNow
+            });
+
+            // Retorna una lista vacía en caso de error
+            return new List<LlavesDto>();
+        }
+    }
+
+
+
+    // Función para consultar las llaves
+    private async Task ConsultarLlaves()
+    {
+        try
+        {
+            // Llamar al método ObtenerLlavesPorRancho para obtener las llaves filtradas
+            llaves = await ObtenerLlavesPorRancho(rancho.IdRancho);
+        
+            // Ordenar las llaves por IdLlave
+            filteredLlaves = llaves.OrderBy(l => l.IdLlave).ToList();
+
+            // Refrescar la UI
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Mostrar mensaje de error al usuario
+            MostrarMensajeModal("Error", $"Error al consultar las llaves: {ex.Message}");
+
+            // Registrar el error en la base de datos
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+            {
+                UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                ErrorMessage = ex.Message,
+                ErrorProcedure = "ConsultarLlaves",
+                ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                ErrorTime = DateTime.UtcNow
+            });
+        }
+    }
+
+    // Función para aplicar el filtro de búsqueda
+    private void AplicarFiltroLlaves()
+    {
+        if (string.IsNullOrEmpty(searchTermLlave))
+        {
+            filteredLlaves = llaves;
+        }
+        else
+        {
+            searchTermLlave = searchTermLlave.Trim();
+            filteredLlaves = llaves.Where(l =>
+                l.IdLlave.ToString().Contains(searchTermLlave, StringComparison.OrdinalIgnoreCase) ||
+                l.IdRancho.ToString().Contains(searchTermLlave, StringComparison.OrdinalIgnoreCase) ||
+                l.NombreLlave.Contains(searchTermLlave, StringComparison.OrdinalIgnoreCase) ||
+                l.SuperficieHa.ToString().Contains(searchTermLlave, StringComparison.OrdinalIgnoreCase) ||
+                l.SuperficieAcres.ToString().Contains(searchTermLlave, StringComparison.OrdinalIgnoreCase) ||
+                l.CantidadTuneles.ToString().Contains(searchTermLlave, StringComparison.OrdinalIgnoreCase) ||
+                l.Disponibilidad.Contains(searchTermLlave, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+        }
+    }
+
+    // Carga los datos de la llave seleccionada en el formulario
+    private void SeleccionarLlave(LlavesDto selectedLlave)
+    {
+        llave = new LlavesDto
+            {
+                IdLlave = selectedLlave.IdLlave,
+                IdRancho = selectedLlave.IdRancho,
+                NombreLlave = selectedLlave.NombreLlave,
+                SuperficieHa = selectedLlave.SuperficieHa,
+                SuperficieAcres = selectedLlave.SuperficieAcres,
+                CantidadTuneles = selectedLlave.CantidadTuneles,
+                Disponibilidad = selectedLlave.Disponibilidad
+            };
+
+        plantacion.IdLlave = selectedLlave.IdLlave; // Se asigna automáticamente el ID
+
+        mostrarModalLlave = false;
+    }
+
+    // Funciones para abrir y cerrar el modal
+    private void AbrirModalLlaves() => mostrarModalLlave = true;
+
+    private void CerrarModalLlave()
+    {
+        mostrarModalLlave = false;
+        searchTermLlave = string.Empty;
+    }
+
+    private void CalcularSemanaPlantacion(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out DateTime fecha))
+        {
+            plantacion.FechaPlantacion = fecha;
+
+            var cultura = System.Globalization.CultureInfo.CurrentCulture;
+            var calendario = cultura.Calendar;
+
+            int semana = calendario.GetWeekOfYear(
+                fecha,
+                System.Globalization.CalendarWeekRule.FirstFourDayWeek,
+                DayOfWeek.Monday
+            );
+
+            plantacion.NumSemPlantacion = semana;
+
+            StateHasChanged(); // Actualiza la interfaz
+        }
+    }
+}

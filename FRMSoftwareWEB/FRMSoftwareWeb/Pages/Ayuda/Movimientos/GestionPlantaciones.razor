@@ -1,0 +1,74 @@
+﻿@page "/Ayuda/Movimientos/GestionPlantaciones"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4"><i class="bi bi-flower3"></i> Ayuda: Gestión de Plantaciones</h2>
+
+    <p>
+        Este formulario permite registrar, modificar y consultar la información relacionada con plantaciones de berries.
+        El flujo comienza al hacer clic en el botón <strong>Nuevo</strong>, que habilita el formulario completo para capturar la información correspondiente.
+        Cada sección (cultivo, vivero, rancho y llave) incluye un botón <strong>Seleccionar</strong> que abre un modal para elegir el dato deseado.
+        Si no se selecciona alguno de estos elementos, los campos relacionados quedarán vacíos y no será posible guardar el registro.
+        Para más detalles sobre los botones de acción generales (<strong>Nuevo</strong>, <strong>Guardar</strong>, <strong>Modificar</strong>, <strong>Cancelar</strong> y <strong>Consultar</strong>),
+        consulta la sección de
+        <a href="/Ayuda/AyudaGeneral/BotonesGenerales" class="text-decoration-underline">Botones Generales</a>.
+    </p>
+
+    <p>
+        La consulta de registros tiene dos modalidades: una consulta general y una consulta por periodo.
+        Si deseas saber más sobre la consulta por periodo, visita
+        <a href="/Ayuda/AyudaGeneral/BusquedaPeriodo" class="text-decoration-underline">Búsqueda por Periodo</a>.
+    </p>
+
+    <h4 class="fw-bold mt-4">Descripción rápida</h4>
+    <ul>
+        <li><strong>Nuevo:</strong> Habilita el formulario completo para registrar una nueva plantación. Desde este punto puedes comenzar a seleccionar los datos requeridos.</li>
+        <li><strong>Seleccionar (Cultivo, Vivero, Rancho o Llave):</strong> Cada botón abre un modal que permite elegir un dato. El proceso es el mismo para los cuatro: si no se realiza la selección, los campos relacionados se mantendrán vacíos y no será posible guardar.</li>
+        <li><strong>Guardar:</strong> Una vez seleccionadas las entidades necesarias y capturados los datos (como cantidad de plantas, plantas por metro, etc.), pulsa este botón para validar y guardar la información.</li>
+        <li><strong>Fecha de plantación y número de semana:</strong> Al seleccionar la fecha, el sistema calcula automáticamente el <strong>número de semana</strong> correspondiente y lo carga en su campo.</li>
+        <li><strong>Modificar:</strong> Permite cargar un registro existente al formulario para editarlo o eliminarlo. Luego, se debe pulsar <strong>Guardar</strong> para aplicar los cambios. No se pueden volver a editar plantaciones declaradas como inactivas.</li>
+        <li><strong>Cancelar:</strong> Cancela la operación actual y restablece el formulario a su estado base.</li>
+        <li><strong>Consultar:</strong> Abre una vista de solo lectura para revisar los registros existentes, con opciones para exportar en <strong>PDF</strong> o <strong>Excel</strong>. La consulta puede ser general o por periodo, según prefieras.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-5">Ejemplos visuales</h4>
+
+    <h5 class="mt-4">Estado: Nuevo registro</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/GestionPlantaciones01.png" alt="Formulario en modo Nuevo"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Al pulsar <strong>Nuevo</strong>, se habilita todo el formulario. Desde este momento puedes comenzar a usar los botones <strong>Seleccionar</strong> para cada sección (cultivo, vivero, rancho y llave).
+        </p>
+    </div>
+
+    <h5 class="mt-4">Estado: Selección de datos, captura de datos y fecha</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/GestionPlantaciones02.png" alt="Formulario con datos seleccionados"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Al hacer clic en un botón <strong>Seleccionar</strong>, como en este ejemplo de cultivo, se carga automáticamente la información relacionada. Este mismo proceso se aplica para los botones de vivero, rancho y llave. 
+            Luego de seleccionar los elementos requeridos, puedes capturar datos como la cantidad de plantas, plantas por metro y la <strong>fecha de plantación</strong>. Al seleccionar la fecha, el número de semana se llena automáticamente.
+        </p>
+    </div>
+
+    <h5 class="mt-4">Estado: Modificar registro</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/GestionPlantaciones03.png" alt="Formulario en modo Modificar"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Al seleccionar un registro existente y pulsar <strong>Modificar</strong>, el formulario carga los datos previos y se habilita la edición. Posteriormente, puedes actualizar la información y pulsar <strong>Guardar</strong>.
+        </p>
+    </div>
+
+    <h5 class="mt-4">Estado: Consultar registros</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/GestionPlantaciones04.png" alt="Vista de consulta"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            En modo consulta puedes revisar los registros sin posibilidad de edición. Esta vista incluye filtros de búsqueda y herramientas para exportar la información en <strong>PDF</strong> o <strong>Excel</strong>.
+        </p>
+    </div>
+</div>
+
+@code {
+}

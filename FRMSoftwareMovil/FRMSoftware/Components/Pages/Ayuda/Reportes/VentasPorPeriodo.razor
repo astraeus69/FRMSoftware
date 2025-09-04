@@ -1,0 +1,71 @@
+﻿@page "/Ayuda/Reportes/ReporteVentasPeriodo"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4 text-center"><i class="bi bi-bar-chart-line"></i> Reporte de ventas por periodo</h2>
+
+    <p>Este reporte muestra las ventas realizadas en un rango de fechas seleccionado, incluyendo ventas de cajas y ventas de kilos de proceso. Permite analizar la producción y comercialización por cultivo, rancho y vehículo, facilitando un control detallado de las operaciones comerciales.</p>
+
+    <h4 class="fw-bold mt-4">Filtros del Reporte</h4>
+    <ul>
+        <li><strong>Fecha de inicio y fin:</strong> Determinan el periodo que será analizado.</li>
+        <li><strong>Botón "Filtrar":</strong> Aplica los filtros y actualiza los datos mostrados.</li>
+        <li><strong>Selector de tipo de venta:</strong> Permite alternar entre la tabla de venta de cajas y la tabla de venta de proceso.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Exportación</h4>
+    <ul>
+        <li><strong>Descargar PDF:</strong> Genera una versión lista para impresión, conservando la agrupación y estilos del reporte.</li>
+        <li><strong>Descargar Excel:</strong> Exporta los datos en un formato editable para análisis o archivo.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Tabla de Ventas</h4>
+    <p>La tabla agrupa las ventas por ID de venta y por viaje dentro de cada venta. Incluye datos detallados como fechas, cantidades, precios, cultivo, rancho y vehículo.</p>
+
+    <ul>
+        <li><strong>Venta:</strong> ID, fecha de facturación, total de venta y precio del dólar.</li>
+        <li><strong>Viaje:</strong> ID, fecha de salida y número de semana.</li>
+        <li><strong>Rancho:</strong> ID, nombre y número.</li>
+        <li><strong>Cultivo:</strong> ID, tipo de berry y variedad.</li>
+        <li><strong>Tarimas (solo en venta de cajas):</strong> ID, cantidad de cajas y licencia del vehículo.</li>
+        <li><strong>Kilos proceso (solo en venta de proceso):</strong> Cantidad de kilos procesados vendidos en el viaje.</li>
+        <li><strong>Fecha de recepción y precio de venta:</strong> Datos finales para cada registro.</li>
+        <li><strong>Totales generales:</strong> Al final de la tabla se muestran los totales de cajas o kilos procesados y el total de ventas monetarias, según el tipo de venta seleccionado.</li>
+    </ul>
+
+    <div class="my-4">
+        <img src="images/Ayuda/Reportes/VentasPorPeriodo01.png" alt="Tabla de ventas por periodo" class="img-fluid rounded shadow-sm" style="border: 1px solid #ccc;" />
+        <p class="text-muted mt-2">Vista de la tabla agrupada por ID de venta y viaje, con alternancia entre venta de cajas y venta de proceso.</p>
+    </div>
+
+    <h4 class="fw-bold mt-4">Gráfica de Ventas por Periodo</h4>
+    <p>Gráfica lineal que representa la evolución de las ventas en el periodo seleccionado, mostrando la cantidad de cajas vendidas o kilos de proceso según el tipo de venta activo.</p>
+
+    <ul>
+        <li>Permite identificar tendencias y picos en la venta durante el tiempo.</li>
+        <li>El gráfico se actualiza automáticamente según la selección de tipo de venta (cajas o proceso).</li>
+    </ul>
+
+    <div class="my-4 d-flex justify-content-center">
+        <img src="images/Ayuda/Reportes/VentasPorPeriodo02.png" alt="Gráfica lineal de ventas por periodo" class="img-fluid rounded shadow-sm" style="max-width: 800px; border: 1px solid #ccc;" />
+    </div>
+
+    <h4 class="fw-bold mt-4">Gráfica de Distribución de Ventas por Tipo de Berry</h4>
+    <p>Gráfica de pastel que muestra la proporción de ventas de cajas o kilos de proceso (según el tipo de venta seleccionado) distribuidas entre los diferentes tipos de berry vendidos en el periodo.</p>
+
+    <ul>
+        <li>Facilita la comparación de ventas entre los tipos de cultivo.</li>
+        <li>Se adapta dinámicamente para mostrar datos de venta de cajas o kilos de proceso.</li>
+    </ul>
+
+    <div class="my-4 d-flex justify-content-center">
+        <img src="images/Ayuda/Reportes/VentasPorPeriodo03.png" alt="Gráfica de pastel de ventas por tipo de berry" class="img-fluid rounded shadow-sm" style="max-width: 800px; border: 1px solid #ccc;" />
+    </div>
+
+    <h4 class="fw-bold mt-4">Recomendaciones de uso</h4>
+    <ul>
+        <li>Utiliza la alternancia entre venta de cajas y venta de proceso para obtener una visión completa de las operaciones.</li>
+        <li>Filtra las fechas para analizar periodos específicos y tomar decisiones informadas.</li>
+        <li>Exporta los datos para hacer análisis externos o respaldos históricos.</li>
+        <li>Usa las gráficas para detectar tendencias y ajustar la producción o comercialización según la demanda.</li>
+    </ul>
+</div>

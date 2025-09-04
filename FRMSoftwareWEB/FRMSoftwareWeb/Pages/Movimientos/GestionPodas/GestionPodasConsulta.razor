@@ -1,0 +1,296 @@
+﻿@page "/Movimientos/GestionPodasConsulta"
+@using FRMSoftware.Data
+@inject FRMSoftware.Services.Movimientos.GestionPodasService podasService
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+@inject NavigationManager Navigation
+
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="margin-top:20px">
+        <h2 class="text-center fw-bold" style="margin-bottom: 20px">Consulta de podas</h2>
+
+        <div style="height: 140px">
+            <!-- Botones para seleccionar tipo de búsqueda -->
+            <div class="d-flex mb-3">
+                <div class="toggle-container">
+                    <div class="toggle-slider" style='left: @(busquedaGeneral ? "0%" : "50%")'></div>
+                    <button class="toggle-btn @(busquedaGeneral ? "active" : "")" @onclick="() => CambiarTipoBusqueda(true)">
+                        Búsqueda general
+                    </button>
+                    <button class="toggle-btn @(!busquedaGeneral ? "active" : "")" @onclick="() => CambiarTipoBusqueda(false)">
+                        Búsqueda por período
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenedor para búsqueda general (texto) -->
+            @if (busquedaGeneral)
+            {
+                <div class="row mb-3 align-items-center">
+                    <div class="col-auto">
+                        <input @bind="searchTermPoda" placeholder="Buscar podas..." class="form-control" />
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn fixed-size-btn" @onclick="AplicarFiltroPodas">Buscar</button>
+                    </div>
+                </div>
+            }
+
+            <!-- Contenedor para búsqueda por período (fechas) -->
+            @if (!busquedaGeneral)
+            {
+                <div class="row mb-3 align-items-center">
+                    <div class="col-auto">
+                        <label>Desde:</label>
+                        <InputDate class="form-control" @bind-Value="fechaInicio" />
+                    </div>
+                    <div class="col-auto">
+                        <label>Hasta:</label>
+                        <InputDate class="form-control" @bind-Value="fechaFin" />
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn fixed-size-btn" style="margin-top: 25px" @onclick="AplicarFiltroPodas">Buscar</button>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mb-3">
+            <button class="btn" @onclick="DescargarPDF_GestionPodas">Descargar PDF</button>
+            <button class="btn" @onclick="DescargarExcel_GestionPodas">Descargar Excel</button>
+        </div>
+
+        <!-- Contenedor de la tabla con scroll -->
+        <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+            <table class="table table-striped table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID Poda</th>
+                        <th>Tipo de poda</th>
+                        <th>Fecha de poda</th>
+                        <th>Número de semana</th>
+
+                        <th>ID Plantación</th>
+                        <th>Fecha de plantación</th>
+                        <th>Número de semana</th>
+                        <th>Estatus de plantación</th>
+
+                        <th>ID Cultivo</th>
+                        <th>Tipo de berry</th>
+                        <th>Variedad</th>
+
+                        <th>ID Rancho</th>
+                        <th>Nombre del rancho</th>
+                        <th>Número del rancho</th>
+
+                        <th>ID Llave</th>
+                        <th>Nombre de llave</th>
+                        <th>Superficie (HA)</th>
+                        <th>Superficie (Acres)</th>
+
+
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in filteredPodas)
+                    {
+                        <tr>
+                            <td>@item.IdPoda</td>
+                            <td>@item.TipoPoda</td>
+                            <td>@item.FechaPoda.ToString("dd/MM/yyyy")</td>
+                            <td>@item.NumSemPoda</td>
+
+                            <td>@item.IdPlantacion</td>
+                            <td>@item.FechaPlantacion.ToString("dd/MM/yyyy")</td>
+                            <td>@item.NumSemPlantacion</td>
+                            <td>@item.EstatusPlantacion</td>
+
+                            <td>@item.IdCultivo</td>
+                            <td>@item.TipoBerry</td>
+                            <td>@item.Variedad</td>
+
+                            <td>@item.IdRancho</td>
+                            <td>@item.NombreRancho</td>
+                            <td>@item.NumeroRancho</td>
+
+                            <td>@item.IdLlave</td>
+                            <td>@item.NombreLlave</td>
+                            <td>@item.SuperficieHa</td>
+                            <td>@item.SuperficieAcres</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Botón de regreso -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+        <button class="btn fixed-size-btn mx-2" @onclick="RedirigirPodas">Regresar</button>
+    </div>
+</div>
+
+@code {
+    private List<PodasDetallesDto> podas = new();
+    private string searchTermPoda = string.Empty;
+    private List<PodasDetallesDto> filteredPodas = new();
+
+    private DateTime? fechaInicio;
+    private DateTime? fechaFin;
+
+    // MENSAJES
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarPodas();
+    }
+
+    private async Task ConsultarPodas()
+    {
+        try
+        {
+            // Obtener las podas desde el servicio
+            podas = await podasService.GetPodasDetallesAsync();
+
+            // Ordenar las podas por IdPoda
+            filteredPodas = podas.OrderBy(p => p.IdPoda).ToList();
+
+            // Refrescar la UI
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+
+            // Registrar el error en la base de datos
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarPodas",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void AplicarFiltroPodas()
+    {
+        filteredPodas =
+            podas.Where(p =>
+
+                // Filtro de fechas
+                (!fechaInicio.HasValue || p.FechaPoda.Date >= fechaInicio.Value.Date) &&
+                (!fechaFin.HasValue || p.FechaPoda.Date <= fechaFin.Value.Date) &&
+
+                (string.IsNullOrEmpty(searchTermPoda) ||
+                    p.IdPoda.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                    p.TipoPoda.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                    p.FechaPoda.ToString("dd/MM/yyyy").Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                    p.NumSemPoda.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos de la Plantación
+                    p.IdPlantacion.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                    p.FechaPlantacion.ToString("dd/MM/yyyy").Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                    p.NumSemPlantacion.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                    p.EstatusPlantacion.Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos del Cultivo
+                    p.IdCultivo.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                    p.TipoBerry.Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                    p.Variedad.Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos de la Llave
+                    p.IdLlave.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                    p.NombreLlave.Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                    p.SuperficieHa.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+				    p.SuperficieAcres.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                    p.Disponibilidad.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos del Rancho
+                    p.IdRancho.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                    p.NombreRancho.Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                    p.NumeroRancho.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase)
+
+                )
+            ).ToList();
+    }
+
+    private bool busquedaGeneral = true; // true = búsqueda general, false = por período
+
+    private void CambiarTipoBusqueda(bool esGeneral)
+    {
+        busquedaGeneral = esGeneral;
+        // Limpiar filtros al cambiar de tipo
+        if (esGeneral)
+        {
+            fechaInicio = null;
+            fechaFin = null;
+        }
+        else
+        {
+            searchTermPoda = string.Empty;
+        }
+    }
+
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+
+    private void RedirigirPodas()
+    {
+        Navigation.NavigateTo("/Movimientos/GestionPodas");
+    }
+
+
+    private async Task DescargarPDF_GestionPodas()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarPDF_GestionPodas");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarPDF - GestionPodas",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task DescargarExcel_GestionPodas()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarExcel_GestionPodas");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarExcel - GestionPodas",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    [Inject] private IJSRuntime JS { get; set; }
+}

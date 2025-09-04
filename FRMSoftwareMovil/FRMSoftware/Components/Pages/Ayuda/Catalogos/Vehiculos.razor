@@ -1,0 +1,54 @@
+﻿@page "/Ayuda/Catalogos/Vehiculos"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4"><i class="bi bi-truck-front-fill"></i> Ayuda: Vehículos</h2>
+
+    <p>
+        Este formulario permite registrar, modificar y consultar los datos de los vehículos utilizados en el sistema.
+        Para entender el funcionamiento general de los botones utilizados aquí (<strong>Nuevo</strong>, <strong>Guardar</strong>, <strong>Modificar</strong>,
+        <strong>Cancelar</strong> y <strong>Consultar</strong>), visita la sección de
+        <a href="/Ayuda/AyudaGeneral/BotonesGenerales" class="text-decoration-underline">
+            Botones Generales
+        </a>.
+    </p>
+
+    <h4 class="fw-bold mt-4">Descripción rápida</h4>
+    <ul>
+        <li><strong>Nuevo:</strong> Limpia el formulario y lo habilita para ingresar los datos de un nuevo vehículo. Una vez completado el formulario, se debe pulsar <strong>Guardar</strong> para registrar la información.</li>
+        <li><strong>Guardar:</strong> Valida y almacena los datos capturados o modificados.</li>
+        <li><strong>Modificar:</strong> Permite seleccionar un vehículo existente. Luego de seleccionado, se pueden <strong>editar</strong> sus datos o <strong>eliminarlo</strong> si es necesario. Después de realizar cambios, también se debe pulsar <strong>Guardar</strong>.</li>
+        <li><strong>Cancelar:</strong> Cancela la operación actual y regresa el formulario a su estado base.</li>
+        <li><strong>Consultar:</strong> Abre la vista para consultar vehículos registrados. El formulario se muestra deshabilitado para evitar modificaciones. En esta vista también se incluye un <strong>filtro de búsqueda</strong> para localizar vehículos fácilmente, así como botones para <strong>exportar la información a PDF o Excel</strong>.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-5">Ejemplos visuales</h4>
+
+    <h5 class="mt-4">Estado: Nuevo registro</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Catalogos/Vehiculos01.png" alt="Formulario de vehículo en modo Nuevo"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">Formulario habilitado para capturar los datos de un nuevo vehículo. Recuerda pulsar <strong>Guardar</strong> para registrar la información.</p>
+    </div>
+
+    <h5 class="mt-4">Estado: Modificar vehículo</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Catalogos/Vehiculos02.png" alt="Formulario de vehículo en modo Modificar"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            En este estado se cargan los datos de un vehículo existente. Desde aquí es posible editar la información o eliminar el registro. Luego de realizar cambios, recuerda pulsar <strong>Guardar</strong>.
+        </p>
+    </div>
+
+    <h5 class="mt-4">Estado: Consultar vehículos</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Catalogos/Vehiculos03.png" alt="Formulario de vehículo en modo Consultar"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Vista para consultar vehículos registrados. En la parte inferior de la pantalla se encuentra el botón "Regresar" para volver al formulario.
+            Esta vista incluye un <strong>filtro de búsqueda general</strong> en la parte superior y botones para <strong>descargar la información en PDF o Excel</strong>.
+        </p>
+    </div>
+</div>
+
+@code {
+}

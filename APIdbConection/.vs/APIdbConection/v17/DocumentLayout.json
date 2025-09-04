@@ -1,0 +1,85 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\soyob\\Desktop\\FRMSoftwareProject\\APIdbConection\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{E9507C16-7F77-491C-A47B-7FB34675838A}|APIdbConection\\APIdbConection.csproj|c:\\users\\soyob\\desktop\\frmsoftwareproject\\apidbconection\\apidbconection\\models\\historicodbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E9507C16-7F77-491C-A47B-7FB34675838A}|APIdbConection\\APIdbConection.csproj|solutionrelative:apidbconection\\models\\historicodbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E9507C16-7F77-491C-A47B-7FB34675838A}|APIdbConection\\APIdbConection.csproj|c:\\users\\soyob\\desktop\\frmsoftwareproject\\apidbconection\\apidbconection\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{E9507C16-7F77-491C-A47B-7FB34675838A}|APIdbConection\\APIdbConection.csproj|solutionrelative:apidbconection\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E9507C16-7F77-491C-A47B-7FB34675838A}|APIdbConection\\APIdbConection.csproj|c:\\users\\soyob\\desktop\\frmsoftwareproject\\apidbconection\\apidbconection\\models\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E9507C16-7F77-491C-A47B-7FB34675838A}|APIdbConection\\APIdbConection.csproj|solutionrelative:apidbconection\\models\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E9507C16-7F77-491C-A47B-7FB34675838A}|APIdbConection\\APIdbConection.csproj|c:\\users\\soyob\\desktop\\frmsoftwareproject\\apidbconection\\apidbconection\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{E9507C16-7F77-491C-A47B-7FB34675838A}|APIdbConection\\APIdbConection.csproj|solutionrelative:apidbconection\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "C:\\Users\\soyob\\Desktop\\FRMSoftwareProject\\APIdbConection\\APIdbConection\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "APIdbConection\\Properties\\launchSettings.json",
+              "ToolTip": "C:\\Users\\soyob\\Desktop\\FRMSoftwareProject\\APIdbConection\\APIdbConection\\Properties\\launchSettings.json",
+              "RelativeToolTip": "APIdbConection\\Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-02-20T17:01:18.7Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ApplicationDbContext.cs",
+              "DocumentMoniker": "C:\\Users\\soyob\\Desktop\\FRMSoftwareProject\\APIdbConection\\APIdbConection\\Models\\ApplicationDbContext.cs",
+              "RelativeDocumentMoniker": "APIdbConection\\Models\\ApplicationDbContext.cs",
+              "ToolTip": "C:\\Users\\soyob\\Desktop\\FRMSoftwareProject\\APIdbConection\\APIdbConection\\Models\\ApplicationDbContext.cs",
+              "RelativeToolTip": "APIdbConection\\Models\\ApplicationDbContext.cs",
+              "ViewState": "AgIAALABAAAAAAAAAAAAAFkAAAA9AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-16T23:23:13.051Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "HistoricoDbContext.cs",
+              "DocumentMoniker": "C:\\Users\\soyob\\Desktop\\FRMSoftwareProject\\APIdbConection\\APIdbConection\\Models\\HistoricoDbContext.cs",
+              "RelativeDocumentMoniker": "APIdbConection\\Models\\HistoricoDbContext.cs",
+              "ToolTip": "C:\\Users\\soyob\\Desktop\\FRMSoftwareProject\\APIdbConection\\APIdbConection\\Models\\HistoricoDbContext.cs",
+              "RelativeToolTip": "APIdbConection\\Models\\HistoricoDbContext.cs",
+              "ViewState": "AgIAAEkBAAAAAAAAAAAqwEEBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-08T01:09:14.514Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Users\\soyob\\Desktop\\FRMSoftwareProject\\APIdbConection\\APIdbConection\\appsettings.json",
+              "RelativeDocumentMoniker": "APIdbConection\\appsettings.json",
+              "ToolTip": "C:\\Users\\soyob\\Desktop\\FRMSoftwareProject\\APIdbConection\\APIdbConection\\appsettings.json",
+              "RelativeToolTip": "APIdbConection\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAyAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-02-20T16:37:46.775Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

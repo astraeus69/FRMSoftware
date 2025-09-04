@@ -1,0 +1,329 @@
+﻿@page "/Perfil"
+@using FRMSoftware.Data
+@inject Services.Catalogos.UsuariosService usuarioService
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <EditForm Model="usuario" OnValidSubmit="ActualizarPerfil" class="w-100" style="max-width: 700px;">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="card shadow-sm p-4">
+            <h3 class="text-center my-4 fw-bold">Mi Perfil</h3>
+
+            <div class="mb-3">
+                <label class="form-label">Usuario:</label>
+                <InputText class="form-control" @bind-Value="usuario.Usuario" disabled />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Nombre:</label>
+                <InputText class="form-control" @bind-Value="usuario.Nombre" disabled />
+                <ValidationMessage For="@(() => usuario.Nombre)" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Teléfono:</label>
+                <InputText class="form-control" @bind-Value="usuario.Telefono" disabled="@(!modoEdicion)" />
+                <ValidationMessage For="@(() => usuario.Telefono)" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Correo electrónico:</label>
+                <InputText class="form-control" @bind-Value="usuario.Email" disabled="@(!modoEdicion)" />
+                <ValidationMessage For="@(() => usuario.Email)" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Rol:</label>
+                <InputText class="form-control" @bind-Value="usuario.Rol" disabled />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Estatus:</label>
+                <InputText class="form-control" @bind-Value="usuario.Estatus" disabled />
+            </div>
+
+            @if (modoEdicion)
+            {
+                <div class="mb-3 text-center">
+                    <button class="btn" type="button" @onclick="AbrirModalCambiarContrasena">Cambiar contraseña</button>
+                </div>
+            }
+
+            <div class="d-flex justify-content-center gap-2">
+                @if (!modoEdicion)
+                {
+                    <button class="btn" type="button" @onclick="ActivarEdicion">Modificar</button>
+                }
+                else
+                {
+                    <button class="btn" type="submit">Guardar</button>
+                    <button class="btn btn-red" type="button" @onclick="CancelarEdicion">Cancelar</button>
+                }
+            </div>
+        </div>
+    </EditForm>
+</div>
+
+@if (mostrarModalCambiarContrasena)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <EditForm Model="cambioContrasenaModel" OnValidSubmit="ValidarYActualizarContrasena">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">Cambiar contraseña</h5>
+                        <button type="button" class="btn-close" @onclick="CerrarModalCambiarContrasena"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña actual:</label>
+                            <InputText class="form-control" type="password" @bind-Value="cambioContrasenaModel.ContrasenaActual" />
+                            <ValidationMessage For="@(() => cambioContrasenaModel.ContrasenaActual)" class="text-danger" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nueva contraseña:</label>
+                            <InputText class="form-control" type="password" @bind-Value="cambioContrasenaModel.NuevaContrasena" />
+                            <ValidationMessage For="@(() => cambioContrasenaModel.NuevaContrasena)" class="text-danger" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirmar nueva contraseña:</label>
+                            <InputText class="form-control" type="password" @bind-Value="cambioContrasenaModel.ConfirmarNuevaContrasena" />
+                            <ValidationMessage For="@(() => cambioContrasenaModel.ConfirmarNuevaContrasena)" class="text-danger" />
+                        </div>
+                        @if (!string.IsNullOrEmpty(errorContrasena))
+                        {
+                            <div class="alert alert-danger">@errorContrasena</div>
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn" type="submit">Guardar</button>
+                        <button class="btn btn-red" type="button" @onclick="CerrarModalCambiarContrasena">Cancelar</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@if (mostrarMensajeModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@mensajeTitulo</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarMensajeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@mensajeContenido</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-red" @onclick="CerrarMensajeModal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private UsuariosDto usuario = new();
+    private UsuariosDto copiaOriginal = new(); // respaldo para cancelar
+    private bool modoEdicion = false;
+
+    // Modal cambiar contraseña
+    private bool mostrarModalCambiarContrasena = false;
+
+    private CambioContrasenaModel cambioContrasenaModel = new();
+
+    private string errorContrasena = string.Empty;
+
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatosUsuario();
+    }
+
+    private async Task CargarDatosUsuario()
+    {
+        try
+        {
+            var userData = await usuarioService.GetUsuarioPorIdAsync(UserSession.IdUsuario);
+
+            if (userData != null)
+            {
+                usuario = new UsuariosDto
+                    {
+                        IdUsuario = userData.IdUsuario,
+                        Usuario = userData.Usuario,
+                        Nombre = userData.Nombre,
+                        Telefono = userData.Telefono,
+                        Email = userData.Email,
+                        Rol = userData.Rol,
+                        Estatus = userData.Estatus,
+                        Contrasena = userData.Contrasena,
+                    };
+
+                copiaOriginal = new UsuariosDto
+                    {
+                        IdUsuario = usuario.IdUsuario,
+                        Usuario = usuario.Usuario,
+                        Nombre = usuario.Nombre,
+                        Telefono = usuario.Telefono,
+                        Email = usuario.Email,
+                        Rol = usuario.Rol,
+                        Estatus = usuario.Estatus,
+                        Contrasena = usuario.Contrasena,
+                    };
+            }
+            else
+            {
+                MostrarMensajeModal("Error", "No se pudo cargar el perfil del usuario.");
+            }
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error", $"Error al cargar perfil: {ex.Message}");
+            await RegistrarError("CargarDatosUsuario", ex);
+        }
+    }
+
+    private void ActivarEdicion()
+    {
+        modoEdicion = true;
+    }
+
+    private void CancelarEdicion()
+    {
+        usuario = new UsuariosDto
+            {
+                IdUsuario = copiaOriginal.IdUsuario,
+                Usuario = copiaOriginal.Usuario,
+                Nombre = copiaOriginal.Nombre,
+                Telefono = copiaOriginal.Telefono,
+                Email = copiaOriginal.Email,
+                Rol = copiaOriginal.Rol,
+                Estatus = copiaOriginal.Estatus,
+                Contrasena = copiaOriginal.Contrasena,
+            };
+
+        modoEdicion = false;
+    }
+
+    private async Task ActualizarPerfil()
+    {
+        try
+        {
+            bool success = await usuarioService.UpdateUsuarioAsync(usuario.IdUsuario, usuario);
+
+            if (success)
+            {
+                MostrarMensajeModal("Éxito", "Tus datos fueron actualizados correctamente.");
+                modoEdicion = false;
+
+                copiaOriginal = new UsuariosDto
+                    {
+                        IdUsuario = usuario.IdUsuario,
+                        Usuario = usuario.Usuario,
+                        Nombre = usuario.Nombre,
+                        Telefono = usuario.Telefono,
+                        Email = usuario.Email,
+                        Rol = usuario.Rol,
+                        Estatus = usuario.Estatus,
+                        Contrasena = usuario.Contrasena,
+                    };
+            }
+            else
+            {
+                MostrarMensajeModal("Error", "No se pudieron guardar los cambios.");
+            }
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error", $"Error al actualizar perfil: {ex.Message}");
+            await RegistrarError("ActualizarPerfil", ex);
+        }
+    }
+
+    private void AbrirModalCambiarContrasena()
+    {
+        cambioContrasenaModel = new CambioContrasenaModel();
+        errorContrasena = string.Empty;
+        mostrarModalCambiarContrasena = true;
+    }
+
+    private void CerrarModalCambiarContrasena()
+    {
+        mostrarModalCambiarContrasena = false;
+    }
+
+    private async Task ValidarYActualizarContrasena()
+    {
+        errorContrasena = string.Empty;
+
+        // Validar que nueva contraseña y confirmación coincidan
+        if (cambioContrasenaModel.NuevaContrasena != cambioContrasenaModel.ConfirmarNuevaContrasena)
+        {
+            errorContrasena = "La nueva contraseña y su confirmación no coinciden.";
+            return;
+        }
+        try
+        {
+            // Validar contraseña actual con el API
+            bool contrasenaCorrecta = await usuarioService.ValidarContrasenaActualAsync(usuario.IdUsuario, cambioContrasenaModel.ContrasenaActual);
+
+            if (!contrasenaCorrecta)
+            {
+                errorContrasena = "La contraseña actual es incorrecta.";
+                return;
+            }
+
+            // Actualizar la contraseña en el objeto usuario
+            usuario.Contrasena = cambioContrasenaModel.NuevaContrasena;
+
+            // Cerrar modal y mostrar mensaje
+            mostrarModalCambiarContrasena = false;
+
+            MostrarMensajeModal("Éxito", "La contraseña fue actualizada. No olvides guardar los cambios en el perfil para que se apliquen.");
+
+        }
+        catch (Exception ex)
+        {
+            errorContrasena = "Error al validar o actualizar la contraseña.";
+            await RegistrarError("ValidarYActualizarContrasena", ex);
+        }
+    }
+
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    private void CerrarMensajeModal()
+    {
+        mostrarMensajeModal = false;
+    }
+
+    private async Task RegistrarError(string procedimiento, Exception ex)
+    {
+        await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+            {
+                UserName = UserSession.Usuario,
+                ErrorMessage = ex.Message,
+                ErrorProcedure = procedimiento,
+                ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                ErrorTime = DateTime.UtcNow
+            });
+    }
+
+
+}

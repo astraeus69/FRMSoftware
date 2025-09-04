@@ -1,0 +1,59 @@
+﻿@page "/Ayuda/Reportes/ReportePlantacionesPorCultivoVariedad"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4 text-center"><i class="bi bi-tree-fill"></i> Reporte de Plantaciones por Cultivo y Variedad</h2>
+
+    <p>Este reporte presenta un resumen detallado de las plantaciones agrícolas agrupadas por <strong>tipo de berry</strong> (cultivo). Permite analizar la distribución y características de cada plantación, así como visualizar el total de plantas por variedad mediante tablas y gráficas.</p>
+
+    <h4 class="fw-bold mt-4">Estructura del Reporte</h4>
+    <ul>
+        <li><strong>Encabezado:</strong> Incluye el logotipo de la empresa, la información fiscal y la fecha de generación del reporte.</li>
+        <li><strong>Nombre del reporte:</strong> Título centrado que indica claramente el contenido del reporte.</li>
+        <li><strong>Botones de exportación:</strong> Permiten descargar el reporte en formato PDF o Excel.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Tabla de Datos</h4>
+    <p>La tabla se encuentra agrupada por <strong>tipo de berry</strong>. Cada grupo muestra todas las plantaciones asociadas a ese cultivo.</p>
+
+    <ul>
+        <li><strong>Encabezado de grupo:</strong> Contiene el nombre del tipo de berry (cultivo).</li>
+        <li>
+            <strong>Columnas de la tabla:</strong>
+            <ul>
+                <li>ID, cantidad de plantas y plantas por metro</li>
+                <li>Fecha y número de semana de plantación</li>
+                <li>Estatus de la plantación</li>
+                <li>Datos del cultivo: ID, tipo de berry, variedad</li>
+                <li>Datos del vivero: ID, nombre y código</li>
+                <li>Datos del rancho: ID, nombre y número</li>
+                <li>Datos de la llave: ID, nombre, superficie en hectáreas y acres</li>
+            </ul>
+        </li>
+        <li><strong>Totales por grupo:</strong> Se muestra la suma de todas las plantas registradas dentro del mismo tipo de berry.</li>
+    </ul>
+
+    <div class="my-4">
+        <img src="images/Ayuda/Reportes/PlantacionesPorCultivoVariedad01.png" alt="Tabla de plantaciones agrupadas por tipo de berry" class="img-fluid rounded shadow-sm" style="border: 1px solid #ccc;" />
+        <p class="text-muted mt-2">Ejemplo de tabla agrupada por tipo de berry con sus respectivos totales por grupo.</p>
+    </div>
+
+    <h4 class="fw-bold mt-4">Gráficas de Plantaciones</h4>
+    <p>Por cada grupo de cultivo (tipo de berry), se muestra una gráfica de barras que representa la cantidad total de plantas registradas por variedad.</p>
+    <ul>
+        <li>Cada barra representa una <strong>variedad</strong> dentro del cultivo.</li>
+        <li>La altura de la barra indica el número de plantas registradas.</li>
+        <li>Ayuda a identificar visualmente qué variedades tienen mayor o menor presencia.</li>
+    </ul>
+
+    <div class="my-4 d-flex justify-content-center">
+        <img src="images/Ayuda/Reportes/PlantacionesPorCultivoVariedad02.png" alt="Gráfica de plantas por variedad" class="img-fluid rounded shadow-sm" style="max-width: 800px; border: 1px solid #ccc;" />
+    </div>
+
+    <h4 class="fw-bold mt-4">Consejos de uso</h4>
+    <ul>
+        <li>Exporta el reporte para informes técnicos o de producción.</li>
+        <li>Identifica cuáles variedades tienen mayor cobertura dentro de cada cultivo.</li>
+        <li>Compara visualmente los volúmenes de plantas entre distintas variedades y berries.</li>
+        <li>Verifica si los datos de viveros y llaves están correctamente asignados por variedad.</li>
+    </ul>
+</div>

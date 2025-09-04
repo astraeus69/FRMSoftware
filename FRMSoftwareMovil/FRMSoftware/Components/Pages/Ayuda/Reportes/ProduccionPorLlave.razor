@@ -1,0 +1,68 @@
+﻿@page "/Ayuda/Reportes/ReporteProduccionPorLlave"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4 text-center"><i class="bi bi-graph-up"></i> Reporte de Producción de Cajas por Llave</h2>
+
+    <p>Este reporte muestra un desglose completo de la producción agrícola organizada por cada <strong>llave</strong>. Incluye una tabla detallada y una gráfica que resumen la información de cosechas, producción, plantaciones, cultivos y ranchos, facilitando la interpretación del rendimiento por llave.</p>
+
+    <h4 class="fw-bold mt-4">Estructura del Reporte</h4>
+    <ul>
+        <li><strong>Encabezado:</strong> Se presenta el logotipo de la empresa, su información fiscal y la fecha de generación del reporte.</li>
+        <li><strong>Nombre del reporte:</strong> Título centrado que indica claramente el objetivo del reporte.</li>
+        <li><strong>Botones de exportación:</strong> Permiten descargar el reporte en formato PDF o Excel.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Tabla de Datos</h4>
+    <p>La tabla se organiza por <strong>llave</strong>, agrupando las cosechas asociadas a cada una. Cada grupo muestra una fila con los datos generales de la llave, seguida por una lista de registros detallados.</p>
+
+    <ul>
+        <li>
+            <strong>Encabezado de grupo:</strong> Muestra:
+            <ul>
+                <li>ID y nombre de la llave</li>
+                <li>Superficie en hectáreas y acres</li>
+            </ul>
+        </li>
+        <li>
+            <strong>Datos de cada fila:</strong>
+            <ul>
+                <li>ID y fecha de la cosecha</li>
+                <li>Semana correspondiente</li>
+                <li>Información del tipo de caja y cantidad de cajas</li>
+                <li>Kilos de proceso registrados</li>
+                <li>Datos de la plantación asociada</li>
+                <li>Datos del cultivo (tipo de berry y variedad)</li>
+                <li>Información del rancho</li>
+            </ul>
+        </li>
+        <li><strong>Totales por grupo:</strong> Al final de cada llave, se muestra el total de cajas producidas.</li>
+        <li><strong>Total general:</strong> Al final de la tabla, se muestra la suma de todas las cajas producidas.</li>
+    </ul>
+
+    <div class="my-4">
+        <img src="images/Ayuda/Reportes/ProduccionPorLlave01.png" alt="Tabla de producción agrupada por llave" class="img-fluid rounded shadow-sm" style="border: 1px solid #ccc;" />
+        <p class="text-muted mt-2">Vista de la tabla con agrupaciones por llave y totales por grupo y generales.</p>
+    </div>
+
+    <h4 class="fw-bold mt-4">Gráfica de Producción</h4>
+    <p>Al final del reporte se encuentra una gráfica de barras que representa visualmente la cantidad de cajas producidas por cada llave.</p>
+    <ul>
+        <li>Cada barra representa una llave identificada por su nombre.</li>
+        <li>La altura de la barra indica el total de cajas producidas.</li>
+        <li>Permite comparar fácilmente el rendimiento entre llaves.</li>
+    </ul>
+
+    <div class="my-4 d-flex justify-content-center">
+        <img src="images/Ayuda/Reportes/ProduccionPorLlave02.png" alt="Gráfica de cajas por llave" class="img-fluid rounded shadow-sm" style="max-width: 800px; border: 1px solid #ccc;" />
+    </div>
+
+    <h4 class="fw-bold mt-4">Consejos de uso</h4>
+    <ul>
+        <li>Exporta el reporte para su análisis externo o presentación a supervisores.</li>
+        <li>Consulta rápidamente qué llave tuvo mejor o peor rendimiento.</li>
+        <li>Verifica si existe correlación entre el tipo de berry, variedad y la producción total.</li>
+    </ul>
+</div>
+
+@code {
+}

@@ -1,0 +1,66 @@
+﻿@page "/Ayuda/Reportes/ReporteProcesoPorLlave"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4 text-center"><i class="bi bi-graph-up-arrow"></i> Reporte de Kilos de Proceso por Llave</h2>
+
+    <p>Este reporte muestra un análisis detallado de los <strong>kilos procesados</strong> agrupados por cada <strong>llave</strong>. Proporciona tanto una tabla con datos completos como una gráfica que facilita la interpretación visual del volumen procesado, permitiendo evaluar el rendimiento de las distintas llaves en términos de producción.</p>
+
+    <h4 class="fw-bold mt-4">Estructura del Reporte</h4>
+    <ul>
+        <li><strong>Encabezado:</strong> Incluye el logotipo de la empresa, su información fiscal y la fecha actual del sistema.</li>
+        <li><strong>Nombre del reporte:</strong> Título centrado que identifica claramente el objetivo del reporte.</li>
+        <li><strong>Botones de exportación:</strong> Permiten descargar el contenido del reporte en formato PDF o Excel.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Tabla de Datos</h4>
+    <p>La tabla está organizada por <strong>llave</strong>. Cada grupo representa una llave específica y contiene la información detallada de las cosechas asociadas.</p>
+
+    <ul>
+        <li>
+            <strong>Encabezado de grupo:</strong> Presenta:
+            <ul>
+                <li>ID y nombre de la llave</li>
+                <li>Superficie en hectáreas y acres</li>
+            </ul>
+        </li>
+        <li>
+            <strong>Datos de cada fila:</strong>
+            <ul>
+                <li>ID, fecha y semana de la cosecha</li>
+                <li>ID de producción y kilos procesados</li>
+                <li>Información de la plantación (ID, fecha, semana y estatus)</li>
+                <li>Datos del cultivo (ID, tipo de berry y variedad)</li>
+                <li>Datos del rancho (ID, nombre y número)</li>
+            </ul>
+        </li>
+        <li><strong>Totales por grupo:</strong> Al final de cada llave, se muestra el total de kilos procesados.</li>
+        <li><strong>Total general:</strong> Una fila final resume los kilos procesados por todas las llaves.</li>
+    </ul>
+
+    <div class="my-4">
+        <img src="images/Ayuda/Reportes/ProcesoPorLlave01.png" alt="Tabla de kilos procesados por llave" class="img-fluid rounded shadow-sm" style="border: 1px solid #ccc;" />
+        <p class="text-muted mt-2">Vista de la tabla con agrupación por llave y totales por grupo y general.</p>
+    </div>
+
+    <h4 class="fw-bold mt-4">Gráfica de Kilos por Llave</h4>
+    <p>Al final del reporte se muestra una gráfica de barras que representa los kilos procesados por cada llave.</p>
+    <ul>
+        <li>Cada barra representa una llave individual.</li>
+        <li>La altura de la barra indica el volumen total de kilos procesados.</li>
+        <li>Facilita la comparación visual del rendimiento entre llaves.</li>
+    </ul>
+
+    <div class="my-4 d-flex justify-content-center">
+        <img src="images/Ayuda/Reportes/ProcesoPorLlave02.png" alt="Gráfica de kilos por llave" class="img-fluid rounded shadow-sm" style="max-width: 800px; border: 1px solid #ccc;" />
+    </div>
+
+    <h4 class="fw-bold mt-4">Consejos de uso</h4>
+    <ul>
+        <li>Exporta el reporte para análisis en Excel o para presentaciones ejecutivas en PDF.</li>
+        <li>Utiliza la gráfica para identificar rápidamente qué llave tuvo mayor o menor volumen procesado.</li>
+        <li>Evalúa si existen patrones de producción según el tipo de berry o la variedad.</li>
+    </ul>
+</div>
+
+@code {
+}

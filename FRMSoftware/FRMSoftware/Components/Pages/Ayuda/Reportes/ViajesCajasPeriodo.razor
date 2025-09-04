@@ -1,0 +1,71 @@
+﻿@page "/Ayuda/Reportes/ReporteViajesCajasPeriodo"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4 text-center"><i class="bi bi-truck"></i> Reporte de Viajes de Cajas por Periodo</h2>
+
+    <p>Este reporte presenta el detalle de los viajes de cajas realizados dentro de un rango de fechas especificado. Incluye información sobre las tarimas transportadas, los cultivos cosechados, la producción y los vehículos utilizados, lo cual permite tener un control integral de la logística de transporte.</p>
+
+    <h4 class="fw-bold mt-4">Filtros del Reporte</h4>
+    <ul>
+        <li><strong>Fecha de inicio y fin:</strong> Permiten delimitar el periodo de análisis.</li>
+        <li><strong>Botón "Filtrar":</strong> Aplica los filtros seleccionados para actualizar los datos mostrados.</li>
+    </ul>
+
+
+    <h4 class="fw-bold mt-4">Exportación</h4>
+    <ul>
+        <li><strong>Descargar PDF:</strong> Genera una versión imprimible del reporte, conservando los estilos y agrupaciones.</li>
+        <li><strong>Descargar Excel:</strong> Exporta los datos en formato editable para facilitar su análisis o archivo.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Tabla de Viajes</h4>
+    <p>La tabla muestra los viajes agrupados por ID de viaje y producción. Los datos incluyen detalles de tarimas, cosechas, producción, cultivo, rancho, empleado y vehículo involucrado en cada viaje.</p>
+
+    <ul>
+        <li><strong>Viaje:</strong> ID, fecha de salida, número de semana y estado de aprobación</li>
+        <li><strong>Tarima:</strong> ID, cantidad de cajas y licencia del vehículo</li>
+        <li><strong>Producción:</strong> ID, tipo de clamshell, cantidad de cajas y kilos de proceso</li>
+        <li><strong>Cosecha:</strong> ID, fecha, número de semana</li>
+        <li><strong>Cultivo:</strong> ID, tipo de berry y variedad</li>
+        <li><strong>Rancho:</strong> ID, nombre y número</li>
+        <li><strong>Empleado:</strong> ID, nombre y teléfono</li>
+        <li><strong>Vehículo:</strong> ID, placas, modelo y marca</li>
+        <li><strong>Total de cajas:</strong> Se muestra al final de la tabla como sumatoria general</li>
+    </ul>
+
+    <div class="my-4">
+        <img src="images/Ayuda/Reportes/ViajesCajasPeriodo01.png" alt="Tabla de viajes de cajas por periodo" class="img-fluid rounded shadow-sm" style="border: 1px solid #ccc;" />
+        <p class="text-muted mt-2">Vista de la tabla con detalles de cada viaje agrupado por ID de viaje y producción.</p>
+    </div>
+
+    <h4 class="fw-bold mt-4">Gráfica de Cajas por Periodo</h4>
+    <p>Representa la distribución de la cantidad de cajas transportadas en los viajes durante el periodo seleccionado.</p>
+
+    <ul>
+        <li>Ayuda a identificar los días o semanas con mayor carga logística.</li>
+        <li>Útil para detectar picos en la producción y transporte.</li>
+    </ul>
+
+    <div class="my-4 d-flex justify-content-center">
+        <img src="images/Ayuda/Reportes/ViajesCajasPeriodo02.png" alt="Gráfica de cajas por periodo" class="img-fluid rounded shadow-sm" style="max-width: 800px; border: 1px solid #ccc;" />
+    </div>
+
+    <h4 class="fw-bold mt-4">Gráfica de Viajes Aceptados vs Rechazados</h4>
+    <p>Esta gráfica de pastel resume el estado de aprobación de los viajes dentro del periodo analizado.</p>
+
+    <ul>
+        <li>Permite evaluar la proporción de viajes exitosamente aprobados.</li>
+        <li>Útil para revisar eficiencia en los procesos de validación y logística.</li>
+    </ul>
+
+    <div class="my-4 d-flex justify-content-center">
+        <img src="images/Ayuda/Reportes/ViajesCajasPeriodo03.png" alt="Gráfica de viajes aceptados vs rechazados" class="img-fluid rounded shadow-sm" style="max-width: 600px; border: 1px solid #ccc;" />
+    </div>
+
+    <h4 class="fw-bold mt-4">Recomendaciones de uso</h4>
+    <ul>
+        <li>Utiliza este reporte para planificar mejor la logística y el uso de vehículos.</li>
+        <li>Revisa los viajes rechazados para identificar áreas de mejora operativa.</li>
+        <li>Exporta los datos periódicamente como respaldo o para análisis históricos.</li>
+    </ul>
+</div>

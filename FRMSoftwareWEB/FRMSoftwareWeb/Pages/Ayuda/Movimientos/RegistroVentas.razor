@@ -1,0 +1,86 @@
+﻿@page "/Ayuda/Movimientos/RegistroVentas"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4"><i class="bi bi-cart4"></i> Ayuda: Registro de Ventas</h2>
+
+    <p>
+        Esta pantalla permite registrar, modificar y consultar las ventas realizadas asociadas a diferentes viajes,
+        ya sea en forma de cajas (tarimas) o como parte de un proceso (kilos).
+        Al pulsar el botón <strong>Nuevo</strong>, aparece un modal que pregunta si la venta corresponde a <strong>Cajas</strong> o <strong>Proceso</strong>,
+        lo cual determina el tipo de formulario y los campos a mostrar.
+        Para entender el funcionamiento de los botones generales (<strong>Nuevo</strong>, <strong>Guardar</strong>, <strong>Modificar</strong>, <strong>Cancelar</strong> y <strong>Consultar</strong>),
+        visita la sección
+        <a href="/Ayuda/AyudaGeneral/BotonesGenerales" class="text-decoration-underline">Botones Generales</a>.
+    </p>
+
+    <p>
+        En modo de consulta, puedes filtrar los registros según el tipo de venta mediante un <strong>toggle</strong> o selección que permite elegir entre
+        <strong>Consulta de cajas</strong> y <strong>Consulta de proceso</strong>.
+        Para conocer más, consulta
+        <a href="/Ayuda/AyudaGeneral/BusquedaPeriodo" class="text-decoration-underline">Búsqueda por Periodo</a> o
+        <a href="/Ayuda/AyudaGeneral/FiltradoCajasProceso" class="text-decoration-underline">Filtrado de cajas o proceso</a>.
+    </p>
+
+    <h4 class="fw-bold mt-4">Descripción rápida</h4>
+    <ul>
+        <li><strong>Nuevo:</strong> Muestra un modal para elegir el tipo de venta: Cajas o Proceso. Activa el formulario para registrar una nueva venta.</li>
+        <li><strong>Selección de viaje:</strong> Permite elegir un viaje previamente registrado para asociar la venta.</li>
+        <li><strong>Cajas:</strong> Muestra la sección <strong>Datos de tarima</strong> donde se capturan cantidades y licencias por cada tarima. Se pueden agregar varias ventas de cajas a la tabla.</li>
+        <li><strong>Proceso:</strong> Muestra la sección <strong>Datos de proceso</strong> para capturar kilos transportados. El registro de venta se hace directamente.</li>
+        <li><strong>Datos de venta:</strong> Incluyen precio, precio en dólares, total calculado y fecha de facturación.</li>
+        <li><strong>Guardar:</strong> Valida y registra la venta (ya sea de cajas o proceso).</li>
+        <li><strong>Modificar:</strong> Permite editar o eliminar una venta previamente registrada.</li>
+        <li><strong>Cancelar:</strong> Cancela la operación actual y limpia el formulario.</li>
+        <li><strong>Consultar:</strong> Vista de solo lectura con los registros. Se puede filtrar y exportar a <strong>PDF</strong> o <strong>Excel</strong>.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-5">Ejemplos visuales</h4>
+
+    <h5 class="mt-4">Modal de selección de tipo de venta</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/RegistroVentas01.png" alt="Modal tipo de venta"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Al pulsar <strong>Nuevo</strong>, se muestra este modal para seleccionar si la venta será de <strong>Cajas</strong> (tarimas) o de <strong>Proceso</strong> (kilos).
+        </p>
+    </div>
+
+    <h5 class="mt-4">Selección de viaje</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/RegistroVentas02.png" alt="Selección de viaje"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Selecciona un viaje para cargar los datos relacionados, como rancho, cultivo y fecha.
+        </p>
+    </div>
+
+    <h5 class="mt-4">Formulario para ventas de cajas</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/RegistroVentas03.png" alt="Formulario ventas de cajas"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Cuando la venta es de cajas, puedes capturar los datos de cada tarima, incluyendo cantidad y licencia, además de los datos de venta (precio, total y fecha).
+        </p>
+    </div>
+
+    <h5 class="mt-4">Formulario para ventas de proceso</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/RegistroVentas04.png" alt="Formulario ventas de proceso"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Para ventas de proceso, se captura el peso en kilos transportados y los datos de venta asociados.
+        </p>
+    </div>
+
+    <h5 class="mt-4">Listado de ventas registradas</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/RegistroVentas05.png" alt="Listado de ventas"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Tabla con las ventas agregadas, que permite editar o eliminar registros antes de guardar definitivamente.
+        </p>
+    </div>
+</div>
+
+@code {
+}

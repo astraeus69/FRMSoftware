@@ -1,0 +1,573 @@
+﻿@page "/Catalogos/Empleados"
+@using FRMSoftware.Data
+@inject Services.Catalogos.EmpleadosService empleadosService
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="margin-top:20px">
+        <div class="col-md-6 d-none d-xl-flex align-items-center justify-content-center">
+            <img src="images/Catalogos/EmpleadosFRM.png" alt="Imagen de Empleados" class="img-fluid" />
+        </div>
+
+        <div class="col-xl-6">
+            <EditForm Model="empleado" OnValidSubmit="GrabarRegistro" id="empleadoForm">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="text-center my-4 fw-bold">Empleados</h3>
+
+                        <div class="mb-1">
+                            <label for="Nombre" class="form-label">Nombre:</label>
+                            <InputText id="Nombre" class="form-control" @bind-Value="empleado.Nombre" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => empleado.Nombre)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Departamento" class="form-label">Departamento:</label>
+                            <InputText id="Departamento" class="form-control" @bind-Value="empleado.Departamento" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => empleado.Departamento)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Puesto" class="form-label">Puesto:</label>
+                            <InputText id="Puesto" class="form-control" @bind-Value="empleado.Puesto" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => empleado.Puesto)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Direccion" class="form-label">Dirección:</label>
+                            <InputText id="Direccion" class="form-control" @bind-Value="empleado.Direccion" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => empleado.Direccion)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Colonia" class="form-label">Colonia:</label>
+                            <InputText id="Colonia" class="form-control" @bind-Value="empleado.Colonia" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => empleado.Colonia)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="CP" class="form-label">Código postal:</label>
+                            <InputText id="CP" class="form-control" @bind-Value="empleado.CP" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => empleado.CP)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Municipio" class="form-label">Municipio:</label>
+                            <InputText id="Municipio" class="form-control" @bind-Value="empleado.Municipio" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => empleado.Municipio)" class="text-danger" />
+                        </div>
+
+                        <!-- Input para seleccionar el estado -->
+                        <div class="mb-1">
+                            <label for="Estado" class="form-label">Estado:</label>
+                            <InputText id="Estado" class="form-control readonly-input" @bind-Value="empleado.Estado" @onclick="AbrirModalEstado" readonly disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => empleado.Estado)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Telefono" class="form-label">Teléfono:</label>
+                            <InputText id="Telefono" class="form-control" @bind-Value="empleado.Telefono" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => empleado.Telefono)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Estatus" class="form-label">Estatus:</label>
+                            <InputSelect id="Estatus" class="form-control" @bind-Value="empleado.Estatus" disabled="@deshabilitarFormulario">
+                                <option disabled selected value="">Seleccione un estatus:</option>
+                                <option value="Activo">Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => empleado.Estatus)" class="text-danger" />
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+
+<!-- Botones -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Editor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="NuevoRegistro" disabled="@deshabilitarNuevo">Nuevo</button>
+            <button class="btn fixed-size-btn mx-2" type="submit" form="empleadoForm" disabled="@deshabilitarGuardar">Guardar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="AbrirModal" disabled="@deshabilitarModificar">Modificar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="Cancelar" disabled="@deshabilitarCancelar">Cancelar</button>
+        }
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Consultor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="RedirigirAConsulta" disabled="@deshabilitarConsultar">Consultar</button>
+        }
+
+    </div>
+</div>
+
+
+<!-- MODAL para mostrar la tabla -->
+@if (mostrarModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Lista de empleados</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Contenedor para alinear horizontalmente -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <input @bind="searchTerm" placeholder="Buscar empleados..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltro">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor de la tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 10%;">Acciones</th>
+
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Departamento</th>
+                                    <th>Puesto</th>
+                                    <th>Estado</th>
+                                    <th>Municipio</th>
+                                    <th>Estatus</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in filteredEmpleados)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn editar" @onclick="() => SeleccionarEmpleado(item)">Editar</button>
+                                                @if (UserSession.Rol == "Admin")
+                                                {
+                                                    <button class="btn btn-red editar" @onclick="() => ConfirmarEliminar(item.IdEmpleado)">Eliminar</button>
+                                                }
+
+                                            </div>
+                                        </td>
+
+                                        <td>@item.IdEmpleado</td>
+                                        <td>@item.Nombre</td>
+                                        <td>@item.Departamento</td>
+                                        <td>@item.Puesto</td>
+                                        <td>@item.Estado</td>
+										<td>@item.Municipio</td>
+                                        <td>@item.Estatus</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal de confirmación de eliminación -->
+@if (mostrarConfirmacion)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro de que desea eliminar este empleado?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" @onclick="CancelarEliminar">Cancelar</button>
+                    <button class="btn btn-red" @onclick="EliminarEmpleadoConfirmado">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal para mostrar mensajes -->
+@if (mostrarMensajeModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <!-- Agregar modal-dialog-centered -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@mensajeTitulo</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarMensajeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@mensajeContenido</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-red" @onclick="CerrarMensajeModal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+<!-- MODAL para seleccionar el estado -->
+@if (mostrarModalEstado)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog" role="document" style="max-width: 400px; width: 90%; margin: auto; display: flex; align-items: center; min-height: 100vh;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Seleccione un estado:</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModalEstado"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Contenedor para alinear horizontalmente -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div id="estadoSelector" class="estado-picker">
+                                @foreach (var estado in estadosMexico)
+                                {
+                                    <div class="estado-item" @onclick="() => SeleccionarEstado(estado)">
+                                        @estado
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    private EmpleadosDto empleado = new EmpleadosDto();
+    private List<EmpleadosDto> empleados = new();
+
+    // MODALES
+    private bool mostrarModal = false;
+    private bool mostrarConfirmacion = false;
+
+    // FORMULARIO
+    private bool deshabilitarFormulario = true;
+
+    // BOTONES
+    private bool deshabilitarNuevo = false;
+    private bool deshabilitarGuardar = true;
+    private bool deshabilitarModificar = false;
+    private bool deshabilitarCancelar = true;
+    private bool deshabilitarConsultar = false;
+    private int idEmpleadoEliminar;
+
+    // BÚSQUEDA INPUT
+    private string searchTerm = string.Empty;  // Campo de búsqueda
+    private List<EmpleadosDto> filteredEmpleados = new(); // Lista filtrada
+
+    // EMPLEADOS DUPLICADOS
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+    // SCROLL PICKER
+    private bool mostrarModalEstado = false; 
+    private List<string> estadosMexico = new()
+    {
+        "Aguascalientes", "Baja California", "Baja California Sur", "Campeche",
+        "Chiapas", "Chihuahua", "Coahuila", "Colima", "Ciudad de México",
+        "Durango", "Guanajuato", "Guerrero", "Hidalgo", "Jalisco", "México",
+        "Michoacán", "Morelos", "Nayarit", "Nuevo León", "Oaxaca", "Puebla",
+        "Querétaro", "Quintana Roo", "San Luis Potosí", "Sinaloa", "Sonora",
+        "Tabasco", "Tamaulipas", "Tlaxcala", "Veracruz", "Yucatán", "Zacatecas"
+    };
+
+    private string selectedEstado;
+
+    // Método para abrir el modal de estados
+    private void AbrirModalEstado()
+    {
+        mostrarModalEstado = true;
+        JSRuntime.InvokeVoidAsync("initializePicker");
+    }
+
+    // Método para seleccionar un estado
+    private void SeleccionarEstado(string estado)
+    {
+        selectedEstado = estado;
+        empleado.Estado = estado;  // Asignamos el estado al empleado
+        mostrarModalEstado = false;
+    }
+
+    // Método para cerrar el modal de estados
+    private void CerrarModalEstado()
+    {
+        mostrarModalEstado = false;
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarEmpleados();
+    }
+
+    // Actualiza la lista de empleados
+    private async Task ConsultarEmpleados()
+    {
+        try
+        {
+            empleados = await empleadosService.GetEmpleadosAsync();
+
+            if (empleados == null || !empleados.Any())
+            {
+                MostrarMensajeModal("Información", "No se encontraron empleados.");
+                return;
+            }
+
+            filteredEmpleados = empleados.OrderBy(e => e.IdEmpleado).ToList();
+            StateHasChanged(); // Refresca la UI
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error", $"Error al consultar empleados: {ex.Message}");
+
+            // Registrar el error en la base de datos
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarEmpleados",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void AplicarFiltro()
+    {
+        if (string.IsNullOrEmpty(searchTerm))
+        {
+            filteredEmpleados = empleados;
+        }
+        else
+        {
+            searchTerm = searchTerm.Trim();
+
+            filteredEmpleados = empleados.Where(e =>
+                e.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                e.Departamento.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                e.Puesto.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                e.Direccion.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                e.Colonia.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                e.CP.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                e.Municipio.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                e.Estado.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                e.Telefono.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                e.Estatus.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+        }
+    }
+
+    private void NuevoRegistro()
+    {
+        empleado = new EmpleadosDto();
+        deshabilitarFormulario = false;
+        deshabilitarGuardar = false;
+        deshabilitarNuevo = true;
+        deshabilitarModificar = true;
+        deshabilitarConsultar = true;
+        deshabilitarCancelar = false;
+    }
+
+    private void Cancelar()
+    {
+        // Restablece el formulario y los botones a su estado inicial
+        empleado = new EmpleadosDto();
+        deshabilitarFormulario = true;
+        deshabilitarGuardar = true;
+        deshabilitarNuevo = false;
+        deshabilitarModificar = false;
+        deshabilitarConsultar = false; // Habilitar consultar nuevamente
+        deshabilitarCancelar = true;
+    }
+
+    private async Task GrabarRegistro()
+    {
+        try
+        {
+            bool success;
+            string message;
+
+            if (empleado.IdEmpleado == 0)
+            {
+                // Si no tiene un IdEmpleado, es un nuevo registro
+                var result = await empleadosService.CreateEmpleadoAsync(empleado);
+                success = result.Success;
+                message = result.Message;
+            }
+            else
+            {
+                // Si tiene un IdEmpleado, es una actualización
+                success = await empleadosService.UpdateEmpleadoAsync(empleado.IdEmpleado, empleado);
+                message = success ? "Actualización exitosa." : "Error al actualizar el registro.";
+            }
+
+            if (success)
+            {
+                await ConsultarEmpleados();
+                deshabilitarFormulario = true;
+                deshabilitarGuardar = true;
+                deshabilitarNuevo = false;
+                deshabilitarModificar = false;
+                deshabilitarCancelar = true;
+                deshabilitarConsultar = false; // Habilitar consultar nuevamente
+                empleado = new EmpleadosDto(); // Limpiar formulario
+
+                // Mostrar mensaje de éxito
+                MostrarMensajeModal("Éxito", message);
+            }
+            else
+            {
+                // Mostrar mensaje de error o duplicidad
+                MostrarMensajeModal("Error", message);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Manejo de errores
+            MostrarMensajeModal("Error", $"Hubo un error al procesar la operación: {ex.Message}");
+
+            // Opcionalmente, registrar el error
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "GrabarRegistroEmpleados",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    // EMPLEADOS DUPLICADOS
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    private void CerrarMensajeModal()
+    {
+        mostrarMensajeModal = false;
+    }
+
+    // CONTROL DE MODALES
+    private void AbrirModal()
+    {
+        mostrarModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+        searchTerm = string.Empty;
+
+    }
+
+    // MODIFICAR EMPLEADO (Editar)
+    private void SeleccionarEmpleado(EmpleadosDto selectedEmpleado)
+    {
+        empleado = new EmpleadosDto
+            {
+                IdEmpleado = selectedEmpleado.IdEmpleado,
+                Nombre = selectedEmpleado.Nombre,
+                Departamento = selectedEmpleado.Departamento,
+                Puesto = selectedEmpleado.Puesto,
+                Direccion = selectedEmpleado.Direccion,
+                Colonia = selectedEmpleado.Colonia,
+                CP = selectedEmpleado.CP,
+                Municipio = selectedEmpleado.Municipio,
+                Estado = selectedEmpleado.Estado,
+                Telefono = selectedEmpleado.Telefono,
+                Estatus = selectedEmpleado.Estatus
+            };
+
+        deshabilitarFormulario = false;
+        deshabilitarGuardar = false;
+        deshabilitarNuevo = true;
+        deshabilitarModificar = true;
+        deshabilitarCancelar = false;
+        deshabilitarConsultar = true;
+        mostrarModal = false; // Cierra el modal
+    }
+
+    private void ConfirmarEliminar(int id)
+    {
+        idEmpleadoEliminar = id;
+        mostrarConfirmacion = true;
+    }
+
+    private void CancelarEliminar()
+    {
+        mostrarConfirmacion = false;
+    }
+
+    private async Task EliminarEmpleadoConfirmado()
+    {
+        try
+        {
+            mostrarConfirmacion = false;
+            bool success = await empleadosService.DeleteEmpleadoAsync(idEmpleadoEliminar);
+
+            if (success)
+            {
+                await ConsultarEmpleados();
+                MostrarMensajeModal("Éxito", "Empleado eliminado exitosamente.");
+            }
+            else
+            {
+                MostrarMensajeModal("Error", "No se pudo eliminar el empleado.");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Manejo de errores en caso de fallo inesperado
+            MostrarMensajeModal("Error", $"Hubo un error al eliminar el empleado: {ex.Message}");
+
+            // Opcionalmente, registrar el error en la base de datos o logs
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "EliminarEmpleadoConfirmado",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    // Redirigir a la página de consulta
+    private void RedirigirAConsulta()
+    {
+        Navigation.NavigateTo("/Catalogos/EmpleadosConsulta");
+    }
+}

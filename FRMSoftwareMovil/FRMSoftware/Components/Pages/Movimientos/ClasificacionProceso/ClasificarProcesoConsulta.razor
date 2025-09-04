@@ -1,0 +1,318 @@
+﻿@page "/Movimientos/ClasificarProcesoConsulta"
+@using FRMSoftware.Data
+@inject FRMSoftware.Services.Movimientos.ProcesosService procesosService
+@inject NavigationManager Navigation
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="margin-top:20px">
+        <h2 class="text-center fw-bold" style="margin-bottom: 20px">Consulta de proceso</h2>
+
+        <div style="height: 140px">
+            <!-- Botones para seleccionar tipo de búsqueda -->
+            <div class="d-flex mb-3">
+                <div class="toggle-container">
+                    <div class="toggle-slider" style='left: @(busquedaGeneral ? "0%" : "50%")'></div>
+                    <button class="toggle-btn @(busquedaGeneral ? "active" : "")" @onclick="() => CambiarTipoBusqueda(true)">
+                        Búsqueda general
+                    </button>
+                    <button class="toggle-btn @(!busquedaGeneral ? "active" : "")" @onclick="() => CambiarTipoBusqueda(false)">
+                        Búsqueda por período
+                    </button>
+                </div>
+            </div>
+
+
+            <!-- Contenedor para búsqueda general (texto) -->
+            @if (busquedaGeneral)
+            {
+                <div class="row mb-3 align-items-center">
+                    <div class="col-auto">
+                        <input @bind="searchTermProceso" placeholder="Buscar proceso..." class="form-control" />
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn fixed-size-btn" @onclick="AplicarFiltroProcesos">Buscar</button>
+                    </div>
+                </div>
+            }
+
+            <!-- Contenedor para búsqueda por período (fechas) -->
+            @if (!busquedaGeneral)
+            {
+                <div class="row mb-3 align-items-center">
+                    <div class="col-auto">
+                        <label>Desde:</label>
+                        <InputDate class="form-control" @bind-Value="fechaInicio" />
+                    </div>
+                    <div class="col-auto">
+                        <label>Hasta:</label>
+                        <InputDate class="form-control" @bind-Value="fechaFin" />
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn fixed-size-btn" style="margin-top: 25px" @onclick="AplicarFiltroProcesos">Buscar</button>
+                    </div>
+                </div>
+            }
+        </div>
+
+
+        <!-- Contenedor de la tabla con scroll -->
+        <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+            <table class="table table-striped table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID Proceso</th>
+                        <th>Clase A (kg)</th>
+                        <th>Clase B (kg)</th>
+                        <th>Clase C (kg)</th>
+                        <th>Rechazo (kg)</th>
+
+                        <th>ID Cosecha</th>
+                        <th>Fecha de cosecha</th>
+
+                        <th>ID Producción</th>
+                        <th>Tipo de clamshell</th>
+                        <th>Cantidad de cajas</th>
+                        <th>Kilos de proceso</th>
+
+                        <th>ID Cultivo</th>
+                        <th>Tipo de berry</th>
+                        <th>Variedad</th>
+
+                        <th>ID Rancho</th>
+                        <th>Nombre del rancho</th>
+                        <th>Número del rancho</th>
+
+                        <th>ID Llave</th>
+                        <th>Nombre de llave</th>
+                        <th>Superficie (HA)</th>
+                        <th>Superficie (Acres)</th>
+
+
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in filteredProcesos)
+                    {
+                        <tr>
+                            <td>@item.IdProceso</td>
+                            <td>@item.ClaseAkg</td>
+                            <td>@item.ClaseBkg</td>
+                            <td>@item.ClaseCkg</td>
+                            <td>@item.Rechazo</td>
+
+                            <td>@item.IdCosecha</td>
+                            <td>@item.FechaCosecha.ToString("dd/MM/yyyy")</td>
+
+                            <td>@item.IdProduccion</td>
+                            <td>@item.TipoCaja</td>
+                            <td>@item.CantidadCajas</td>
+                            <td>@item.KilosProceso</td>
+
+                            <td>@item.IdCultivo</td>
+                            <td>@item.TipoBerry</td>
+                            <td>@item.Variedad</td>
+
+                            <td>@item.IdRancho</td>
+                            <td>@item.NombreRancho</td>
+                            <td>@item.NumeroRancho</td>
+
+                            <td>@item.IdLlave</td>
+                            <td>@item.NombreLlave</td>
+                            <td>@item.SuperficieHa</td>
+                            <td>@item.SuperficieAcres</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Botón de regreso -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+        <button class="btn fixed-size-btn mx-2" @onclick="RedirigirProceso">Regresar</button>
+    </div>
+</div>
+
+@code {
+    private List<ProcesoDetallesDto> procesos = new();
+
+    // BÚSQUEDA INPUT
+    private string searchTermProceso = string.Empty;  // Campo de búsqueda
+    private List<ProcesoDetallesDto> filteredProcesos = new(); // Lista filtrada
+
+    private DateTime? fechaInicio;
+    private DateTime? fechaFin;
+
+    // MENSAJES
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await ConsultarProcesos();
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en la base de datos usando el servicio ErrorLogService
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "OnInitializedAsync",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+
+        }
+    }
+
+    private async Task ConsultarProcesos()
+    {
+        try
+        {
+            procesos = await procesosService.GetProcesosDetallesAsync();
+
+            filteredProcesos = procesos.OrderBy(p => p.IdProceso).ToList(); // Inicializa  con la lista completa
+            StateHasChanged(); // Fuerza el refresco de la UI después de consultar
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en la base de datos usando el servicio ErrorLogService
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarProcesos",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+
+        }
+    }
+
+    private void AplicarFiltroProcesos()
+    {
+        filteredProcesos = 
+            procesos.Where(pr =>
+
+                // Filtro de fechas
+                (!fechaInicio.HasValue || pr.FechaCosecha.Date >= fechaInicio.Value.Date) &&
+                (!fechaFin.HasValue || pr.FechaCosecha.Date <= fechaFin.Value.Date) &&
+
+                (string.IsNullOrEmpty(searchTermProceso) || 
+                    // Datos del Proceso
+                    pr.IdProceso.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                    pr.ClaseAkg.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                    pr.ClaseBkg.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                    pr.ClaseCkg.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                    pr.Rechazo.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos de la Cosecha
+                    pr.IdCosecha.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                    pr.FechaCosecha.ToString("dd/MM/yyyy").Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos de la Producción
+                    pr.IdProduccion.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                    pr.TipoCaja.Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                    pr.CantidadCajas.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                    pr.KilosProceso.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos del Cultivo
+                    pr.IdCultivo.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                    pr.TipoBerry.Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                    pr.Variedad.Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos de la Llave
+                    pr.IdLlave.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                    pr.NombreLlave.Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                    pr.SuperficieHa.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                    pr.SuperficieAcres.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                    pr.Disponibilidad.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+
+                    // Datos del Rancho
+                    pr.IdRancho.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                    pr.NombreRancho.Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase) ||
+                    pr.NumeroRancho.ToString().Contains(searchTermProceso, StringComparison.OrdinalIgnoreCase)
+                )
+            ).ToList();
+    }
+
+    private bool busquedaGeneral = true; // true = búsqueda general, false = por período
+
+    private void CambiarTipoBusqueda(bool esGeneral)
+    {
+        busquedaGeneral = esGeneral;
+        // Limpiar filtros al cambiar de tipo
+        if (esGeneral)
+        {
+            fechaInicio = null;
+            fechaFin = null;
+        }
+        else
+        {
+            searchTermProceso = string.Empty;
+        }
+    }
+
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    private void RedirigirProceso()
+    {
+        Navigation.NavigateTo("/Movimientos/ClasificarProceso");
+    }
+
+
+    private async Task DescargarPDF_ClasificarProceso()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarPDF_ClasificarProceso");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarPDF - ClasificarProceso",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task DescargarExcel_ClasificarProceso()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarExcel_ClasificarProceso");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarExcel - ClasificarProceso",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    [Inject] private IJSRuntime JS { get; set; }
+
+}

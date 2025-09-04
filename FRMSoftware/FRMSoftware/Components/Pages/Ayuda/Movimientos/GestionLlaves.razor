@@ -1,0 +1,66 @@
+﻿@page "/Ayuda/Movimientos/GestionLlaves"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4"><i class="bi bi-key-fill"></i> Ayuda: Gestión de Llaves</h2>
+
+    <p>
+        Este formulario permite registrar, modificar y consultar la información de llaves asignadas a ranchos.
+        El flujo inicia con la selección del rancho al que pertenece la llave, y posteriormente se ingresan los datos correspondientes.
+        Para entender el funcionamiento general de los botones utilizados aquí (<strong>Nuevo</strong>, <strong>Guardar</strong>, <strong>Modificar</strong>,
+        <strong>Cancelar</strong> y <strong>Consultar</strong>), visita la sección de
+        <a href="/Ayuda/AyudaGeneral/BotonesGenerales" class="text-decoration-underline">
+            Botones Generales
+        </a>.
+    </p>
+
+    <h4 class="fw-bold mt-4">Descripción rápida</h4>
+    <ul>
+        <li><strong>Nuevo:</strong> Habilita el formulario para registrar una nueva llave. En este estado, se activa el botón <strong>Seleccionar</strong> para elegir el rancho correspondiente desde un modal.</li>
+        <li><strong>Seleccionar:</strong> Disponible únicamente al registrar una nueva llave o al modificar una existente. Abre un modal donde puedes buscar y elegir el rancho. Al seleccionar uno, se cierra el modal y se cargan sus datos en el formulario. Fuera de estos estados, el botón permanece deshabilitado.</li>
+        <li><strong>Guardar:</strong> Una vez que se ha seleccionado el rancho y se han capturado los datos de la llave (nombre, superficie, cantidad de túneles, disponibilidad), pulsa este botón para validar y guardar la información.</li>
+        <li><strong>Modificar:</strong> Permite seleccionar un registro existente para editarlo. Al ingresar en modo edición, también se habilita el botón <strong>Seleccionar</strong> para cambiar el rancho asociado si es necesario. Luego se debe pulsar <strong>Guardar</strong>.</li>
+        <li><strong>Cancelar:</strong> Cancela la operación actual, limpia el formulario y regresa al estado inicial.</li>
+        <li><strong>Consultar:</strong> Abre una vista de solo lectura donde puedes buscar llaves registradas. Incluye opciones para <strong>exportar a PDF o Excel</strong>.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-5">Ejemplos visuales</h4>
+
+    <h5 class="mt-4">Estado: Nuevo registro</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/GestionLlaves01.png" alt="Formulario de Gestión de Llaves en modo Nuevo con botón Seleccionar disponible"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Tras pulsar el botón <strong>Nuevo</strong>, el formulario se habilita para capturar una nueva llave. En este estado, se activa el botón <strong>Seleccionar</strong>, que permite elegir el rancho desde un modal.
+        </p>
+    </div>
+
+    <h5 class="mt-4">Estado: Nuevo registro con rancho seleccionado</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/GestionLlaves02.png" alt="Formulario de Gestión de Llaves en modo Nuevo con rancho seleccionado"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Luego de seleccionar el rancho, su número y nombre se llenan automáticamente en el formulario. Ahora puedes capturar los datos de la llave: nombre, superficie (en hectáreas o acres, con conversión automática), cantidad de túneles y disponibilidad. Después, pulsa <strong>Guardar</strong>.
+        </p>
+    </div>
+
+    <h5 class="mt-4">Estado: Modificar registro</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/GestionLlaves03.png" alt="Formulario de Gestión de Llaves en modo Modificar"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Al pulsar <strong>Modificar</strong>, se carga un registro existente para su edición. En este modo también se habilita el botón <strong>Seleccionar</strong> para cambiar el rancho asociado, si fuera necesario. Una vez terminados los cambios, se debe pulsar <strong>Guardar</strong>.
+        </p>
+    </div>
+
+    <h5 class="mt-4">Estado: Consultar registros</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/GestionLlaves04.png" alt="Vista de consulta de Gestión de Llaves"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            La vista de consulta permite revisar los registros existentes sin posibilidad de modificación. Incluye un <strong>filtro de búsqueda</strong> en la parte superior, y botones para <strong>exportar en PDF o Excel</strong>.
+        </p>
+    </div>
+</div>
+
+@code {
+}

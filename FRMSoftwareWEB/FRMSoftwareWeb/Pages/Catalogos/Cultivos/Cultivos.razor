@@ -1,0 +1,461 @@
+﻿@page "/Catalogos/Cultivos"
+@using FRMSoftware.Data
+@inject FRMSoftware.Services.Catalogos.CultivoService cultivoService
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+@inject NavigationManager Navigation
+
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="margin-top:20px">
+        <div class="col-md-6 d-none d-xl-flex align-items-center justify-content-center">
+            <img src="images/Catalogos/CultivosFRM.png" alt="Imagen de Cultivos" class="img-fluid" />
+        </div>
+
+        <div class="col-xl-6">
+            <EditForm Model="cultivo" OnValidSubmit="GrabarRegistro" id="cultivoForm">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="text-center my-4 fw-bold">Cultivos</h3>
+
+                        <div class="mb-1">
+                            <label for="TipoBerry" class="form-label">Tipo de Berry:</label>
+                            <InputSelect id="TipoBerry" class="form-control" @bind-Value="cultivo.TipoBerry" disabled="@deshabilitarFormulario">
+                                <option disabled selected value="">Seleccione una opción:</option>
+                                <option value="Fresa">Fresa</option>
+                                <option value="Frambuesa">Frambuesa</option>
+                                <option value="Arándano">Arándano</option>
+                                <option value="Zarzamora">Zarzamora</option>
+                                <option value="Fresa Orgánica">Fresa Orgánica</option>
+                                <option value="Frambuesa Orgánica">Frambuesa Orgánica</option>
+                                <option value="Arándano Orgánico">Arándano Orgánico</option>
+                                <option value="Zarzamora Orgánica">Zarzamora Orgánica</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => cultivo.TipoBerry)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Variedad" class="form-label">Variedad:</label>
+                            <InputText id="Variedad" class="form-control" @bind-Value="cultivo.Variedad" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => cultivo.Variedad)" class="text-danger" />
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+<!-- Botones -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Editor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="NuevoRegistro" disabled="@deshabilitarNuevo">Nuevo</button>
+            <button class="btn fixed-size-btn mx-2" type="submit" form="cultivoForm" disabled="@deshabilitarGuardar">Guardar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="AbrirModal" disabled="@deshabilitarModificar">Modificar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="Cancelar" disabled="@deshabilitarCancelar">Cancelar</button>
+        }
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Consultor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="RedirigirAConsulta" disabled="@deshabilitarConsultar">Consultar</button>
+        }
+
+    </div>
+</div>
+
+
+<!-- MODAL para mostrar la tabla -->
+@if (mostrarModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Lista de cultivos</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Contenedor para alinear horizontalmente -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <input @bind="searchTerm" placeholder="Buscar cultivos..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltro">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor de la tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 10%;">Acciones</th>
+
+                                    <th>ID</th>
+                                    <th>Tipo de berry</th>
+                                    <th style="width: 20%;">Variedad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in filteredCultivos)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn editar" @onclick="() => SeleccionarCultivo(item)">Editar</button>
+                                                @if (UserSession.Rol == "Admin")
+                                                {
+                                                    <button class="btn btn-red eliminar" @onclick="() => ConfirmarEliminar(item.IdCultivo)">Eliminar</button>
+                                                }
+                                            </div>
+                                        </td>
+
+                                        <td>@item.IdCultivo</td>
+                                        <td>@item.TipoBerry</td>
+                                        <td>@item.Variedad</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal de confirmación de eliminación -->
+@if (mostrarConfirmacion)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro de que desea eliminar este cultivo?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" @onclick="CancelarEliminar">Cancelar</button>
+                    <button class="btn btn-red" @onclick="EliminarCultivoConfirmado">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+<!-- Modal para mostrar mensajes -->
+@if (mostrarMensajeModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <!-- Agregar modal-dialog-centered -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@mensajeTitulo</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarMensajeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@mensajeContenido</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-red" @onclick="CerrarMensajeModal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private CultivosDto cultivo = new CultivosDto();
+    private List<CultivosDto> cultivos = new();
+
+    // MODALES
+    private bool mostrarModal = false;
+    private bool mostrarConfirmacion = false;
+
+    // FORMULARIO
+    private bool deshabilitarFormulario = true;
+
+    // BOTONES
+    private bool deshabilitarNuevo = false;
+    private bool deshabilitarGuardar = true;
+	private bool deshabilitarModificar = false;
+    private bool deshabilitarCancelar = true;
+    private bool deshabilitarConsultar = false;
+    private int idCultivoEliminar;
+
+    // BÚSQUEDA INPUT
+    private string searchTerm = string.Empty;  // Campo de búsqueda
+    private List<CultivosDto> filteredCultivos = new(); // Lista filtrada
+
+    // CULTIVOS DUPLICADOS
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarCultivos();
+    }
+
+	// Actualiza la lista de cultivos
+    private async Task ConsultarCultivos()
+    {
+        try
+        {
+            cultivos = await cultivoService.GetCultivosAsync();
+
+            if (cultivos == null || !cultivos.Any())
+            {
+                MostrarMensajeModal("Información", "No se encontraron cultivos.");
+                filteredCultivos = new List<CultivosDto>();
+            }
+            else
+            {
+                filteredCultivos = cultivos.OrderBy(c => c.IdCultivo).ToList();
+            }
+
+            StateHasChanged(); // Refresca la UI después de la consulta
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error", $"Error al consultar los cultivos: {ex.Message}");
+
+            // Registrar el error en la base de datos
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarCultivos",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void AplicarFiltro()
+    {
+        if (string.IsNullOrEmpty(searchTerm))
+        {
+            filteredCultivos = cultivos;
+        }
+        else
+        {
+            searchTerm = searchTerm.Trim();
+
+            filteredCultivos = cultivos.Where(c =>
+                c.TipoBerry.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                c.Variedad.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+        }
+    }
+
+    private void NuevoRegistro()
+    {
+        cultivo = new CultivosDto();
+        deshabilitarFormulario = false;
+        deshabilitarGuardar = false;
+        deshabilitarNuevo = true;
+		deshabilitarModificar = true;
+        deshabilitarConsultar = true;
+        deshabilitarCancelar = false;
+    }
+
+    private void Cancelar()
+    {
+        // Restablece el formulario y los botones a su estado inicial
+        cultivo = new CultivosDto();
+        deshabilitarFormulario = true;
+        deshabilitarGuardar = true;
+        deshabilitarNuevo = false;
+        deshabilitarModificar = false;
+        deshabilitarConsultar = false; // Habilitar consultar nuevamente
+        deshabilitarCancelar = true;
+    }
+
+    private async Task GrabarRegistro()
+    {
+        Console.WriteLine("Ejecutando GrabarRegistro");
+
+        try
+        {
+            if (cultivo == null || string.IsNullOrWhiteSpace(cultivo.TipoBerry))
+            {
+                MostrarMensajeModal("Error", "Debe ingresar todos los datos requeridos.");
+                return;
+            }
+
+            bool success;
+            string message;
+
+            if (cultivo.IdCultivo == 0)
+            {
+                // Si no tiene un IdCultivo, es un nuevo registro
+                var result = await cultivoService.CreateCultivoAsync(cultivo);
+                success = result.Success;
+                message = result.Message;
+            }
+            else
+            {
+                // Si tiene un IdCultivo, es una actualización
+                success = await cultivoService.UpdateCultivoAsync(cultivo.IdCultivo, cultivo);
+                message = success ? "Actualización exitosa." : "Error al actualizar el registro.";
+            }
+
+            if (success)
+            {
+                await ConsultarCultivos();
+
+                // Restablecer el formulario
+                deshabilitarFormulario = true;
+                deshabilitarGuardar = true;
+                deshabilitarNuevo = false;
+                deshabilitarModificar = false;
+                deshabilitarCancelar = true;
+                deshabilitarConsultar = false; // Habilitar consultar nuevamente
+                cultivo = new CultivosDto(); // Limpiar formulario
+
+                // Mostrar mensaje de éxito
+                MostrarMensajeModal("Éxito", message);
+            }
+            else
+            {
+                // Mostrar mensaje de error
+                MostrarMensajeModal("Error", message);
+            }
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error", $"Ocurrió un error: {ex.Message}");
+
+            // Registrar el error en la base de datos
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "GrabarRegistroCultivos",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+
+    // CULTIVOS DUPLICADOS
+    // Método para mostrar el modal de mensajes 
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    // Método para cerrar el modal de mensajes
+    private void CerrarMensajeModal()
+    {
+        mostrarMensajeModal = false;
+    }
+
+    // CONTROL DE MODALES
+    private void AbrirModal()
+    {
+        mostrarModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+        searchTerm = string.Empty;
+
+    }
+
+	// MODIFICAR CULTIVO (Editar)
+    private void SeleccionarCultivo(CultivosDto selectedCultivo)
+    {
+        cultivo = new CultivosDto
+            {
+                IdCultivo = selectedCultivo.IdCultivo,
+                TipoBerry = selectedCultivo.TipoBerry,
+                Variedad = selectedCultivo.Variedad
+            };
+
+        deshabilitarFormulario = false;
+        deshabilitarGuardar = false;
+        deshabilitarNuevo = true;
+		deshabilitarModificar = true;
+        deshabilitarCancelar = false;
+        deshabilitarConsultar = true;
+        mostrarModal = false; // Cierra el modal
+    }
+
+    private void ConfirmarEliminar(int id)
+    {
+        idCultivoEliminar = id;
+        mostrarConfirmacion = true;
+    }
+
+    private void CancelarEliminar()
+    {
+        mostrarConfirmacion = false;
+    }
+
+    private async Task EliminarCultivoConfirmado()
+    {
+        try
+        {
+            mostrarConfirmacion = false;
+            bool success = await cultivoService.DeleteCultivoAsync(idCultivoEliminar);
+
+            if (success)
+            {
+                await ConsultarCultivos();
+
+                // Restablecer variables relacionadas
+                cultivo = new CultivosDto();
+                deshabilitarFormulario = true;
+                deshabilitarGuardar = true;
+                deshabilitarNuevo = false;
+                deshabilitarModificar = false;
+                deshabilitarCancelar = true;
+                deshabilitarConsultar = false;
+
+                MostrarMensajeModal("Éxito", "Cultivo eliminado correctamente.");
+            }
+            else
+            {
+                MostrarMensajeModal("Error", "No se pudo eliminar el cultivo.");
+            }
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error", $"Ocurrió un error: {ex.Message}");
+
+            // Registrar el error en la base de datos
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "EliminarCultivoConfirmado",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    // Redirigir a la página de consulta
+    private void RedirigirAConsulta()
+    {
+        Navigation.NavigateTo("/Catalogos/CultivosConsulta");
+    }
+
+}

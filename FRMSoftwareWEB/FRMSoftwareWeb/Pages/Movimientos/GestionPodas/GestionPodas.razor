@@ -1,0 +1,977 @@
+﻿@page "/Movimientos/GestionPodas"
+
+@using FRMSoftware.Data
+@inject FRMSoftware.Services.Catalogos.CultivoService cultivoService
+@inject FRMSoftware.Services.Catalogos.ViverosService viveroService
+@inject FRMSoftware.Services.Movimientos.GestionPlantacionesService plantacionesService
+@inject FRMSoftware.Services.Catalogos.RanchosService ranchoService
+@inject FRMSoftware.Services.Movimientos.GestionLlavesService llavesService
+@inject FRMSoftware.Services.Movimientos.GestionPodasService podasService
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+@inject NavigationManager Navigation
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <div class="row justify-content-center align-items-start mt-4">
+        <h2 class="text-center fw-bold" style="margin-bottom: 20px">Gestión de podas</h2>
+
+        <!-- Primera fila -->
+        <!-- PLANTACIÓN -->
+        <div class="col-lg-4">
+            <EditForm Model="plantacion">
+                <div class="card shadow-sm mb-3 same-height-Poda-1">
+                    <div class="card-body">
+                        <h5 class="text-center fw-bold">Plantación</h5>
+
+                        <div class="mb-1">
+                            <label class="form-label">Fecha de plantación:</label>
+                            <InputDate class="form-control" @bind-Value="plantacion.FechaPlantacion" disabled="true" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label class="form-label">Número de semana:</label>
+                            <InputNumber class="form-control" @bind-Value="plantacion.NumSemPlantacion" disabled="true" />
+                        </div>
+
+                        <div class="d-flex justify-content-center">
+                            <button class="btn fixed-size-btn btn-seleccion mx-2" @onclick="AbrirModalPlantacion" disabled="@deshabilitarGuardar">
+                                Seleccionar
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Cultivo -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <EditForm Model="cultivo">
+                        <h5 class="text-center fw-bold">Cultivo</h5>
+                        <div class="mb-1">
+                            <label class="form-label">Tipo de berry:</label>
+                            <InputText class="form-control" @bind-Value="cultivo.TipoBerry" disabled="true" />
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label">Variedad de berry:</label>
+                            <InputText class="form-control" @bind-Value="cultivo.Variedad" disabled="true" />
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+
+            <!-- PODA -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <EditForm Model="poda" OnValidSubmit="GrabarRegistro" id="podaForm">
+                        <DataAnnotationsValidator />
+
+                        <h5 class="text-center fw-bold">Poda</h5>
+                        <!-- ID de plantación (Oculto) -->
+                        <input type="hidden" @bind="poda.IdPoda" />
+                        <!-- ID de plantación (Oculto) -->
+                        <input type="hidden" @bind="poda.IdPlantacion" />
+
+                        <div class="mb-1">
+                            <label class="form-label">Tipo de poda:</label>
+                            <InputSelect id="TipoPoda" class="form-control" @bind-Value="poda.TipoPoda" disabled="@deshabilitarFormulario">
+                                <option disabled selected value="">Seleccione un tipo:</option>
+                                <option value="Green cut back">Green cut back</option>
+                                <option value="Cut back">Cut back</option>
+                                <option value="Low Down">Low down</option>
+                                <option value="1/4">1/4</option>
+                            </InputSelect>
+
+                            <ValidationMessage For="@(() => poda.TipoPoda)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label class="form-label">Fecha de poda:</label>
+                            <InputDate id="FechaPoda"
+                                       class="form-control"
+                                       @bind-Value="poda.FechaPoda"
+                                       @oninput="CalcularSemanaPoda"
+                                       disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => poda.FechaPoda)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label class="form-label">Número de semana:</label>
+                            <InputNumber id="NumSemPoda" class="form-control" @bind-Value="poda.NumSemPoda" disabled="true" />
+                            <ValidationMessage For="@(() => poda.NumSemPoda)" class="text-danger" />
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <!-- Segunda fila -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-3">
+                <div class="card-body d-flex flex-column">
+                    <!-- RANCHO -->
+                    <EditForm Model="rancho">
+
+                        <h5 class="text-center fw-bold">Rancho</h5>
+                        <div class="mb-1">
+                            <label class="form-label">Nombre del rancho:</label>
+                            <InputText class="form-control" @bind-Value="rancho.NombreRancho" disabled="true" />
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label">Número de rancho:</label>
+                            <InputText class="form-control" @bind-Value="rancho.NumeroRancho" disabled="true" />
+                        </div>
+                    </EditForm>
+
+                    <!-- LLAVES -->
+                    <EditForm Model="llave">
+                        <h5 class="text-center fw-bold margenPodasLlave" style="margin-top:30px">Llave</h5>
+                        <div class="mb-1">
+                            <label class="form-label">Nombre de la llave:</label>
+                            <InputText class="form-control" @bind-Value="llave.NombreLlave" disabled="true" />
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label">Superficie (Ha):</label>
+                            <InputNumber class="form-control" @bind-Value="llave.SuperficieHa" disabled="true" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label class="form-label">Superficie (Acres):</label>
+                            <InputNumber class="form-control" @bind-Value="llave.SuperficieAcres" disabled="true" />
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Botones -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Editor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="NuevoRegistro" disabled="@deshabilitarNuevo">Nuevo</button>
+            <button class="btn fixed-size-btn mx-2" type="submit" form="podaForm" disabled="@deshabilitarGuardar">Guardar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="AbrirModalPoda" disabled="@deshabilitarModificar">Modificar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="Cancelar" disabled="@deshabilitarCancelar">Cancelar</button>
+        }
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Consultor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="RedirigirAConsulta" disabled="@deshabilitarConsultar">Consultar</button>
+        }
+
+    </div>
+</div>
+
+
+
+<!-- MODAL para mostrar la tabla de seleccionar plantaciones -->
+@if (mostrarModalPlantaciones)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Lista de plantaciones</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModalPlantacion"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Filtro de búsqueda -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <input @bind="searchTermPlantacion" placeholder="Buscar plantaciones..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltroPlantaciones">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID Plantación</th>
+                                    <th>Fecha de plantación</th>
+                                    <th>Número de semana</th>
+                                    <th>Estatus de plantación</th>
+
+                                    <th>ID Cultivo</th>
+                                    <th>Tipo de berry</th>
+                                    <th>Variedad</th>
+
+                                    <th>ID Rancho</th>
+                                    <th>Nombre del rancho</th>
+                                    <th>Número del rancho</th>
+
+                                    <th>ID Llave</th>
+                                    <th>Nombre de llave</th>
+                                    <th>Superficie (HA)</th>
+                                    <th>Superficie (Acres)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in filteredPlantaciones)
+                                {
+                                    <tr @onclick="() => SeleccionarPlantacion(item)" class="fila-seleccionable">
+                                        <td>@item.IdPlantacion</td>
+                                        <td>@item.FechaPlantacion.ToString("dd/MM/yyyy")</td>
+                                        <td>@item.NumSemPlantacion</td>
+                                        <td>@item.EstatusPlantacion</td>
+
+                                        <td>@item.IdCultivo</td>
+                                        <td>@item.TipoBerry</td>
+                                        <td>@item.Variedad</td>
+
+                                        <td>@item.IdRancho</td>
+                                        <td>@item.NombreRancho</td>
+                                        <td>@item.NumeroRancho</td>
+
+                                        <td>@item.IdLlave</td>
+                                        <td>@item.NombreLlave</td>
+                                        <td>@item.SuperficieHa</td>
+                                        <td>@item.SuperficieAcres</td>
+
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+<!-- MODAL para mostrar la tabla de modificación -->
+@if (mostrarModalPoda)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Lista de podas</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModalPoda"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Contenedor para alinear horizontalmente -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <input @bind="searchTermPoda" placeholder="Buscar podas..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltroPodas">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor de la tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 10%;">Acciones</th>
+
+                                    <th>ID Poda</th>
+                                    <th>Tipo de poda</th>
+                                    <th>Fecha de poda</th>
+                                    <th>Número de semana</th>
+
+                                    <th>ID Plantación</th>
+                                    <th>Fecha de plantación</th>
+                                    <th>Número de semana</th>
+                                    <th>Estatus de plantación</th>
+
+                                    <th>ID Cultivo</th>
+                                    <th>Tipo de berry</th>
+                                    <th>Variedad</th>
+
+                                    <th>ID Rancho</th>
+                                    <th>Nombre del rancho</th>
+                                    <th>Número del rancho</th>
+
+                                    <th>ID Llave</th>
+                                    <th>Nombre de llave</th>
+                                    <th>Superficie (HA)</th>
+                                    <th>Superficie (Acres)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in filteredPodas)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn editar" @onclick="() => SeleccionarPoda(item)">Editar</button>
+                                                @if (UserSession.Rol == "Admin")
+                                                {
+                                                    <button class="btn btn-red editar" @onclick="() => ConfirmarEliminar(item.IdPoda)">Eliminar</button>
+                                                }
+                                            </div>
+                                        </td>                                        
+                                        
+                                        <td>@item.IdPoda</td>
+                                        <td>@item.TipoPoda</td>
+                                        <td>@item.FechaPoda.ToString("dd/MM/yyyy")</td>
+                                        <td>@item.NumSemPoda</td>
+
+                                        <td>@item.IdPlantacion</td>
+                                        <td>@item.FechaPlantacion.ToString("dd/MM/yyyy")</td>
+                                        <td>@item.NumSemPlantacion</td>
+                                        <td>@item.EstatusPlantacion</td>
+
+                                        <td>@item.IdCultivo</td>
+                                        <td>@item.TipoBerry</td>
+                                        <td>@item.Variedad</td>
+
+                                        <td>@item.IdRancho</td>
+                                        <td>@item.NombreRancho</td>
+                                        <td>@item.NumeroRancho</td>
+
+                                        <td>@item.IdLlave</td>
+                                        <td>@item.NombreLlave</td>
+                                        <td>@item.SuperficieHa</td>
+                                        <td>@item.SuperficieAcres</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal de confirmación de eliminación -->
+@if (mostrarConfirmacion)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar eliminación</h5>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro de que desea eliminar esta poda?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" @onclick="CancelarEliminar">Cancelar</button>
+                    <button class="btn btn-red" @onclick="EliminarPodaConfirmado">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+<!-- Modal para mostrar mensajes -->
+@if (mostrarMensajeModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <!-- Agregar modal-dialog-centered -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@mensajeTitulo</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarMensajeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@mensajeContenido</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-red" @onclick="CerrarMensajeModal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    private PlantacionesDetallesDto plantacion = new PlantacionesDetallesDto();
+    private List<PlantacionesDetallesDto> plantaciones = new();
+
+    private CultivosDto cultivo = new CultivosDto();
+    private List<CultivosDto> cultivos = new();
+
+    private RanchosDto rancho = new RanchosDto();
+    private List<RanchosDto> ranchos = new();
+
+    private LlavesDto llave = new LlavesDto();
+    private List<LlavesDto> llaves = new();
+
+    private PodasDto poda = new PodasDto();
+    private List<PodasDetallesDto> podas = new();
+
+
+
+    // MODALES
+    private bool mostrarModalPoda = false;
+    private bool mostrarConfirmacion = false;
+
+    // FORMULARIO
+    private bool deshabilitarFormulario = true;
+
+    // BOTONES
+    private bool deshabilitarNuevo = false;
+    private bool deshabilitarGuardar = true;
+    private bool deshabilitarModificar = false;
+    private bool deshabilitarCancelar = true;
+    private bool deshabilitarConsultar = false;
+    private int idPodaEliminar;
+
+    // BÚSQUEDA INPUT
+    private string searchTermPoda = string.Empty;  // Campo de búsqueda
+    private List<PodasDetallesDto> filteredPodas = new(); // Lista filtrada
+
+    // MENSAJES
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarPlantaciones();
+        await ConsultarPodas();
+    }
+
+    private async Task ConsultarPodas()
+    {
+        try
+        {
+            // Obtener las podas desde el servicio
+            podas = await podasService.GetPodasDetallesAsync();
+        
+            // Verificar existencia de datos
+            if (podas == null || !podas.Any())
+            {
+                MostrarMensajeModal("Sin datos", "No se encontraron podas.");
+                return;
+            }
+
+            // Ordenar las podas por IdPoda
+            filteredPodas = podas.OrderBy(p => p.IdPoda).ToList();
+
+            // Refrescar la UI
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Mostrar mensaje de error al usuario
+            MostrarMensajeModal("Error", $"Error al consultar las podas: {ex.Message}");
+
+            // Registrar el error en la base de datos
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+            {
+                UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                ErrorMessage = ex.Message,
+                ErrorProcedure = "ConsultarPodas",
+                ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                ErrorTime = DateTime.UtcNow
+            });
+        }
+    }
+
+    private void AplicarFiltroPodas()
+    {
+        filteredPodas = string.IsNullOrEmpty(searchTermPoda) ? 
+            podas : 
+            podas.Where(p =>
+                p.IdPoda.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                p.TipoPoda.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                p.FechaPoda.ToString("dd/MM/yyyy").Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                p.NumSemPoda.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+            
+                // Datos de la Plantación
+                p.IdPlantacion.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                p.FechaPlantacion.ToString("dd/MM/yyyy").Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                p.NumSemPlantacion.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                p.EstatusPlantacion.Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+
+                // Datos del Cultivo
+                p.IdCultivo.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                p.TipoBerry.Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                p.Variedad.Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+
+                // Datos de la Llave
+                p.IdLlave.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                p.NombreLlave.Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                p.SuperficieHa.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                p.SuperficieAcres.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                p.Disponibilidad.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+
+                // Datos del Rancho
+                p.IdRancho.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                p.NombreRancho.Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase) ||
+                p.NumeroRancho.ToString().Contains(searchTermPoda, StringComparison.OrdinalIgnoreCase)
+
+            ).ToList();
+    }
+
+
+
+    private void NuevoRegistro()
+    {
+        plantacion = new PlantacionesDetallesDto();
+        cultivo = new CultivosDto();
+        llave = new LlavesDto();
+        rancho = new RanchosDto();
+        poda = new PodasDto();
+
+        deshabilitarFormulario = false;
+        deshabilitarGuardar = false;
+        deshabilitarNuevo = true;
+        deshabilitarModificar = true;
+        deshabilitarConsultar = true;
+        deshabilitarCancelar = false;
+    }
+
+    private void Cancelar()
+    {
+        plantacion = new PlantacionesDetallesDto();
+        cultivo = new CultivosDto();
+        llave = new LlavesDto();
+        rancho = new RanchosDto();
+        poda = new PodasDto();
+
+        deshabilitarFormulario = true;
+        deshabilitarGuardar = true;
+        deshabilitarNuevo = false;
+        deshabilitarModificar = false;
+        deshabilitarConsultar = false;
+        deshabilitarCancelar = true;
+    }
+
+    private async Task GrabarRegistro()
+    {
+        try
+        {
+            // Verificar que todos los datos requeridos estén seleccionados
+            if (plantacion == null || plantacion.IdPlantacion == 0 ||
+                rancho == null || rancho.IdRancho == 0 ||
+                cultivo == null || cultivo.IdCultivo == 0 ||
+                llave == null || llave.IdLlave == 0)
+            {
+                MostrarMensajeModal("Error", "Debe seleccionar todos los datos antes de continuar.");
+                return;
+            }
+
+            bool success;
+            string message;
+
+            // Crear o actualizar el registro de poda
+            if (poda.IdPoda == 0)
+            {
+                var result = await podasService.CreatePodaAsync(poda);
+                success = result.Success;
+                message = result.Message;
+            }
+            else
+            {
+                success = await podasService.UpdatePodaAsync(poda.IdPoda, poda);
+                message = success ? "Actualización exitosa." : "Error al actualizar el registro.";
+            }
+
+            // Si la operación fue exitosa
+            if (success)
+            {
+                await ConsultarPodas();
+                deshabilitarFormulario = true;
+                deshabilitarGuardar = true;
+                deshabilitarNuevo = false;
+                deshabilitarModificar = false;
+                deshabilitarCancelar = true;
+                deshabilitarConsultar = false;
+
+                // Limpiar el formulario
+                plantacion = new PlantacionesDetallesDto();
+                cultivo = new CultivosDto();
+                llave = new LlavesDto();
+                rancho = new RanchosDto();
+                poda = new PodasDto();
+
+                MostrarMensajeModal("Éxito", message);
+            }
+            else
+            {
+                MostrarMensajeModal("Error", message);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Mostrar mensaje de error al usuario
+            MostrarMensajeModal("Error", $"Error al grabar el registro: {ex.Message}");
+
+            // Registrar el error en la base de datos
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+            {
+                UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                ErrorMessage = ex.Message,
+                ErrorProcedure = "GrabarRegistroPodas",
+                ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                ErrorTime = DateTime.UtcNow
+            });
+        }
+    }
+
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    private void CerrarMensajeModal()
+    {
+        mostrarMensajeModal = false;
+    }
+
+    private void AbrirModalPoda()
+    {
+        mostrarModalPoda = true;
+    }
+
+    private void CerrarModalPoda()
+    {
+        mostrarModalPoda = false;
+        searchTermPoda = string.Empty;
+    }
+
+    private async Task SeleccionarPoda(PodasDetallesDto selectedPoda)
+    {
+        try
+        {
+            // Asignar los datos de la poda seleccionada
+            poda = new PodasDto
+            {
+                IdPoda = selectedPoda.IdPoda,
+                IdPlantacion = selectedPoda.IdPlantacion,
+                TipoPoda = selectedPoda.TipoPoda,
+                FechaPoda = selectedPoda.FechaPoda,
+                NumSemPoda = selectedPoda.NumSemPoda,
+            };
+
+            // Cargar los datos del cultivo correspondiente
+            cultivo = await cultivoService.GetCultivos(selectedPoda.IdCultivo);
+            if (cultivo != null)
+            {
+                cultivo.TipoBerry = cultivo.TipoBerry;
+                cultivo.Variedad = cultivo.Variedad;
+            }
+
+            // Cargar los datos de la plantación correspondiente
+            plantacion = await plantacionesService.GetPlantacionPorIdAsync(selectedPoda.IdPlantacion);
+            if (plantacion != null)
+            {
+                plantacion.FechaPlantacion = plantacion.FechaPlantacion;
+                plantacion.NumSemPlantacion = plantacion.NumSemPlantacion;
+                plantacion.EstatusPlantacion = plantacion.EstatusPlantacion;
+            }
+
+            // Cargar los datos de la llave correspondiente a la plantación
+            llave = await llavesService.GetLlave(plantacion.IdLlave);
+            if (llave != null)
+            {
+                llave.NombreLlave = llave.NombreLlave;
+                llave.Disponibilidad = llave.Disponibilidad;
+            }
+
+            // Cargar los datos del rancho correspondiente a la llave
+            rancho = await ranchoService.GetRancho(llave.IdRancho);
+            if (rancho != null)
+            {
+                rancho.NombreRancho = rancho.NombreRancho;
+                rancho.NumeroRancho = rancho.NumeroRancho;
+            }
+
+            // Actualizar el formulario con los datos obtenidos
+            deshabilitarFormulario = false;
+            deshabilitarGuardar = false;
+            deshabilitarNuevo = true;
+            deshabilitarModificar = true;
+            deshabilitarCancelar = false;
+            deshabilitarConsultar = true;
+            mostrarModalPoda = false;
+        }
+        catch (Exception ex)
+        {
+            // Manejo de errores
+            MostrarMensajeModal("Error", $"Error al seleccionar la poda: {ex.Message}");
+        
+            // Opcionalmente, podrías registrar el error en la base de datos
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+            {
+                UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                ErrorMessage = ex.Message,
+                ErrorProcedure = "SeleccionarPoda",
+                ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                ErrorTime = DateTime.UtcNow
+            });
+        }
+    }
+
+
+    private void ConfirmarEliminar(int id)
+    {
+        idPodaEliminar = id;
+        mostrarConfirmacion = true;
+    }
+
+    private void CancelarEliminar()
+    {
+        mostrarConfirmacion = false;
+    }
+
+    private async Task EliminarPodaConfirmado()
+    {
+        try
+        {
+            mostrarConfirmacion = false;
+            bool success = await podasService.DeletePodaAsync(idPodaEliminar);
+
+            if (success)
+            {
+                // Si la eliminación fue exitosa, recargar las podas
+                await ConsultarPodas();
+                MostrarMensajeModal("Éxito", "La poda ha sido eliminada correctamente.");
+            }
+            else
+            {
+                MostrarMensajeModal("Error", "No se pudo eliminar la poda. Intente nuevamente.");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Manejo de errores
+            MostrarMensajeModal("Error", $"Error al eliminar la poda: {ex.Message}");
+        
+            // Opcionalmente, podrías registrar el error en la base de datos
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+            {
+                UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                ErrorMessage = ex.Message,
+                ErrorProcedure = "EliminarPodaConfirmado",
+                ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                ErrorTime = DateTime.UtcNow
+            });
+        }
+    }
+
+    private void RedirigirAConsulta()
+    {
+        Navigation.NavigateTo("/Movimientos/GestionPodasConsulta");
+    }
+
+
+    // MODALES DE SELECCIÓN
+
+    // MODAL PARA SELECCIONAR PLANTACIÓN
+    // BÚSQUEDA INPUT
+    private bool mostrarModalPlantaciones = false;
+
+    private string searchTermPlantacion = string.Empty;  // Campo de búsqueda
+    private List<PlantacionesDetallesDto> filteredPlantaciones = new(); // Lista filtrada
+
+    // Función para consultar los cultivos
+    private async Task ConsultarPlantaciones()
+    {
+        try
+        {
+            // Obtiene todas las plantaciones desde el servicio
+            plantaciones = await plantacionesService.GetPlantacionesDetalles();
+
+            // Verificar si no se obtuvieron plantaciones
+            if (plantaciones == null || !plantaciones.Any())
+            {
+                MostrarMensajeModal("Información", "No se encontraron plantaciones.");
+                return;
+            }
+
+            // Filtra las plantaciones activas
+            filteredPlantaciones = plantaciones
+                .Where(p => p.EstatusPlantacion != "Inactiva") // Excluye las inactivas
+                .OrderBy(p => p.IdPlantacion)
+                .ToList();
+
+            StateHasChanged(); // Refresca la UI
+
+        }
+        catch (Exception ex)
+        {
+            // Manejo de errores
+            MostrarMensajeModal("Error", $"Error al consultar las plantaciones: {ex.Message}");
+        
+            // Opcionalmente, registrar el error
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+            {
+                UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                ErrorMessage = ex.Message,
+                ErrorProcedure = "ConsultarPlantaciones",
+                ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                ErrorTime = DateTime.UtcNow
+            });
+        }
+    }
+
+
+    // Función para aplicar el filtro de búsqueda
+    private void AplicarFiltroPlantaciones()
+    {
+        filteredPlantaciones = string.IsNullOrEmpty(searchTermPlantacion) ?
+            plantaciones :
+            plantaciones.Where(p =>
+                p.IdPlantacion.ToString().Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+
+                p.IdCultivo.ToString().Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.TipoBerry.Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.Variedad.Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+
+                p.IdLlave.ToString().Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.NombreLlave.Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+				p.SuperficieHa.ToString().Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+				p.SuperficieAcres.ToString().Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.Disponibilidad.Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+
+                p.IdRancho.ToString().Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.NombreRancho.Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.NumeroRancho.Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+
+                p.IdVivero.ToString().Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.NombreVivero.Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.CodigoVivero.Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+
+                p.FechaPlantacion.ToString("dd/MM/yyyy").Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.NumSemPlantacion.ToString().Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.EstatusPlantacion.Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+    }
+
+    // Carga los datos del cultivo seleccionado en el formulario
+    private async Task SeleccionarPlantacion(PlantacionesDetallesDto selectedPlantacion)
+    {
+        try
+        {
+            // Asignar los datos de la plantación seleccionada
+            plantacion = new PlantacionesDetallesDto
+            {
+                IdPlantacion = selectedPlantacion.IdPlantacion,
+                IdCultivo = selectedPlantacion.IdCultivo,
+                IdLlave = selectedPlantacion.IdLlave,
+                IdVivero = selectedPlantacion.IdVivero,
+                FechaPlantacion = selectedPlantacion.FechaPlantacion,
+                NumSemPlantacion = selectedPlantacion.NumSemPlantacion,
+                EstatusPlantacion = selectedPlantacion.EstatusPlantacion
+            };
+
+            // Cargar los datos del cultivo correspondiente a la plantación seleccionada
+            cultivo = await cultivoService.GetCultivos(selectedPlantacion.IdCultivo);
+            if (cultivo != null)
+            {
+                cultivo.TipoBerry = cultivo.TipoBerry;
+                cultivo.Variedad = cultivo.Variedad;
+            }
+            else
+            {
+                MostrarMensajeModal("Error", "No se pudo obtener los detalles del cultivo.");
+            }
+
+            // Cargar los datos de la llave correspondiente a la plantación seleccionada
+            llave = await llavesService.GetLlave(selectedPlantacion.IdLlave);
+            if (llave != null)
+            {
+                llave.NombreLlave = llave.NombreLlave;
+                llave.Disponibilidad = llave.Disponibilidad;
+            }
+            else
+            {
+                MostrarMensajeModal("Error", "No se pudo obtener los detalles de la llave.");
+            }
+
+            // Cargar los datos del rancho correspondiente a la plantación seleccionada
+            rancho = await ranchoService.GetRancho(selectedPlantacion.IdRancho);
+            if (rancho != null)
+            {
+                rancho.NombreRancho = rancho.NombreRancho;
+                rancho.NumeroRancho = rancho.NumeroRancho;
+            }
+            else
+            {
+                MostrarMensajeModal("Error", "No se pudo obtener los detalles del rancho.");
+            }
+
+            // Actualizar el formulario con los datos obtenidos
+            deshabilitarFormulario = false;
+            deshabilitarGuardar = false;
+            deshabilitarNuevo = true;
+            deshabilitarModificar = true;
+            deshabilitarCancelar = false;
+            deshabilitarConsultar = true;
+            mostrarModalPlantaciones = false;
+
+            // Asignar la plantación seleccionada a la poda
+            poda.IdPlantacion = selectedPlantacion.IdPlantacion;
+
+            // Aquí puedes realizar más asignaciones si lo necesitas
+        }
+        catch (Exception ex)
+        {
+            // Manejo de errores
+            MostrarMensajeModal("Error", $"Error al seleccionar la plantación: {ex.Message}");
+        
+            // Opcionalmente, registrar el error
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+            {
+                UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                ErrorMessage = ex.Message,
+                ErrorProcedure = "SeleccionarPlantacion",
+                ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                ErrorTime = DateTime.UtcNow
+            });
+        }
+    }
+
+    private void AbrirModalPlantacion()
+    {
+        mostrarModalPlantaciones = true;
+    }
+
+    private void CerrarModalPlantacion()
+    {
+        mostrarModalPlantaciones = false;
+        searchTermPlantacion = string.Empty;
+    }
+
+    private void CalcularSemanaPoda(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out DateTime fecha))
+        {
+            poda.FechaPoda = fecha;
+
+            var cultura = System.Globalization.CultureInfo.CurrentCulture;
+            var calendario = cultura.Calendar;
+
+            int semana = calendario.GetWeekOfYear(
+                fecha,
+                System.Globalization.CalendarWeekRule.FirstFourDayWeek,
+                DayOfWeek.Monday
+            );
+
+            poda.NumSemPoda = semana;
+
+            StateHasChanged(); // Actualiza la interfaz
+        }
+    }
+
+}

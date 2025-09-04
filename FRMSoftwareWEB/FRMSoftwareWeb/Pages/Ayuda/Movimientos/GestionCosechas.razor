@@ -1,0 +1,73 @@
+﻿@page "/Ayuda/Movimientos/GestionCosechas"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4"><i class="bi bi-basket-fill"></i> Ayuda: Gestión de Cosechas</h2>
+
+    <p>
+        Esta pantalla permite registrar, modificar y consultar las cosechas realizadas en las plantaciones de berries.
+        El flujo comienza al presionar el botón <strong>Nuevo</strong>, lo que habilita el formulario para ingresar los datos necesarios.
+        Para seleccionar la <strong>plantación</strong>, el <strong>cultivo</strong>, el <strong>vivero</strong>, el <strong>rancho</strong> y la <strong>llave</strong>,
+        cada sección cuenta con un botón <strong>Seleccionar</strong> que abre un modal con las opciones disponibles.
+        Sin seleccionar estos elementos, no es posible guardar el registro.
+        Para entender mejor los botones generales (<strong>Nuevo</strong>, <strong>Guardar</strong>, <strong>Modificar</strong>, <strong>Cancelar</strong> y <strong>Consultar</strong>),
+        consulta la sección
+        <a href="/Ayuda/AyudaGeneral/BotonesGenerales" class="text-decoration-underline">Botones Generales</a>.
+    </p>
+
+    <p>
+        También puedes consultar registros filtrando por periodo. Para más información sobre esta funcionalidad, visita
+        <a href="/Ayuda/AyudaGeneral/BusquedaPeriodo" class="text-decoration-underline">Búsqueda por Periodo</a>.
+    </p>
+
+    <h4 class="fw-bold mt-4">Descripción rápida</h4>
+    <ul>
+        <li><strong>Nuevo:</strong> Habilita el formulario para registrar una nueva cosecha. Es obligatorio seleccionar la plantación y los elementos asociados.</li>
+        <li><strong>Seleccionar (Plantación, Cultivo, Rancho o Llave):</strong> Cada botón abre un modal para elegir un elemento. Si no se selecciona, el formulario no podrá ser guardado.</li>
+        <li><strong>Guardar:</strong> Valida y almacena la información de la cosecha, incluyendo la fecha, el número de semana, los kilos cosechados y el tipo de empaque.</li>
+        <li><strong>Fecha de cosecha y número de semana:</strong> Al seleccionar la fecha, el sistema calcula automáticamente el <strong>número de semana</strong> correspondiente.</li>
+        <li><strong>Modificar:</strong> Permite cargar un registro existente para editarlo. Después de realizar los cambios, pulsa <strong>Guardar</strong> para actualizar la información.</li>
+        <li><strong>Cancelar:</strong> Anula la operación actual y limpia el formulario.</li>
+        <li><strong>Consultar:</strong> Permite visualizar los registros existentes en modo lectura, aplicar filtros y exportar los datos a <strong>PDF</strong> o <strong>Excel</strong>.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-5">Ejemplos visuales</h4>
+
+    <h5 class="mt-4">Estado: Nuevo registro</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/GestionCosechas01.png" alt="Formulario en modo Nuevo"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Al pulsar <strong>Nuevo</strong>, se activa el formulario para registrar una nueva cosecha. Inicia seleccionando la plantación y elementos relacionados.
+        </p>
+    </div>
+
+    <h5 class="mt-4">Estado: Selección y captura de datos</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/GestionCosechas02.png" alt="Formulario con datos seleccionados"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Tras seleccionar la plantación y demás datos, captura la fecha, los kilos cosechados y selecciona el tipo de empaque. La semana se calcula automáticamente.
+        </p>
+    </div>
+
+    <h5 class="mt-4">Estado: Modificar registro</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/GestionCosechas03.png" alt="Formulario en modo Modificar"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Selecciona un registro y pulsa <strong>Modificar</strong> para editarlo. Después de realizar los cambios, usa <strong>Guardar</strong> para actualizar la cosecha.
+        </p>
+    </div>
+
+    <h5 class="mt-4">Estado: Consultar registros</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/GestionCosechas04.png" alt="Vista de consulta"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            En modo consulta puedes revisar las cosechas sin modificar los datos. Usa los filtros para refinar la búsqueda y exportar los resultados a <strong>PDF</strong> o <strong>Excel</strong>.
+        </p>
+    </div>
+</div>
+
+@code {
+}

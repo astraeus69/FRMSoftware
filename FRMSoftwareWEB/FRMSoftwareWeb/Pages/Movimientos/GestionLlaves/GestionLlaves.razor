@@ -1,0 +1,727 @@
+﻿@page "/Movimientos/GestionLlaves"
+
+@using FRMSoftware.Data
+@inject FRMSoftware.Services.Catalogos.RanchosService ranchoService
+@inject FRMSoftware.Services.Movimientos.GestionLlavesService llavesService
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+@inject NavigationManager Navigation
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <div class="row justify-content-center align-items-start mt-4">
+        <h2 class="text-center fw-bold" style="margin-bottom: 20px">Gestión de llaves</h2>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <EditForm Model="rancho">
+
+                    <h3 class="text-center my-4 fw-bold">Ranchos</h3>
+
+                    <!-- Formulario de Rancho -->
+                    <div class="mb-1">
+                        <label for="NombreRancho" class="form-label">Nombre del Rancho:</label>
+                        <InputText id="NombreRancho" class="form-control" @bind-Value="rancho.NombreRancho" disabled="true" />
+                    </div>
+
+                    <div class="mb-1">
+                        <label for="NumeroRancho" class="form-label">Número del Rancho:</label>
+                        <InputText id="NumeroRancho" class="form-control" @bind-Value="rancho.NumeroRancho" disabled="true" />
+                    </div>
+
+                    <div class="d-flex justify-content-center">
+                        <button class="btn fixed-size-btn btn-seleccion mx-2" @onclick="AbrirModalRancho" disabled="@deshabilitarGuardar">
+                            Seleccionar
+                        </button>
+                    </div>
+
+                </EditForm>
+
+
+                <!-- Formulario de Llaves -->
+                <EditForm Model="llave" OnValidSubmit="GrabarRegistro" id="llaveForm">
+                    <DataAnnotationsValidator />
+                    <h3 class="text-center fw-bold mb-3" style="margin-top:30px">Llaves</h3>
+
+                    <!-- ID del Rancho (Oculto) -->
+                    <input type="hidden" @bind="llave.IdRancho" />
+
+
+                    <div class="mb-1">
+                        <label for="NombreLlave" class="form-label">Nombre de la Llave:</label>
+                        <InputText id="NombreLlave" class="form-control" @bind-Value="llave.NombreLlave" disabled="@deshabilitarFormulario" />
+                        <ValidationMessage For="@(() => llave.NombreLlave)" class="text-danger" />
+                    </div>
+
+                    <div class="mb-1">
+                        <label for="SuperficieHA" class="form-label">Superficie (Ha):</label>
+                        <InputNumber id="SuperficieHA" class="form-control" @bind-Value="llave.SuperficieHa"
+                                     @oninput="ConvertirAHectareas" disabled="@deshabilitarFormulario" />
+                        <ValidationMessage For="@(() => llave.SuperficieHa)" class="text-danger" />
+                    </div>
+
+                    <div class="mb-1">
+                        <label for="SuperficieAcres" class="form-label">Superficie (Acres):</label>
+                        <InputNumber id="SuperficieAcres" class="form-control" @bind-Value="llave.SuperficieAcres"
+                                     @oninput="ConvertirAcre" disabled="@deshabilitarFormulario" />
+                        <ValidationMessage For="@(() => llave.SuperficieAcres)" class="text-danger" />
+                    </div>
+
+                    <div class="mb-1">
+                        <label for="CantidadTuneles" class="form-label">Cantidad de Túneles:</label>
+                        <InputNumber id="CantidadTuneles" class="form-control" @bind-Value="llave.CantidadTuneles" disabled="@deshabilitarFormulario" />
+                        <ValidationMessage For="@(() => llave.CantidadTuneles)" class="text-danger" />
+                    </div>
+
+                    <div class="mb-1">
+                        <label for="Disponibilidad" class="form-label">Disponible:</label>
+                        <select id="Disponibilidad" class="form-control" @bind="llave.Disponibilidad" disabled="@deshabilitarFormulario">
+                            <option disabled selected value="">Seleccione una opción:</option>
+                            <option value="Sí">Sí</option>
+                            <option value="No">No</option>
+                        </select>
+                        <ValidationMessage For="@(() => llave.Disponibilidad)" class="text-danger" />
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Botones -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Editor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="NuevoRegistro" disabled="@deshabilitarNuevo">Nuevo</button>
+            <button class="btn fixed-size-btn mx-2" type="submit" form="llaveForm" disabled="@deshabilitarGuardar">Guardar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="AbrirModal" disabled="@deshabilitarModificar">Modificar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="Cancelar" disabled="@deshabilitarCancelar">Cancelar</button>
+        }
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Consultor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="RedirigirAConsulta" disabled="@deshabilitarConsultar">Consultar</button>
+        }
+
+    </div>
+</div>
+
+
+
+<!-- MODAL para mostrar la tabla de seleccionar ranchos -->
+@if (mostrarModalRancho)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Lista de ranchos</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModalRancho"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Contenedor para alinear horizontalmente -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <input @bind="searchTermRancho" placeholder="Buscar ranchos..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltroRanchos">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor de la tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre de rancho</th>
+                                    <th>Número de rancho</th>
+                                    <th>Superficie (HA)</th>
+                                    <th>Superficie (Acres)</th>
+                                    <th>Municipio</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in filteredRanchos)
+                                {
+                                    <tr @onclick="() => SeleccionarRancho(item)" class="fila-seleccionable">
+                                        <td>@item.IdRancho</td>
+                                        <td>@item.NombreRancho</td>
+                                        <td>@item.NumeroRancho</td>
+                                        <td>@item.SuperficieHa</td>
+                                        <td>@item.SuperficieAcres</td>
+                                        <td>@item.Municipio</td>
+                                        <td>@item.Estado</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+<!-- MODAL para mostrar la tabla de modificación -->
+@if (mostrarModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Lista de llaves</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Contenedor para alinear horizontalmente -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <input @bind="searchTerm" placeholder="Buscar llaves..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltro">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor de la tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 10%;">Acciones</th>
+
+                                    <th style="width: 4%;">ID Llave</th>
+                                    <th style="width: 4%;">ID Rancho</th>
+									<th>Nombre de rancho</th>
+                                    <th style="width: 6%;">Número de rancho</th>
+                                    <th>Nombre de llave</th>
+                                    <th style="width: 8%;">Superficie (Ha)</th>
+                                    <th style="width: 8%;">Superficie (Acres)</th>
+                                    <th style="width: 6%;">Cantidad de túneles</th>
+                                    <th>Disponibilidad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in filteredLlaves)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn editar" @onclick="() => SeleccionarLlave(item)">Editar</button>
+                                                @if (UserSession.Rol == "Admin")
+                                                {
+                                                    <button class="btn btn-red editar" @onclick="() => ConfirmarEliminar(item.IdLlave)">Eliminar</button>
+                                                }
+                                            </div>
+                                        </td>
+
+                                        <td>@item.IdLlave</td>
+                                        <td>@item.IdRancho</td>
+                                        <td>@item.NombreRancho</td>
+                                        <td>@item.NumeroRancho</td> 
+                                        <td>@item.NombreLlave</td>
+                                        <td>@item.SuperficieHa</td>
+                                        <td>@item.SuperficieAcres</td>
+                                        <td>@item.CantidadTuneles</td>
+                                        <td>@item.Disponibilidad</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal de confirmación de eliminación -->
+@if (mostrarConfirmacion)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar eliminación</h5>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro de que desea eliminar esta llave?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" @onclick="CancelarEliminar">Cancelar</button>
+                    <button class="btn btn-red" @onclick="EliminarRanchoConfirmado">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+<!-- Modal para mostrar mensajes -->
+@if (mostrarMensajeModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <!-- Agregar modal-dialog-centered -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@mensajeTitulo</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarMensajeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@mensajeContenido</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-red" @onclick="CerrarMensajeModal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    private RanchosDto rancho = new RanchosDto();
+    private List<RanchosDto> ranchos = new();
+
+    private LlavesDto llave = new LlavesDto();
+    private List<LlaveConRanchoDto> llaves = new();
+
+
+    // MODALES
+    private bool mostrarModal = false;
+    private bool mostrarConfirmacion = false;
+
+    // FORMULARIO
+    private bool deshabilitarFormulario = true;
+
+    // BOTONES
+    private bool deshabilitarNuevo = false;
+    private bool deshabilitarGuardar = true;
+    private bool deshabilitarModificar = false;
+    private bool deshabilitarCancelar = true;
+    private bool deshabilitarConsultar = false;
+    private int idLlaveEliminar;
+
+    // BÚSQUEDA INPUT
+    private string searchTerm = string.Empty;  // Campo de búsqueda
+    private List<LlaveConRanchoDto> filteredLlaves = new(); // Lista filtrada
+
+    // MENSAJES
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarLlaves();
+        await ConsultarRanchos();
+
+    }
+
+    private async Task ConsultarLlaves()
+    {
+        try
+        {
+            llaves = await llavesService.GetLlavesConRancho();
+
+            // Verificar existencia de datos
+            if (llaves == null || !llaves.Any())
+            {
+                MostrarMensajeModal("Sin datos", "No se encontraron llaves.");
+                return;
+            }
+
+            filteredLlaves = llaves.OrderBy(l => l.IdLlave).ToList(); // Inicializa con la lista completa
+            StateHasChanged(); // Fuerza el refresco de la UI después de consultar los llaves
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error al consultar las llaves: {ex.Message}");
+
+            // Registrar el error inesperado
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarLlaves",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void AplicarFiltro()
+    {
+        filteredLlaves = string.IsNullOrEmpty(searchTerm) ?
+            llaves :
+            llaves.Where(l =>
+                l.IdLlave.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                l.IdRancho.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                l.NombreRancho.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                l.NumeroRancho.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                l.NombreLlave.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                (l.SuperficieHa.HasValue && l.SuperficieHa.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                (l.SuperficieAcres.HasValue && l.SuperficieAcres.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                l.CantidadTuneles.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrEmpty(l.Disponibilidad) && l.Disponibilidad.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+            ).ToList();
+    }
+
+
+    private void NuevoRegistro()
+    {
+        llave = new LlavesDto();
+        rancho = new RanchosDto();
+        deshabilitarFormulario = false;
+        deshabilitarGuardar = false;
+        deshabilitarNuevo = true;
+        deshabilitarModificar = true;
+        deshabilitarConsultar = true;
+        deshabilitarCancelar = false;
+    }
+
+    private void Cancelar()
+    {
+        llave = new LlavesDto();
+        rancho = new RanchosDto();
+        deshabilitarFormulario = true;
+        deshabilitarGuardar = true;
+        deshabilitarNuevo = false;
+        deshabilitarModificar = false;
+        deshabilitarConsultar = false;
+        deshabilitarCancelar = true;
+    }
+
+    private async Task GrabarRegistro()
+    {
+        try
+        {
+            if (rancho == null || rancho.IdRancho == 0)
+            {
+                MostrarMensajeModal("Error", "Debe seleccionar un rancho antes de continuar.");
+                return;
+            }
+
+            bool success;
+            string message;
+
+            if (llave.IdLlave == 0)
+            {
+                var result = await llavesService.CreateLlaveAsync(llave, rancho.SuperficieHa);
+                success = result.Success;
+                message = result.Message;
+            }
+            else
+            {
+                success = await llavesService.UpdateLlaveAsync(llave.IdLlave, llave);
+                message = success ? "Actualización exitosa." : "Error al actualizar el registro.";
+            }
+
+            if (success)
+            {
+                await ConsultarLlaves();
+                deshabilitarFormulario = true;
+                deshabilitarGuardar = true;
+                deshabilitarNuevo = false;
+                deshabilitarModificar = false;
+                deshabilitarCancelar = true;
+                deshabilitarConsultar = false;
+                llave = new LlavesDto(); // Limpia el formulario
+                rancho = new RanchosDto();
+                MostrarMensajeModal("Éxito", message);
+            }
+            else
+            {
+                MostrarMensajeModal("Error", message);
+            }
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+
+            // Registrar el error inesperado
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "GrabarRegistroLlaves",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    private void CerrarMensajeModal()
+    {
+        mostrarMensajeModal = false;
+    }
+
+    private void AbrirModal()
+    {
+        mostrarModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+		searchTerm = string.Empty;
+    }
+
+    private async Task SeleccionarLlave(LlaveConRanchoDto selectedLlave)
+    {
+        try
+        {
+            llave = new LlavesDto
+                {
+                    IdLlave = selectedLlave.IdLlave,
+                    IdRancho = selectedLlave.IdRancho,
+                    NombreLlave = selectedLlave.NombreLlave,
+                    SuperficieHa = selectedLlave.SuperficieHa,
+                    SuperficieAcres = selectedLlave.SuperficieAcres,
+                    CantidadTuneles = selectedLlave.CantidadTuneles,
+                    Disponibilidad = selectedLlave.Disponibilidad
+                };
+
+            // Cargar los datos del rancho correspondiente a la llave seleccionada
+            rancho = await ranchoService.GetRancho(selectedLlave.IdRancho);
+
+            // Establecer los valores del rancho en los campos correspondientes
+            if (rancho != null)
+            {
+                // Aquí mapeas los datos del rancho en el formulario
+                rancho.NombreRancho = rancho.NombreRancho;
+                rancho.NumeroRancho = rancho.NumeroRancho;
+                rancho.SuperficieHa = rancho.SuperficieHa;
+                rancho.SuperficieAcres = rancho.SuperficieAcres;
+                rancho.Direccion = rancho.Direccion;
+                rancho.CP = rancho.CP;
+                rancho.Municipio = rancho.Municipio;
+                rancho.Estado = rancho.Estado;
+            }
+
+            deshabilitarFormulario = false;
+            deshabilitarGuardar = false;
+            deshabilitarNuevo = true;
+            deshabilitarModificar = true;
+            deshabilitarCancelar = false;
+            deshabilitarConsultar = true;
+            mostrarModal = false;
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+
+            // Registrar el error inesperado
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "SeleccionarLlave",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void ConfirmarEliminar(int id)
+    {
+        idLlaveEliminar = id;
+        mostrarConfirmacion = true;
+    }
+
+    private void CancelarEliminar()
+    {
+        mostrarConfirmacion = false;
+    }
+
+    private async Task EliminarRanchoConfirmado()
+    {
+        try
+        {
+            mostrarConfirmacion = false;
+            bool success = await ranchoService.DeleteRanchoAsync(idLlaveEliminar);
+
+            if (success)
+            {
+                await ConsultarLlaves();
+            }
+            else
+            {
+                MostrarMensajeModal("Error", "No se pudo eliminar el rancho.");
+            }
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+
+            // Registrar el error inesperado
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "EliminarRanchoConfirmado",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void RedirigirAConsulta()
+    {
+        Navigation.NavigateTo("/Movimientos/GestionLlavesConsulta");
+    }
+
+
+    // CONVERSIÓN DE UNIDADES DE SUPERFICIE
+
+    private bool isUpdating = false; // Para evitar la recursión
+
+    // Función para convertir de hectáreas a acres
+    private void ConvertirAHectareas(ChangeEventArgs e)
+    {
+        if (isUpdating) return; // Evita la recursión
+        isUpdating = true; // Marca que estamos actualizando
+
+        // Intentar convertir el valor ingresado a hectáreas
+        if (decimal.TryParse(e.Value?.ToString(), out decimal hectareas))
+        {
+            decimal factorAcres = 2.471053814671653m; // Factor para convertir hectáreas a acres
+            llave.SuperficieAcres = hectareas * factorAcres; // Realiza la conversión
+        }
+        else
+        {
+            llave.SuperficieAcres = null; // Limpia el campo si la entrada no es válida
+        }
+
+        isUpdating = false; // Restablece la bandera
+    }
+
+    // Función para convertir de acres a hectáreas
+    private void ConvertirAcre(ChangeEventArgs e)
+    {
+        if (isUpdating) return; // Evita la recursión
+        isUpdating = true; // Marca que estamos actualizando
+
+        // Intentar convertir el valor ingresado a acres
+        if (decimal.TryParse(e.Value?.ToString(), out decimal acres))
+        {
+            decimal factorHectareas = 0.40468564224041m; // Factor para convertir acres a hectáreas
+            llave.SuperficieHa = acres * factorHectareas; // Realiza la conversión
+        }
+        else
+        {
+            llave.SuperficieHa = null; // Limpia el campo si la entrada no es válida
+        }
+
+        isUpdating = false; // Restablece la bandera
+    }
+
+
+
+    // MODAL PARA SELECCIONAR RANCHO
+
+    private async Task ConsultarRanchos()
+    {
+        try
+        {
+            ranchos = await ranchoService.GetRanchosAsync();
+            filteredRanchos = ranchos.OrderBy(r => r.IdRancho).ToList(); // Inicializa con la lista completa
+            StateHasChanged(); // Fuerza el refresco de la UI después de consultar los ranchos
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+
+            // Registrar el error inesperado
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarRanchos",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+
+    private bool mostrarModalRancho = false;
+
+    // BÚSQUEDA INPUT
+    private string searchTermRancho = string.Empty;  // Campo de búsqueda
+    private List<RanchosDto> filteredRanchos = new(); // Lista filtrada
+
+
+    private void AplicarFiltroRanchos()
+    {
+        if (string.IsNullOrEmpty(searchTermRancho))
+        {
+            filteredRanchos = ranchos;
+        }
+        else
+        {
+            searchTerm = searchTerm.Trim(); // Elimina espacios en blanco al inicio y al final
+
+            filteredRanchos = ranchos.Where(r =>
+                r.NombreRancho.Contains(searchTermRancho, StringComparison.OrdinalIgnoreCase) ||
+                r.NumeroRancho.Contains(searchTermRancho, StringComparison.OrdinalIgnoreCase) ||
+                r.SuperficieHa.ToString().Contains(searchTermRancho, StringComparison.OrdinalIgnoreCase) ||
+                r.SuperficieAcres.ToString().Contains(searchTermRancho, StringComparison.OrdinalIgnoreCase) ||
+                r.Direccion.Contains(searchTermRancho, StringComparison.OrdinalIgnoreCase) ||
+                r.CP.Contains(searchTermRancho, StringComparison.OrdinalIgnoreCase) ||
+                r.Municipio.Contains(searchTermRancho, StringComparison.OrdinalIgnoreCase) ||
+                r.Estado.Contains(searchTermRancho, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+        }
+    }
+
+    private void SeleccionarRancho(RanchosDto selectedRancho)
+    {
+        rancho = new RanchosDto
+            {
+                IdRancho = selectedRancho.IdRancho,
+                NombreRancho = selectedRancho.NombreRancho,
+                NumeroRancho = selectedRancho.NumeroRancho,
+                SuperficieHa = selectedRancho.SuperficieHa,
+                SuperficieAcres = selectedRancho.SuperficieAcres,
+                Direccion = selectedRancho.Direccion,
+                CP = selectedRancho.CP,
+                Municipio = selectedRancho.Municipio,
+                Estado = selectedRancho.Estado
+            };
+
+        //rancho = selectedRancho;  // Se asignan los datos al formulario de rancho
+        llave.IdRancho = selectedRancho.IdRancho;  // Se asigna automáticamente el ID al formulario de llaves
+
+        mostrarModalRancho = false;
+    }
+
+    private void AbrirModalRancho()
+    {
+        mostrarModalRancho = true;
+    }
+
+    private void CerrarModalRancho()
+    {
+        mostrarModalRancho = false;
+        rancho = new RanchosDto();
+		searchTermRancho = string.Empty;
+    }
+}

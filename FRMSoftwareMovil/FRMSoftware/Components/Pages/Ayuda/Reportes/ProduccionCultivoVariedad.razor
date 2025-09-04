@@ -1,0 +1,58 @@
+﻿@page "/Ayuda/Reportes/ReporteProduccionCultivoVariedad"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4 text-center"><i class="bi bi-bar-chart-line-fill"></i> Reporte de Producción por Cultivo y Variedad</h2>
+
+    <p>Este reporte proporciona un desglose detallado de la producción agrícola, agrupado por <strong>tipo de cultivo</strong> (berry). Presenta información clave sobre cosechas, producción, plantaciones y unidades productivas, junto con gráficas visuales que permiten analizar el rendimiento por variedad.</p>
+
+    <h4 class="fw-bold mt-4">Estructura del Reporte</h4>
+    <ul>
+        <li><strong>Encabezado:</strong> Muestra el logotipo de la empresa, datos fiscales y la fecha de generación del reporte.</li>
+        <li><strong>Título del reporte:</strong> Centrado en la parte superior para identificar claramente el contenido.</li>
+        <li><strong>Botones de exportación:</strong> Permiten descargar el reporte en formato PDF o Excel para compartir o analizar offline.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Tabla de Producción</h4>
+    <p>La tabla está organizada por <strong>tipo de berry</strong>. Cada grupo incluye todas las cosechas asociadas a ese cultivo, ordenadas por variedad.</p>
+
+    <ul>
+        <li><strong>Encabezado de grupo:</strong> Indica el nombre del cultivo (tipo de berry).</li>
+        <li>
+            <strong>Columnas de la tabla:</strong>
+            <ul>
+                <li><strong>Cosecha:</strong> ID, fecha, número de semana</li>
+                <li><strong>Producción:</strong> ID, tipo de clamshell, cantidad de cajas y kilos de proceso</li>
+                <li><strong>Plantación:</strong> ID, fecha, semana y estatus</li>
+                <li><strong>Cultivo:</strong> ID, tipo de berry, variedad</li>
+                <li><strong>Rancho:</strong> ID, nombre y número</li>
+                <li><strong>Llave:</strong> ID, nombre, superficie en hectáreas y acres</li>
+            </ul>
+        </li>
+        <li><strong>Totales por grupo:</strong> Se muestra la suma de todas las cajas producidas por cultivo.</li>
+    </ul>
+
+    <div class="my-4">
+        <img src="images/Ayuda/Reportes/ProduccionCultivoVariedad01.png" alt="Tabla de producción agrupada por cultivo" class="img-fluid rounded shadow-sm" style="border: 1px solid #ccc;" />
+        <p class="text-muted mt-2">Ejemplo de tabla de producción agrupada por tipo de cultivo, con totales de cajas al final de cada grupo.</p>
+    </div>
+
+    <h4 class="fw-bold mt-4">Gráficas de Variedades</h4>
+    <p>Cada grupo (cultivo) está acompañado por una gráfica de barras que muestra la cantidad de cajas producidas por variedad.</p>
+    <ul>
+        <li>Cada barra representa una <strong>variedad</strong> dentro del cultivo.</li>
+        <li>La altura de la barra indica la cantidad total de cajas producidas.</li>
+        <li>Facilita la comparación del desempeño entre variedades dentro de cada cultivo.</li>
+    </ul>
+
+    <div class="my-4 d-flex justify-content-center">
+        <img src="images/Ayuda/Reportes/ProduccionCultivoVariedad02.png" alt="Gráfica de cajas por variedad" class="img-fluid rounded shadow-sm" style="max-width: 800px; border: 1px solid #ccc;" />
+    </div>
+
+    <h4 class="fw-bold mt-4">Consejos de uso</h4>
+    <ul>
+        <li>Utiliza este reporte para identificar qué variedades generan mayor producción dentro de cada cultivo.</li>
+        <li>Exporta los resultados para presentaciones técnicas o reuniones de evaluación.</li>
+        <li>Detecta tendencias de producción por fecha o por variedad.</li>
+        <li>Verifica que la información de plantaciones y llaves esté correctamente ligada a la producción.</li>
+    </ul>
+</div>

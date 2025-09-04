@@ -1,0 +1,68 @@
+﻿@page "/Ayuda/Movimientos/RegistroJarras"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4"><i class="bi bi-cup-straw"></i> Ayuda: Registro de Jarras</h2>
+
+    <p>
+        Esta pantalla permite registrar, modificar y consultar las jarras recolectadas por los empleados durante una cosecha de berries.
+        El proceso inicia al pulsar el botón <strong>Nuevo</strong>, que activa el formulario para capturar la información requerida.
+        Para seleccionar al <strong>empleado</strong> y la <strong>cosecha</strong>, cada sección dispone de un botón <strong>Seleccionar</strong> que abre un modal con las opciones disponibles.
+        Si no se seleccionan estos elementos, no será posible guardar el registro.
+        Para entender el funcionamiento de los botones generales (<strong>Nuevo</strong>, <strong>Guardar</strong>, <strong>Modificar</strong>, <strong>Cancelar</strong> y <strong>Consultar</strong>),
+        visita la sección
+        <a href="/Ayuda/AyudaGeneral/BotonesGenerales" class="text-decoration-underline">Botones Generales</a>.
+    </p>
+
+    <h4 class="fw-bold mt-4">Descripción rápida</h4>
+    <ul>
+        <li><strong>Nuevo:</strong> Activa el formulario para registrar una nueva entrada de jarras. Es necesario seleccionar el empleado y la cosecha antes de capturar la información.</li>
+        <li><strong>Seleccionar (Empleado o Cosecha):</strong> Cada botón abre un modal para elegir un elemento. Si no se selecciona, los campos relacionados quedarán vacíos y no se podrá guardar el registro.</li>
+        <li><strong>Cantidad de jarras:</strong> Número de jarras recolectadas por el empleado en la cosecha seleccionada. Campo obligatorio.</li>
+        <li><strong>Precio por jarra:</strong> Valor en pesos que se paga por cada jarra recolectada. Campo obligatorio.</li>
+        <li><strong>Guardar:</strong> Valida y almacena la información de las jarras recolectadas. Todos los campos requeridos deben estar completos para guardar.</li>
+        <li><strong>Modificar:</strong> Permite cargar un registro existente para editarlo o eliminarlo. Después de modificar, pulsa <strong>Guardar</strong> para aplicar los cambios.</li>
+        <li><strong>Cancelar:</strong> Cancela la operación actual y restablece el formulario a su estado inicial.</li>
+        <li><strong>Consultar:</strong> Abre una vista de solo lectura con los registros capturados, donde puedes filtrar, buscar y exportar los datos en <strong>PDF</strong> o <strong>Excel</strong>.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-5">Ejemplos visuales</h4>
+
+    <h5 class="mt-4">Estado: Nuevo registro</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/RegistroJarras01.png" alt="Formulario en modo Nuevo"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Al pulsar <strong>Nuevo</strong>, se activa el formulario y se habilitan los campos para seleccionar un empleado, una cosecha y capturar los datos de las jarras.
+        </p>
+    </div>
+
+    <h5 class="mt-4">Estado: Selección y captura de datos</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/RegistroJarras02.png" alt="Formulario con datos capturados"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Una vez seleccionados el empleado y la cosecha, se pueden capturar la cantidad de jarras recolectadas y el precio correspondiente. Ambos campos son obligatorios.
+        </p>
+    </div>
+
+    <h5 class="mt-4">Estado: Modificar registro</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/RegistroJarras03.png" alt="Formulario en modo Modificar"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            En modo modificación puedes actualizar los datos previamente registrados. Después de editar, es necesario pulsar <strong>Guardar</strong> para aplicar los cambios.
+        </p>
+    </div>
+
+    <h5 class="mt-4">Estado: Consultar registros</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Movimientos/RegistroJarras04.png" alt="Vista de consulta"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            En la vista de consulta puedes revisar los registros existentes, aplicar filtros, buscar información y exportar los datos según sea necesario.
+        </p>
+    </div>
+</div>
+
+@code {
+}

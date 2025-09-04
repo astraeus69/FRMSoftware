@@ -1,0 +1,607 @@
+﻿@page "/Catalogos/Ranchos"
+@using FRMSoftware.Data
+@inject Services.Catalogos.RanchosService ranchoService
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="margin-top:20px">
+        <div class="col-md-6 d-none d-xl-flex align-items-center justify-content-center">
+            <img src="images/Catalogos/RanchosFRM.png" alt="Imagen de Ranchos" class="img-fluid" />
+        </div>
+
+        <div class="col-xl-6">
+            <EditForm Model="rancho" OnValidSubmit="GrabarRegistro" id="ranchoForm">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="text-center my-4 fw-bold">Ranchos</h3>
+
+                        <div class="mb-1">
+                            <label for="NombreRancho" class="form-label">Nombre del Rancho:</label>
+                            <InputText id="NombreRancho" class="form-control" @bind-Value="rancho.NombreRancho" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => rancho.NombreRancho)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="NumeroRancho" class="form-label">Número del Rancho:</label>
+                            <InputText id="NumeroRancho"  class="form-control" @bind-Value="rancho.NumeroRancho" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => rancho.NumeroRancho)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="SuperficieHA" class="form-label">Superficie (Ha):</label>
+                            <InputNumber id="SuperficieHA" class="form-control" @bind-Value="rancho.SuperficieHa"
+                                         @oninput="ConvertirAHectareas" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => rancho.SuperficieHa)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="SuperficieAcres" class="form-label">Superficie (Acres):</label>
+                            <InputNumber id="SuperficieAcres" class="form-control" @bind-Value="rancho.SuperficieAcres"
+                                         @oninput="ConvertirAcre" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => rancho.SuperficieAcres)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Direccion" class="form-label">Dirección:</label>
+                            <InputText id="Direccion" class="form-control" @bind-Value="rancho.Direccion" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => rancho.Direccion)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="CP" class="form-label">Código postal:</label>
+                            <InputText id="CP" class="form-control" @bind-Value="rancho.CP" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => rancho.CP)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Municipio" class="form-label">Municipio:</label>
+                            <InputText id="Municipio" class="form-control" @bind-Value="rancho.Municipio" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => rancho.Municipio)" class="text-danger" />
+                        </div>
+
+                        <!-- Input para seleccionar el estado -->
+                        <div class="mb-1">
+                            <label for="Estado" class="form-label">Estado:</label>
+                            <InputText id="Estado" class="form-control readonly-input" @bind-Value="rancho.Estado" @onclick="AbrirModalEstado" readonly disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => rancho.Estado)" class="text-danger" />
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+
+<!-- Botones -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Editor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="NuevoRegistro" disabled="@deshabilitarNuevo">Nuevo</button>
+            <button class="btn fixed-size-btn mx-2" type="submit" form="ranchoForm" disabled="@deshabilitarGuardar">Guardar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="AbrirModal" disabled="@deshabilitarModificar">Modificar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="Cancelar" disabled="@deshabilitarCancelar">Cancelar</button>
+        }
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Consultor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="RedirigirAConsulta" disabled="@deshabilitarConsultar">Consultar</button>
+        }
+
+    </div>
+</div>
+
+
+<!-- MODAL para mostrar la tabla -->
+@if (mostrarModal)
+{
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+            <div class="modal-dialog modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" style="font-weight: bold;">Lista de ranchos</h3>
+                        <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Contenedor para alinear horizontalmente -->
+                        <div class="row mb-3 align-items-center">
+                            <div class="col-auto">
+                                <input @bind="searchTerm" placeholder="Buscar ranchos..." class="form-control" />
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn fixed-size-btn" @onclick="AplicarFiltro">Buscar</button>
+                            </div>
+                        </div>
+
+                        <!-- Contenedor de la tabla con scroll -->
+                        <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                            <table class="table table-striped table-bordered">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th style="width: 10%;">Acciones</th>
+
+                                        <th>ID</th>
+                                        <th>Nombre de rancho</th>
+                                        <th style="width: 8%;">Número de rancho</th>
+                                        <th style="width: 8%;">Superficie (HA)</th>
+                                        <th style="width: 8%;">Superficie (Acres)</th>
+                                        <th>Dirección</th>
+                                        <th style="width: 6%;">Código postal</th>
+                                        <th>Municipio</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var item in filteredRanchos)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn editar" @onclick="() => SeleccionarRancho(item)">Editar</button>
+                                                @if (UserSession.Rol == "Admin")
+                                                {
+                                                    <button class="btn btn-red editar" @onclick="() => ConfirmarEliminar(item.IdRancho)">Eliminar</button>
+                                                }
+
+                                            </div>
+                                        </td>
+
+                                        <td>@item.IdRancho</td>
+                                        <td>@item.NombreRancho</td>
+                                        <td>@item.NumeroRancho</td>
+                                        <td>@item.SuperficieHa</td>
+                                        <td>@item.SuperficieAcres</td>
+                                        <td>@item.Direccion</td>
+                                        <td>@item.CP</td>
+                                        <td>@item.Municipio</td>
+                                        <td>@item.Estado</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+}
+
+<!-- Modal de confirmación de eliminación -->
+@if (mostrarConfirmacion)
+{
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmar Eliminación</h5>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Está seguro de que desea eliminar este rancho?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn" @onclick="CancelarEliminar">Cancelar</button>
+                        <button class="btn btn-red" @onclick="EliminarRanchoConfirmado">Eliminar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+}
+
+
+<!-- Modal para mostrar mensajes -->
+@if (mostrarMensajeModal)
+{
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <!-- Agregar modal-dialog-centered -->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">@mensajeTitulo</h5>
+                        <button type="button" class="btn-close" @onclick="CerrarMensajeModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>@mensajeContenido</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-red" @onclick="CerrarMensajeModal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+}
+
+<!-- MODAL para seleccionar el estado -->
+@if (mostrarModalEstado)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog" role="document" style="max-width: 400px; width: 90%; margin: auto; display: flex; align-items: center; min-height: 100vh;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Seleccione un estado:</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModalEstado"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Contenedor para alinear horizontalmente -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div id="estadoSelector" class="estado-picker">
+                                @foreach (var estado in estadosMexico)
+                                {
+                                    <div class="estado-item" @onclick="() => SeleccionarEstado(estado)">
+                                        @estado
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private RanchosDto rancho = new RanchosDto();
+    private List<RanchosDto> ranchos = new();
+
+    // MODALES
+    private bool mostrarModal = false;
+    private bool mostrarConfirmacion = false;
+
+    // FORMULARIO
+    private bool deshabilitarFormulario = true;
+
+    // BOTONES
+    private bool deshabilitarNuevo = false;
+    private bool deshabilitarGuardar = true;
+    private bool deshabilitarModificar = false;
+    private bool deshabilitarCancelar = true;
+    private bool deshabilitarConsultar = false;
+    private int idRanchoEliminar;
+
+    // BÚSQUEDA INPUT
+    private string searchTerm = string.Empty;  // Campo de búsqueda
+    private List<RanchosDto> filteredRanchos = new(); // Lista filtrada
+
+    // MENSAJES
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+    // SCROLL PICKER
+    private bool mostrarModalEstado = false;
+    private List<string> estadosMexico = new()
+    {
+        "Aguascalientes", "Baja California", "Baja California Sur", "Campeche",
+        "Chiapas", "Chihuahua", "Coahuila", "Colima", "Ciudad de México",
+        "Durango", "Guanajuato", "Guerrero", "Hidalgo", "Jalisco", "México",
+        "Michoacán", "Morelos", "Nayarit", "Nuevo León", "Oaxaca", "Puebla",
+        "Querétaro", "Quintana Roo", "San Luis Potosí", "Sinaloa", "Sonora",
+        "Tabasco", "Tamaulipas", "Tlaxcala", "Veracruz", "Yucatán", "Zacatecas"
+    };
+
+    private string selectedEstado;
+
+    // Método para abrir el modal de estados
+    private void AbrirModalEstado()
+    {
+        mostrarModalEstado = true;
+        JSRuntime.InvokeVoidAsync("initializePicker");
+    }
+
+    // Método para seleccionar un estado
+    private void SeleccionarEstado(string estado)
+    {
+        selectedEstado = estado;
+        rancho.Estado = estado;  // Asignamos el estado al empleado
+        mostrarModalEstado = false;
+    }
+
+    // Método para cerrar el modal de estados
+    private void CerrarModalEstado()
+    {
+        mostrarModalEstado = false;
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarRanchos();
+    }
+
+    private async Task ConsultarRanchos()
+    {
+        try
+        {
+            ranchos = await ranchoService.GetRanchosAsync();
+
+            // Verifica si no se encontraron ranchos
+            if (ranchos == null || !ranchos.Any())
+            {
+                MostrarMensajeModal("Información", "No se encontraron ranchos.");
+                return;
+            }
+
+            // Ordenar la lista de ranchos
+            filteredRanchos = ranchos.OrderBy(r => r.IdRancho).ToList();
+            StateHasChanged(); // Fuerza el refresco de la UI después de consultar los ranchos
+        }
+        catch (Exception ex)
+        {
+            // Mostrar mensaje de error en caso de que falle la consulta
+            MostrarMensajeModal("Error", $"Error al consultar los ranchos: {ex.Message}");
+
+            // Registrar el error en la base de datos para su seguimiento
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarRanchos",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void AplicarFiltro()
+    {
+        if (string.IsNullOrEmpty(searchTerm))
+        {
+            filteredRanchos = ranchos;
+        }
+        else
+        {
+            searchTerm = searchTerm.Trim(); // Elimina espacios en blanco al inicio y al final
+
+            filteredRanchos = ranchos.Where(r =>
+                r.NombreRancho.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                r.NumeroRancho.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                r.SuperficieHa.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                r.SuperficieAcres.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                r.Direccion.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                r.CP.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                r.Municipio.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                r.Estado.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+        }
+    }
+
+    private void NuevoRegistro()
+    {
+        rancho = new RanchosDto();
+        deshabilitarFormulario = false;
+        deshabilitarGuardar = false;
+        deshabilitarNuevo = true;
+        deshabilitarModificar = true;
+        deshabilitarConsultar = true;
+        deshabilitarCancelar = false;
+    }
+
+    private void Cancelar()
+    {
+        rancho = new RanchosDto();
+        deshabilitarFormulario = true;
+        deshabilitarGuardar = true;
+        deshabilitarNuevo = false;
+        deshabilitarModificar = false;
+        deshabilitarConsultar = false;
+        deshabilitarCancelar = true;
+    }
+
+    private async Task GrabarRegistro()
+    {
+        bool success;
+        string message;
+
+        try
+        {
+            // Verificar si el Id del rancho es 0, lo que indica que es un nuevo registro
+            if (rancho.IdRancho == 0)
+            {
+                var result = await ranchoService.CreateRanchoAsync(rancho);
+                success = result.Success;
+                message = result.Message;
+            }
+            else
+            {
+                // Si ya existe el IdRancho, actualizar el registro
+                success = await ranchoService.UpdateRanchoAsync(rancho.IdRancho, rancho);
+                message = success ? "Actualización exitosa." : "Error al actualizar el registro.";
+            }
+
+            // Verifica si la operación fue exitosa
+            if (success)
+            {
+                // Consultar nuevamente los ranchos para actualizar la lista
+                await ConsultarRanchos();
+
+                // Deshabilitar botones y limpiar el formulario
+                deshabilitarFormulario = true;
+                deshabilitarGuardar = true;
+                deshabilitarNuevo = false;
+                deshabilitarModificar = false;
+                deshabilitarCancelar = true;
+                deshabilitarConsultar = false;
+
+                rancho = new RanchosDto(); // Limpiar los campos del formulario
+
+                // Mostrar un mensaje de éxito
+                MostrarMensajeModal("Éxito", message);
+            }
+            else
+            {
+                // Mostrar mensaje de error en caso de fallo
+                MostrarMensajeModal("Error", message);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Manejo de errores generales
+            MostrarMensajeModal("Error", $"Error al procesar la operación: {ex.Message}");
+
+            // Registrar el error en la base de datos para su seguimiento
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "GrabarRegistroRanchos",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    private void CerrarMensajeModal()
+    {
+        mostrarMensajeModal = false;
+    }
+
+    private void AbrirModal()
+    {
+        mostrarModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+        searchTerm = string.Empty;
+
+    }
+
+    private void SeleccionarRancho(RanchosDto selectedRancho)
+    {
+        rancho = new RanchosDto
+            {
+                IdRancho = selectedRancho.IdRancho,
+                NombreRancho = selectedRancho.NombreRancho,
+                NumeroRancho = selectedRancho.NumeroRancho,
+                SuperficieHa = selectedRancho.SuperficieHa,
+                SuperficieAcres = selectedRancho.SuperficieAcres,
+                Direccion = selectedRancho.Direccion,
+                CP = selectedRancho.CP,
+                Municipio = selectedRancho.Municipio,
+                Estado = selectedRancho.Estado
+            };
+
+        deshabilitarFormulario = false;
+        deshabilitarGuardar = false;
+        deshabilitarNuevo = true;
+        deshabilitarModificar = true;
+        deshabilitarCancelar = false;
+        deshabilitarConsultar = true;
+        mostrarModal = false;
+    }
+
+    private void ConfirmarEliminar(int id)
+    {
+        idRanchoEliminar = id;
+        mostrarConfirmacion = true;
+    }
+
+    private void CancelarEliminar()
+    {
+        mostrarConfirmacion = false;
+    }
+
+    private async Task EliminarRanchoConfirmado()
+    {
+        try
+        {
+            mostrarConfirmacion = false;
+            bool success = await ranchoService.DeleteRanchoAsync(idRanchoEliminar);
+
+            if (success)
+            {
+                // Si la eliminación es exitosa, consultar nuevamente los ranchos
+                await ConsultarRanchos();
+                MostrarMensajeModal("Éxito", "El rancho fue eliminado exitosamente.");
+            }
+            else
+            {
+                // Si la eliminación no es exitosa, mostrar un mensaje de error
+                MostrarMensajeModal("Error", "No se pudo eliminar el rancho.");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Manejo de errores generales
+            MostrarMensajeModal("Error", $"Error al eliminar el rancho: {ex.Message}");
+
+            // Registrar el error en la base de datos para su seguimiento
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "EliminarRanchoConfirmado",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void RedirigirAConsulta()
+    {
+        Navigation.NavigateTo("/Catalogos/RanchosConsulta");
+    }
+
+
+	// CONVERSIÓN DE UNIDADES DE SUPERFICIE
+
+    private bool isUpdating = false; // Para evitar la recursión
+
+    // Función para convertir de hectáreas a acres
+    private void ConvertirAHectareas(ChangeEventArgs e)
+    {
+        if (isUpdating) return; // Evita la recursión
+        isUpdating = true; // Marca que estamos actualizando
+
+        // Intentar convertir el valor ingresado a hectáreas
+        if (decimal.TryParse(e.Value?.ToString(), out decimal hectareas))
+        {
+            decimal factorAcres = 2.471053814671653m; // Factor para convertir hectáreas a acres
+            rancho.SuperficieAcres = hectareas * factorAcres; // Realiza la conversión
+        }
+        else
+        {
+            rancho.SuperficieAcres = null; // Limpia el campo si la entrada no es válida
+        }
+
+        isUpdating = false; // Restablece la bandera
+    }
+
+    // Función para convertir de acres a hectáreas
+    private void ConvertirAcre(ChangeEventArgs e)
+    {
+        if (isUpdating) return; // Evita la recursión
+        isUpdating = true; // Marca que estamos actualizando
+
+        // Intentar convertir el valor ingresado a acres
+        if (decimal.TryParse(e.Value?.ToString(), out decimal acres))
+        {
+            decimal factorHectareas = 0.40468564224041m; // Factor para convertir acres a hectáreas
+            rancho.SuperficieHa = acres * factorHectareas; // Realiza la conversión
+        }
+        else
+        {
+            rancho.SuperficieHa = null; // Limpia el campo si la entrada no es válida
+        }
+
+        isUpdating = false; // Restablece la bandera
+    }
+}

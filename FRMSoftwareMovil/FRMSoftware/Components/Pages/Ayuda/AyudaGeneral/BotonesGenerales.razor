@@ -1,0 +1,43 @@
+﻿@page "/Ayuda/AyudaGeneral/BotonesGenerales"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4"><i class="bi bi-gear"></i> Botones Generales</h2>
+
+    <p>Los botones generales están presentes en todos los catálogos y movimientos y permiten realizar las tareas básicas sobre los registros: crear, guardar, modificar, cancelar y consultar datos.</p>
+
+    <h4 class="fw-bold mt-4">Descripción de botones principales</h4>
+    <ul>
+        <li><strong>Nuevo:</strong> Inicia la creación de un nuevo registro, limpiando, preparando y activando el formulario para captura de datos. Activa el boton de Guardar y Cancelar.</li>
+        <li><strong>Guardar:</strong> Envía el formulario para almacenar o actualizar la información en la base de datos, luego regresa el formulario a estado base.</li>
+        <li>
+            <strong>Modificar:</strong> Permite editar el registro seleccionado; abre un modal que permite seleccionar el elemento que se desea afectar.
+            <ul class="mt-2">
+                <li><strong>Editar:</strong> Carga los datos del registro seleccionado en el formulario para que pueda modificarse, luego se pulsa "Grabar" para guardar.</li>
+                <li><strong>Eliminar:</strong> Solicita confirmación y elimina el registro seleccionado.</li>
+            </ul>
+        </li>
+        <li><strong>Cancelar:</strong> Cancela la operación actual, limpia el formulario y/o cierra modales o paneles de edición, regresando al estado base del formulario.</li>
+        <li><strong>Consultar:</strong> Redirige a una ´página para visualizar los registros existentes.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Restricciones por rol de usuario</h4>
+    <p>Los botones se habilitan o deshabilitan según el rol del usuario:</p>
+    <ul>
+        <li><strong>Admin y Editor:</strong> Acceso completo a los botones Nuevo, Guardar, Modificar y Cancelar.</li>
+        <li><strong>Admin y Consultor:</strong> Acceso al botón Consultar para la visualización de datos.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-5">Imagen de los botones generales</h4>
+    <div class="mb-5">
+        <img src="images/Ayuda/AyudaGeneral/BotonesGenerales01.png" alt="Botones generales del sistema" style="max-width: 600px; width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">Vista de los botones principales en la parte inferior de la pantalla.</p>
+    </div>
+
+    <h4 class="fw-bold mt-5">Imagen de botones dependientes de 'Modificar'</h4>
+    <div class="">
+        <img src="images/Ayuda/AyudaGeneral/BotonesGenerales02.png" alt="Botones Editar y Eliminar" style="max-width: 500px; width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">Botones que aparecen junto a cada registro para editar o eliminar datos.</p>
+    </div></div>
+
+@code {
+}

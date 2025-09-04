@@ -1,0 +1,464 @@
+﻿@page "/Movimientos/GestionViajesConsulta"
+@using FRMSoftware.Data
+@inject FRMSoftware.Services.Movimientos.GestionViajesService viajesService
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+@inject NavigationManager Navigation
+
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="margin-top:20px">
+        <h2 class="text-center fw-bold" style="margin-bottom: 20px">Consulta de viajes</h2>
+        
+        <div style="height: 130px">
+            <!-- Botones para seleccionar tipo de búsqueda -->
+            <div class="d-flex mb-3">
+                <div class="toggle-container">
+                    <div class="toggle-slider" style='left: @(busquedaGeneral ? "0%" : "50%")'></div>
+                    <button class="toggle-btn @(busquedaGeneral ? "active" : "")" @onclick="() => CambiarTipoBusqueda(true)">
+                        Búsqueda general
+                    </button>
+                    <button class="toggle-btn @(!busquedaGeneral ? "active" : "")" @onclick="() => CambiarTipoBusqueda(false)">
+                        Búsqueda por período
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenedor para búsqueda general (texto) -->
+            @if (busquedaGeneral)
+            {
+                <div class="row mb-3 align-items-center">
+                    <div class="col-auto">
+                        <input @bind="searchTermViajes" placeholder="Buscar viajes..." class="form-control" />
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn fixed-size-btn" @onclick="AplicarFiltroViajes">Buscar</button>
+                    </div>
+                </div>
+            }
+
+            <!-- Contenedor para búsqueda por período (fechas) -->
+            @if (!busquedaGeneral)
+            {
+                <div class="row mb-3 align-items-center">
+                    <div class="col-auto">
+                        <label>Desde:</label>
+                        <InputDate class="form-control" @bind-Value="fechaInicio" />
+                    </div>
+                    <div class="col-auto">
+                        <label>Hasta:</label>
+                        <InputDate class="form-control" @bind-Value="fechaFin" />
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn fixed-size-btn" style="margin-top: 25px" @onclick="AplicarFiltroViajes">Buscar</button>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Botones deslizantes para alternar entre tablas -->
+        <div class="d-flex justify-content-center mb-3">
+            <div class="toggle-container">
+                <div class="toggle-slider" style='left: @(tablaActual == 1 ? "0%" : "50%")'></div>
+                <button class="toggle-btn @(tablaActual == 1 ? "active" : "")" @onclick="() => FiltrarViajes(1)">
+                    Consulta de cajas
+                </button>
+                <button class="toggle-btn @(tablaActual == 2 ? "active" : "")" @onclick="() => FiltrarViajes(2)">
+                    Consulta de proceso
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Contenedor de la tabla con scroll -->
+        <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+            <table class="table table-striped table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID Viaje</th>
+                        <th>Fecha de salida</th>
+                        <th>Número de semana</th>
+                        <th>Estado de aprobación</th>
+
+                        @if (tablaActual != 2)
+                        {
+                            <th>ID Tarima</th>
+                            <th>Cantidad de cajas</th>
+                            <th>Licencia</th>
+                        }
+                        @if (tablaActual != 1)
+                        {
+                            <th>Kilos proceso</th>
+                        }
+
+                        <th>ID Cosecha</th>
+                        <th>Fecha de cosecha</th>
+                        <th>Número de semana</th>
+
+                        <th>ID Producción</th>
+                        <th>Tipo de clamshell</th>
+                        <th>Cantidad de cajas</th>
+                        <th>Kilos de proceso</th>
+
+                        <th>ID Cultivo</th>
+                        <th>Tipo de berry</th>
+                        <th>Variedad</th>
+
+                        <th>ID Rancho</th>
+                        <th>Nombre del rancho</th>
+                        <th>Número del rancho</th>
+
+                        <th>ID Empleado</th>
+                        <th>Nombre del empleado</th>
+                        <th>Teléfono</th>
+
+                        <th>ID Vehículo</th>
+                        <th>Placas</th>
+                        <th>Modelo</th>
+                        <th>Marca</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var grupo in filteredViajes.GroupBy(v => new { v.IdViaje, v.IdProduccion }))
+                    {
+                        var primeraTarima = grupo.FirstOrDefault(v => v.IdTarima != null);
+                        bool esPrimeraFila = true;
+
+                        @foreach (var item in grupo)
+                        {
+                            <tr>
+                                @if (tablaActual != 2)
+                                {
+                                    <!-- Solo mostramos ID Viaje y Fecha Salida en la primera fila -->
+                                    @if (esPrimeraFila)
+                                    {
+                                        <td rowspan="@grupo.Count()">@item.IdViaje</td>
+                                        <td rowspan="@grupo.Count()">@item.FechaSalida.ToString("dd/MM/yyyy")</td>
+                                        <td rowspan="@grupo.Count()">@item.NumSemViaje</td>
+                                        <td rowspan="@grupo.Count()">@item.EstadoAprobacion</td>
+                                    }
+
+                                    <!-- Mostrar solo en la primera fila si hay tarimas -->
+                                    @if (esPrimeraFila && primeraTarima != null)
+                                    {
+                                        <td>@primeraTarima.IdTarima</td>
+                                        <td>@primeraTarima.CantidadCajasViaje</td>
+                                        <td>@primeraTarima.Licencia</td>
+                                    }
+                                    else if (!esPrimeraFila)
+                                    {
+                                        <td>@item.IdTarima</td>
+                                        <td>@item.CantidadCajasViaje</td>
+                                        <td>@item.Licencia</td>
+                                    }
+
+                                }
+
+                                <!-- Datos generales del viaje, solo en la primera fila -->
+                                @if (esPrimeraFila)
+                                {
+
+                                    if (tablaActual != 1)
+                                    {
+                                        <td rowspan="@grupo.Count()">@item.IdViaje</td>
+                                        <td rowspan="@grupo.Count()">@item.FechaSalida.ToString("dd/MM/yyyy")</td>
+                                        <td rowspan="@grupo.Count()">@item.NumSemViaje</td>
+                                        <td rowspan="@grupo.Count()">@item.EstadoAprobacion</td>
+                                        <td>@item.KilosProcesoViaje</td>
+
+                                    }
+
+                                    <td rowspan="@grupo.Count()">@item.IdCosecha</td>
+                                    <td rowspan="@grupo.Count()">@item.FechaCosecha.ToString("dd/MM/yyyy")</td>
+                                    <td rowspan="@grupo.Count()">@item.NumSemCosecha</td>
+
+                                    <td rowspan="@grupo.Count()">@item.IdProduccion</td>
+                                    <td rowspan="@grupo.Count()">@item.TipoCaja</td>
+                                    <td rowspan="@grupo.Count()">@item.CantidadCajas</td>
+                                    <td rowspan="@grupo.Count()">@item.KilosProceso</td>
+
+                                    <td rowspan="@grupo.Count()">@item.IdCultivo</td>
+                                    <td rowspan="@grupo.Count()">@item.TipoBerry</td>
+                                    <td rowspan="@grupo.Count()">@item.Variedad</td>
+
+                                    <td rowspan="@grupo.Count()">@item.IdRancho</td>
+                                    <td rowspan="@grupo.Count()">@item.NombreRancho</td>
+                                    <td rowspan="@grupo.Count()">@item.NumeroRancho</td>
+
+                                    <td rowspan="@grupo.Count()">@item.IdEmpleado</td>
+                                    <td rowspan="@grupo.Count()">@item.Nombre</td>
+                                    <td rowspan="@grupo.Count()">@item.Telefono</td>
+
+                                    <td rowspan="@grupo.Count()">@item.IdVehiculo</td>
+                                    <td rowspan="@grupo.Count()">@item.Placas</td>
+                                    <td rowspan="@grupo.Count()">@item.Modelo</td>
+                                    <td rowspan="@grupo.Count()">@item.Marca</td>
+                                }
+
+                            </tr>
+                            esPrimeraFila = false;
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para mostrar mensajes -->
+@if (mostrarMensajeModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <!-- Agregar modal-dialog-centered -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@mensajeTitulo</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarMensajeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@mensajeContenido</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-red" @onclick="CerrarMensajeModal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+<!-- Botón de regreso -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+        <button class="btn fixed-size-btn mx-2" @onclick="RedirigirViajes">Regresar</button>
+    </div>
+</div>
+
+@code {
+    private List<ViajesDetallesDto> viajesDetalles = new();
+
+    // BÚSQUEDA INPUT
+    private string searchTermViajes = string.Empty;
+    private List<ViajesDetallesDto> filteredViajes = new();
+
+    // FORMULARIO TARIMAS
+    private bool mostrarTarima = false;
+    private bool mostrarKilosProceso = false;
+    private bool MostarFormularioTarimas = false;
+
+    // MODAL PROCESO
+    bool mostrarModalTarimasProceso = false; // Controla la visibilidad del modal de tarimas o proceso
+
+    // MENSAJES
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+    private DateTime? fechaInicio;
+    private DateTime? fechaFin;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarViajes();
+    }
+
+    private async Task ConsultarViajes()
+    {
+        try
+        {
+            viajesDetalles = await viajesService.GetViajesDetallesAsync();
+            filteredViajes = viajesDetalles.OrderBy(c => c.IdViaje).ToList(); // Inicializa  con la lista completa
+            FiltrarViajes(1); // Filtra la tabla de viajes por defecto
+            StateHasChanged(); // Fuerza el refresco de la UI después de consultar
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en la base de datos usando el servicio ErrorLogService
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarViajesDetalles",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+
+            // Mostrar el mensaje de error al usuario
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+        }
+    }
+
+    private bool busquedaGeneral = true; // true = búsqueda general, false = por período
+
+    private void CambiarTipoBusqueda(bool esGeneral)
+    {
+        busquedaGeneral = esGeneral;
+        // Limpiar filtros al cambiar de tipo
+        if (esGeneral)
+        {
+            fechaInicio = null;
+            fechaFin = null;
+        }
+        else
+        {
+            searchTermViajes = string.Empty;
+        }
+    }
+
+    private void AplicarFiltroViajes()
+    {
+        var listaBase = viajesDetalles;
+
+        // Aplicar el filtro según la tabla seleccionada
+        if (tablaActual == 1)
+        {
+            listaBase = listaBase.Where(v => v.KilosProcesoViaje == 0).ToList();
+        }
+        else if (tablaActual == 2)
+        {
+            listaBase = listaBase.Where(v => v.CantidadCajasViaje == 0 && v.Licencia == 0).ToList();
+        }
+
+        // 2. Aplicar filtro de fechas (siempre se aplica)
+        if (fechaInicio.HasValue)
+        {
+            listaBase = listaBase.Where(v => v.FechaSalida >= DateOnly.FromDateTime(fechaInicio.Value)).ToList();
+        }
+        if (fechaFin.HasValue)
+        {
+            listaBase = listaBase.Where(v => v.FechaSalida <= DateOnly.FromDateTime(fechaFin.Value)).ToList();
+        }
+
+        // Aplicar búsqueda sobre la lista filtrada
+        filteredViajes =
+            listaBase.Where(v =>
+                (
+                    // Filtro de fechas
+                    (!fechaInicio.HasValue || v.FechaSalida <= DateOnly.FromDateTime(fechaFin.Value)) &&
+                    (!fechaFin.HasValue || v.FechaSalida <= DateOnly.FromDateTime(fechaFin.Value)) &&
+                    
+                    (string.IsNullOrEmpty(searchTermViajes) ||
+                        // --- FILTROS DE TEXTO ---
+                        v.IdViaje.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+                        v.FechaSalida.ToString("dd/MM/yyyy").Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+                        v.NumSemViaje.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+                        v.CantidadCajasViaje.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+                        v.Licencia.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+                        v.KilosProcesoViaje.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+
+                        v.IdCosecha.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+                        v.FechaCosecha.ToString("dd/MM/yyyy").Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+                        v.NumSemCosecha.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+
+                        v.IdProduccion.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+                        v.TipoCaja.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+                        (v.CantidadCajas?.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                        (v.KilosProceso?.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ?? false) ||
+
+                        v.IdCultivo.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+                        (v.TipoBerry?.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                        (v.Variedad?.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ?? false) ||
+
+                        v.IdRancho.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+                        (v.NombreRancho?.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                        (v.NumeroRancho?.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ?? false) ||
+
+                        v.IdEmpleado.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+                        v.Nombre.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+                        v.Telefono.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+
+                        v.IdVehiculo.ToString().Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+                        v.Placas.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+                        v.Modelo.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) ||
+                        v.Marca.Contains(searchTermViajes, StringComparison.OrdinalIgnoreCase) 
+                    )
+                )
+            ).OrderBy(c => c.IdCosecha).ToList();
+    }
+
+    private int tablaActual = 1; // 1 para cajas, 2 para proceso
+
+    private void FiltrarViajes(int opcion)
+    {
+        tablaActual = opcion;
+
+        if (opcion == 1)
+        {
+            filteredViajes = viajesDetalles.Where(v => v.KilosProcesoViaje == 0).ToList();
+            mostrarModalTarimasProceso = false;
+            searchTermViajes = string.Empty; // Limpiar el campo de búsqueda
+            fechaFin = null;
+            fechaInicio = null;
+
+        }
+        else if (opcion == 2)
+        {
+            filteredViajes = viajesDetalles.Where(v => v.CantidadCajasViaje == 0 && v.Licencia == 0).ToList();
+            mostrarModalTarimasProceso = true;
+            searchTermViajes = string.Empty; // Limpiar el campo de búsqueda
+            fechaFin = null;
+            fechaInicio = null;
+
+        }
+    }
+
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    private void CerrarMensajeModal()
+    {
+        mostrarMensajeModal = false;
+    }
+
+    private void RedirigirViajes()
+    {
+        Navigation.NavigateTo("/Movimientos/GestionViajes");
+    }
+
+
+    private async Task DescargarPDF_GestionViajes()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarPDF_GestionViajes");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarPDF - GestionViajes",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task DescargarExcel_GestionViajes()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarExcel_GestionViajes");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarExcel - GestionViajes",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    [Inject] private IJSRuntime JS { get; set; }
+}

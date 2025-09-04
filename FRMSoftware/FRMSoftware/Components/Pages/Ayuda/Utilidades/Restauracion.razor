@@ -1,0 +1,44 @@
+﻿@page "/Ayuda/Utilidades/Restauracion"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4"><i class="bi bi-upload"></i> Restaurar base de datos</h2>
+
+    <p>Este módulo permite cargar un archivo <code>.sql</code> para restaurar por completo la base de datos del sistema. Su uso está reservado para situaciones en las que se requiere recuperar el sistema desde un respaldo.</p>
+
+    <h4 class="fw-bold mt-4">¿Cómo funciona?</h4>
+    <ul>
+        <li>Haz clic en el botón para seleccionar un archivo con extensión <strong>.sql</strong>.</li>
+        <li>Una vez seleccionado, el botón <strong>Restaurar</strong> se habilita.</li>
+        <li>Presiona <strong>Restaurar</strong> para iniciar el proceso. Se mostrará un mensaje indicando si fue exitoso o no.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Ejemplos visuales</h4>
+
+    <h5 class="mt-4">Estado inicial</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Utilidades/Restauracion01.png" alt="Vista inicial de restauración"
+             style="max-width: 600px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Vista inicial del formulario de restauración. El botón <strong>Restaurar</strong> se encuentra deshabilitado hasta que se seleccione un archivo válido.
+        </p>
+    </div>
+
+    <h5 class="mt-4">Archivo seleccionado</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Utilidades/Restauracion02.png" alt="Archivo seleccionado para restaurar"
+             style="max-width: 600px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Se abre el explorador de archivos para la selección del archivo <strong>.sql</strong>, luego el botón <strong>Restaurar</strong> queda habilitado y se puede ejecutar la operación.
+        </p>
+    </div>
+
+    <h4 class="fw-bold mt-4">Recomendaciones</h4>
+    <ul>
+        <li>Antes de restaurar, asegúrate de contar con una copia actual del sistema por si necesitas revertir los cambios.</li>
+        <li>El archivo debe contener instrucciones SQL válidas para una restauración completa.</li>
+        <li>No cierres ni recargues la página mientras se ejecuta el proceso de restauración.</li>
+    </ul>
+</div>
+
+@code {
+}

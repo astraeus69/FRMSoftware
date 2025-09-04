@@ -1,0 +1,1061 @@
+﻿@page "/Movimientos/GestionCosechas"
+
+@using FRMSoftware.Data
+@inject Services.Catalogos.CultivoService cultivoService
+@inject Services.Catalogos.ViverosService viveroService
+@inject FRMSoftware.Services.Movimientos.GestionPlantacionesService plantacionesService
+@inject Services.Catalogos.RanchosService ranchoService
+@inject FRMSoftware.Services.Movimientos.GestionLlavesService llavesService
+@inject FRMSoftware.Services.Movimientos.GestionCosechasService cosechasService
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+
+@inject NavigationManager Navigation
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <div class="row justify-content-center align-items-start mt-4">
+        <h2 class="text-center fw-bold" style="margin-bottom: 20px">Gestión de cosechas</h2>
+
+        <!-- Primera columna: Plantaciones y Ranchos -->
+        <div class="col-lg-4">
+            <!-- PLANTACIÓN -->
+            <EditForm Model="plantacion">
+                <div class="card shadow-sm mb-3 same-height-Cosecha-1">
+                    <div class="card-body">
+                        <h5 class="text-center fw-bold">Plantación</h5>
+                        <div class="mb-1">
+                            <label class="form-label">Fecha de plantación:</label>
+                            <InputDate class="form-control" @bind-Value="plantacion.FechaPlantacion" disabled="true" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label class="form-label">Número de semana:</label>
+                            <InputNumber class="form-control" @bind-Value="plantacion.NumSemPlantacion" disabled="true" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label class="form-label">Estatus de plantación:</label>
+                            <InputText class="form-control" @bind-Value="plantacion.EstatusPlantacion" disabled="true" />
+                        </div>
+
+                        <div class="d-flex justify-content-center">
+                            <button class="btn fixed-size-btn selectRancho mx-2" @onclick="AbrirModalPlantacion" disabled="@deshabilitarGuardar">
+                                Seleccionar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+
+            <!-- CULTIVO -->
+            <EditForm Model="cultivo">
+                <div class="card shadow-sm mb-3 same-height-Cosecha-1">
+                    <div class="card-body">
+                        <h5 class="text-center fw-bold">Cultivo</h5>
+                        <div class="mb-1">
+                            <label class="form-label">Tipo de berry:</label>
+                            <InputText class="form-control" @bind-Value="cultivo.TipoBerry" disabled="true" />
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label">Variedad de berry:</label>
+                            <InputText class="form-control" @bind-Value="cultivo.Variedad" disabled="true" />
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+
+        <!-- Segunda columna: Cultivos, Viveros y Llaves -->
+        <div class="col-lg-4">
+            <!-- RANCHO -->
+            <div class="card shadow-sm mb-3 same-height-Cosecha-2">
+                <div class="card-body">
+                    <EditForm Model="rancho">
+                        <h5 class="text-center fw-bold">Rancho</h5>
+                        <div class="mb-1">
+                            <label class="form-label">Nombre del rancho:</label>
+                            <InputText class="form-control" @bind-Value="rancho.NombreRancho" disabled="true" />
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label">Número de rancho:</label>
+                            <InputText class="form-control" @bind-Value="rancho.NumeroRancho" disabled="true" />
+                        </div>
+                    </EditForm>
+
+                    <!-- LLAVES -->
+                    <EditForm Model="llave">
+                        <h5 class="text-center fw-bold" style="margin-top:30px">Llave</h5>
+                        <div class="mb-1">
+                            <label class="form-label">Nombre de la llave:</label>
+                            <InputText class="form-control" @bind-Value="llave.NombreLlave" disabled="true" />
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label">Superficie (Ha):</label>
+                            <InputNumber class="form-control" @bind-Value="llave.SuperficieHa" disabled="true" />
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label">Superficie (Acres):</label>
+                            <InputNumber class="form-control" @bind-Value="llave.SuperficieAcres" disabled="true" />
+                        </div>
+                    </EditForm>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Tercera columna: Cosecha y Producción -->
+        <div class="col-lg-4">
+            <!-- COSECHA -->
+            <EditForm Model="cosecha" OnValidSubmit="GrabarRegistro" id="cosechaForm">
+                <DataAnnotationsValidator />
+                <div class="card shadow-sm mb-3 same-height-CosProd">
+                    <div class="card-body">
+                        <h5 class="text-center fw-bold">Cosecha</h5>
+                        <!-- ID de cosecha (Oculto) -->
+                        <input type="hidden" @bind="cosecha.IdCosecha" />
+                        <!-- ID de plantación (Oculto) -->
+                        <input type="hidden" @bind="cosecha.IdPlantacion" />
+
+                        <!-- Fecha de cosecha -->
+                        <div class="mb-1">
+                            <label class="form-label">Fecha de cosecha:</label>
+                            <InputDate id="FechaCosecha"
+                                       class="form-control"
+                                       @bind-Value="cosecha.FechaCosecha"
+                                       @oninput="CalcularSemanaCosecha"
+                                       disabled="@deshabilitarFormulario" />
+
+                            <ValidationMessage For="@(() => cosecha.FechaCosecha)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label class="form-label">Número de semana:</label>
+                            <InputNumber id="NumSemCosecha" class="form-control" @bind-Value="cosecha.NumSemCosecha" disabled="true" />
+                            <ValidationMessage For="@(() => cosecha.NumSemCosecha)" class="text-danger" />
+                        </div>
+
+
+                        <!-- PRODUCCIÓN -->
+                        <h5 class="text-center fw-bold" style="margin-top:30px">Producción</h5>
+
+                        <h6 class="fw-bold mt-4">Fruta de calidad</h6>
+                        <!-- ID de producción (Oculto) -->
+                        <input type="hidden" @bind="produccion.IdProduccion" />
+                        <!-- ID de cosecha (Oculto) -->
+                        <input type="hidden" @bind="produccion.IdCosecha" />
+
+                        <!-- Tipo de caja -->
+                        <div class="mb-1">
+                            <label class="form-label">Tipo de clamshell:</label>
+                            <InputSelect id="TipoCaja" class="form-control" @bind-Value="produccion.TipoCaja" disabled="@deshabilitarFormulario">
+                                <option disabled selected value="">Seleccione una opción:</option>
+                                <option value="6oz">6oz</option>
+                                <option value="10oz">10oz</option>
+                                <option value="12oz">12oz</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => produccion.TipoCaja)" class="text-danger" />
+                        </div>
+
+                        <!-- Cantidad de cajas -->
+                        <div class="mb-1">
+                            <label class="form-label">Cantidad de cajas:</label>
+                            <InputNumber id="CantidadCajas" class="form-control" @bind-Value="produccion.CantidadCajas" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => produccion.CantidadCajas)" class="text-danger" />
+                        </div>
+
+                        <h6 class="fw-bold mt-4">Fruta de proceso</h6>
+
+                        <!-- Kilos de proceso -->
+                        <div class="mb-1">
+                            <label class="form-label">Kilos de proceso:</label>
+                            <InputNumber id="KilosProceso" class="form-control" @bind-Value="produccion.KilosProceso" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => produccion.KilosProceso)" class="text-danger" />
+                        </div>
+
+
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+
+
+
+<!-- Botones -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Editor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="NuevoRegistro" disabled="@deshabilitarNuevo">Nuevo</button>
+            <button class="btn fixed-size-btn mx-2" type="submit" form="cosechaForm" disabled="@deshabilitarGuardar">Guardar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="AbrirModalCosecha" disabled="@deshabilitarModificar">Modificar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="Cancelar" disabled="@deshabilitarCancelar">Cancelar</button>
+        }
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Consultor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="RedirigirAConsulta" disabled="@deshabilitarConsultar">Consultar</button>
+        }
+
+    </div>
+</div>
+
+
+
+<!-- MODAL para mostrar la tabla de seleccionar plantaciones -->
+@if (mostrarModalPlantaciones)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Lista de plantaciones</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModalPlantacion"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Filtro de búsqueda -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <input @bind="searchTermPlantacion" placeholder="Buscar plantaciones..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltroPlantaciones">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID Plantación</th>
+                                    <th>Fecha de plantación</th>
+                                    <th>Número de semana</th>
+                                    <th>Estatus de plantación</th>
+
+                                    <th>ID Cultivo</th>
+                                    <th>Tipo de berry</th>
+                                    <th>Variedad</th>
+
+                                    <th>ID Rancho</th>
+                                    <th>Nombre del rancho</th>
+                                    <th>Número del rancho</th>
+
+                                    <th>ID Llave</th>
+                                    <th>Nombre de llave</th>
+                                    <th>Superficie (HA)</th>
+                                    <th>Superficie (Acres)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in filteredPlantaciones)
+                                {
+                                    <tr @onclick="() => SeleccionarPlantacion(item)" class="fila-seleccionable">
+                                        <td>@item.IdPlantacion</td>
+                                        <td>@item.FechaPlantacion.ToString("dd/MM/yyyy")</td>
+                                        <td>@item.NumSemPlantacion</td>
+                                        <td>@item.EstatusPlantacion</td>
+
+                                        <td>@item.IdCultivo</td>
+                                        <td>@item.TipoBerry</td>
+                                        <td>@item.Variedad</td>
+
+                                        <td>@item.IdRancho</td>
+                                        <td>@item.NombreRancho</td>
+                                        <td>@item.NumeroRancho</td>
+
+                                        <td>@item.IdLlave</td>
+                                        <td>@item.NombreLlave</td>
+                                        <td>@item.SuperficieHa</td>
+                                        <td>@item.SuperficieAcres</td>
+
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+<!-- MODAL para mostrar la tabla de modificación -->
+@if (mostrarModalCosecha)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Lista de podas</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModalCosecha"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Contenedor para alinear horizontalmente -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <input @bind="searchTermCosecha" placeholder="Buscar cosechas..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltroCosechas">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor de la tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 10%;">Acciones</th>
+                                    
+                                    <th>ID Cosecha</th>
+                                    <th>Fecha de cosecha</th>
+                                    <th>Número de semana</th>
+
+                                    <th>ID Producción</th>
+                                    <th>Tipo de clamshell</th>
+                                    <th>Cantidad de cajas</th>
+                                    <th>Kilos de proceso</th>
+
+                                    <th>ID Plantación</th>
+                                    <th>Fecha de plantación</th>
+                                    <th>Número de semana</th>
+                                    <th>Estatus de plantación</th>
+
+                                    <th>ID Cultivo</th>
+                                    <th>Tipo de berry</th>
+                                    <th>Variedad</th>
+
+                                    <th>ID Rancho</th>
+                                    <th>Nombre del rancho</th>
+                                    <th>Número del rancho</th>
+
+                                    <th>ID Llave</th>
+                                    <th>Nombre de llave</th>
+                                    <th>Superficie (HA)</th>
+                                    <th>Superficie (Acres)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in filteredCosechas)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn editar" @onclick="() => SeleccionarCosecha(item)">Editar</button>
+                                                @if (UserSession.Rol == "Admin")
+                                                {
+                                                    <button class="btn btn-red editar" @onclick="() => ConfirmarEliminar(item.IdCosecha)">Eliminar</button>
+                                                }
+                                            </div>
+                                        </td>
+
+                                        <td>@item.IdCosecha</td>
+                                        <td>@item.FechaCosecha.ToString("dd/MM/yyyy")</td>
+                                        <td>@item.NumSemCosecha</td>
+
+                                        <td>@item.IdProduccion</td>
+                                        <td>@item.TipoCaja</td>
+                                        <td>@item.CantidadCajas</td>
+                                        <td>@item.KilosProceso</td>
+
+                                        <td>@item.IdPlantacion</td>
+                                        <td>@item.FechaPlantacion.ToString("dd/MM/yyyy")</td>
+                                        <td>@item.NumSemPlantacion</td>
+                                        <td>@item.EstatusPlantacion</td>
+
+                                        <td>@item.IdCultivo</td>
+                                        <td>@item.TipoBerry</td>
+                                        <td>@item.Variedad</td>
+
+                                        <td>@item.IdRancho</td>
+                                        <td>@item.NombreRancho</td>
+                                        <td>@item.NumeroRancho</td>
+
+                                        <td>@item.IdLlave</td>
+                                        <td>@item.NombreLlave</td>
+                                        <td>@item.SuperficieHa</td>
+                                        <td>@item.SuperficieAcres</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal de confirmación de eliminación -->
+@if (mostrarConfirmacion)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar eliminación</h5>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro de que desea eliminar esta cosecha?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" @onclick="CancelarEliminar">Cancelar</button>
+                    <button class="btn btn-red" @onclick="EliminarCosechaConfirmado">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+<!-- Modal para mostrar mensajes -->
+@if (mostrarMensajeModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <!-- Agregar modal-dialog-centered -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@mensajeTitulo</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarMensajeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@mensajeContenido</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-red" @onclick="CerrarMensajeModal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    private PlantacionesDetallesDto plantacion = new PlantacionesDetallesDto();
+    private List<PlantacionesDetallesDto> plantaciones = new();
+
+    private CultivosDto cultivo = new CultivosDto();
+    private List<CultivosDto> cultivos = new();
+
+    private RanchosDto rancho = new RanchosDto();
+    private List<RanchosDto> ranchos = new();
+
+    private LlavesDto llave = new LlavesDto();
+    private List<LlavesDto> llaves = new();
+
+    private CosechasDto cosecha = new CosechasDto();
+    private ProduccionDto produccion = new ProduccionDto();
+
+    private List<CosechasProduccionDto> cosechas = new();
+
+
+    // MODALES
+    private bool mostrarModalCosecha = false;
+    private bool mostrarConfirmacion = false;
+
+    // FORMULARIO
+    private bool deshabilitarFormulario = true;
+
+    // BOTONES
+    private bool deshabilitarNuevo = false;
+    private bool deshabilitarGuardar = true;
+    private bool deshabilitarModificar = false;
+    private bool deshabilitarCancelar = true;
+    private bool deshabilitarConsultar = false;
+
+    private int idCosechaEliminar;
+
+    // BÚSQUEDA INPUT
+    private string searchTermCosecha = string.Empty;  // Campo de búsqueda
+    private List<CosechasProduccionDto> filteredCosechas = new(); // Lista filtrada
+
+    // MENSAJES
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarPlantaciones();
+        await ConsultarCosechas();
+    }
+
+    private async Task ConsultarCosechas()
+    {
+        try
+        {
+            cosechas = await cosechasService.GetCosechasProduccionAsync();
+
+            // Verificar existencia de datos
+            if (cosechas == null || !cosechas.Any())
+            {
+                MostrarMensajeModal("Sin datos", "No se encontraron cosechas.");
+                return;
+            }
+
+            filteredCosechas = cosechas.OrderBy(c => c.IdCosecha).ToList(); // Inicializa  con la lista completa
+            StateHasChanged(); // Fuerza el refresco de la UI después de consultar
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en la base de datos usando el servicio ErrorLogService
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarCosechas",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+
+            // Mostrar el mensaje de error al usuario
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+        }
+    }
+
+    private void AplicarFiltroCosechas()
+    {
+        filteredCosechas = string.IsNullOrEmpty(searchTermCosecha) ?
+            cosechas :
+            cosechas.Where(c =>
+                c.IdCosecha.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                c.FechaCosecha.ToString("dd/MM/yyyy").Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                c.NumSemCosecha.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+
+                c.TipoCaja.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                c.CantidadCajas.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                c.KilosProceso.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+
+                // Datos de la Plantación
+                c.IdPlantacion.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                c.FechaPlantacion.ToString("dd/MM/yyyy").Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                c.NumSemPlantacion.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                c.EstatusPlantacion.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+
+                // Datos del Cultivo
+                c.IdCultivo.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                c.TipoBerry.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                c.Variedad.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+
+                // Datos de la Llave
+                c.IdLlave.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                c.NombreLlave.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                c.SuperficieHa.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                c.SuperficieAcres.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                c.Disponibilidad.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+
+                // Datos del Rancho
+                c.IdRancho.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                c.NombreRancho.Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) ||
+                c.NumeroRancho.ToString().Contains(searchTermCosecha, StringComparison.OrdinalIgnoreCase) 
+
+            ).ToList();
+    }
+
+
+
+    private void NuevoRegistro()
+    {
+        plantacion = new PlantacionesDetallesDto();
+        cultivo = new CultivosDto();
+        llave = new LlavesDto();
+        rancho = new RanchosDto();
+        cosecha = new CosechasDto();
+
+        deshabilitarFormulario = false;
+        deshabilitarGuardar = false;
+        deshabilitarNuevo = true;
+        deshabilitarModificar = true;
+        deshabilitarConsultar = true;
+        deshabilitarCancelar = false;
+    }
+
+    private void Cancelar()
+    {
+        plantacion = new PlantacionesDetallesDto();
+        cultivo = new CultivosDto();
+        llave = new LlavesDto();
+        rancho = new RanchosDto();
+        cosecha = new CosechasDto();
+
+        deshabilitarFormulario = true;
+        deshabilitarGuardar = true;
+        deshabilitarNuevo = false;
+        deshabilitarModificar = false;
+        deshabilitarConsultar = false;
+        deshabilitarCancelar = true;
+    }
+
+
+
+    private async Task GrabarRegistro()
+    {
+        if (plantacion == null || plantacion.IdPlantacion == 0 ||
+            rancho == null || rancho.IdRancho == 0 ||
+            cultivo == null || cultivo.IdCultivo == 0 ||
+            llave == null || llave.IdLlave == 0)
+        {
+            MostrarMensajeModal("Error", "Debe seleccionar todos los datos antes de continuar.");
+            return;
+        }
+
+        try
+        {
+            bool success = false;
+            string message = string.Empty;
+
+            // 🔹 Primero, intenta crear la Cosecha
+            if (cosecha.IdCosecha == 0)
+            {
+                var resultCosecha = await cosechasService.CreateCosechaAsync(cosecha);
+                if (!resultCosecha.Success)
+                {
+                    MostrarMensajeModal("Error", resultCosecha.Message);
+
+                    // Registrar el error
+                    await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                        {
+                            UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                            ErrorMessage = resultCosecha.Message,
+                            ErrorProcedure = "GrabarRegistro - CreateCosecha",
+                            ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                            ErrorTime = DateTime.UtcNow
+                        });
+
+                    return;
+                }
+                cosecha.IdCosecha = resultCosecha.IdCosecha;
+            }
+
+            // 🔹 Ahora que cosecha tiene un ID, podemos grabar Producción
+            produccion.IdCosecha = cosecha.IdCosecha;
+
+            if (produccion.IdProduccion == 0)
+            {
+                var resultProduccion = await cosechasService.CreateProduccionAsync(produccion);
+                if (!resultProduccion.Success)
+                {
+                    MostrarMensajeModal("Error", resultProduccion.Message);
+
+                    // Registrar el error
+                    await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                        {
+                            UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                            ErrorMessage = resultProduccion.Message,
+                            ErrorProcedure = "GrabarRegistro - CreateProduccion",
+                            ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                            ErrorTime = DateTime.UtcNow
+                        });
+
+                    return;
+                }
+                else
+                {
+                    MostrarMensajeModal("Éxito", "Cosecha y producción guardadas correctamente.");
+                }
+            }
+            else
+            {
+                var resultUpdateCosecha = await cosechasService.UpdateCosechaAsync(cosecha.IdCosecha, cosecha);
+                var resultUpdateProduccion = await cosechasService.UpdateProduccionAsync(produccion.IdProduccion, produccion);
+
+                if (!resultUpdateProduccion)
+                {
+                    MostrarMensajeModal("Error", "Error al actualizar.");
+
+                    // Registrar el error
+                    await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                        {
+                            UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                            ErrorMessage = "Error al actualizar producción.",
+                            ErrorProcedure = "GrabarRegistro - UpdateProduccion",
+                            ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                            ErrorTime = DateTime.UtcNow
+                        });
+
+                    return;
+                }
+                else
+                {
+                    MostrarMensajeModal("Éxito", "Se realizó la actualización correctamente.");
+                }
+            }
+
+            // Si todo salió bien, actualizamos la UI y limpiamos el formulario
+            await ConsultarCosechas();
+            deshabilitarFormulario = true;
+            deshabilitarGuardar = true;
+            deshabilitarNuevo = false;
+            deshabilitarModificar = false;
+            deshabilitarCancelar = true;
+            deshabilitarConsultar = false;
+
+            plantacion = new PlantacionesDetallesDto();
+            cultivo = new CultivosDto();
+            llave = new LlavesDto();
+            rancho = new RanchosDto();
+            cosecha = new CosechasDto();
+            produccion = new ProduccionDto();
+
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+
+            // Registrar el error inesperado
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "GrabarRegistroCosechas",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    private void CerrarMensajeModal()
+    {
+        mostrarMensajeModal = false;
+    }
+
+    private void AbrirModalCosecha()
+    {
+        mostrarModalCosecha = true;
+    }
+
+    private void CerrarModalCosecha()
+    {
+        mostrarModalCosecha = false;
+        searchTermCosecha = string.Empty;
+    }
+
+    private async Task SeleccionarCosecha(CosechasProduccionDto selectedCosecha)
+    {
+        try
+        {
+            // Asignar datos de cosecha
+            cosecha = new CosechasDto
+                {
+                    IdCosecha = selectedCosecha.IdCosecha,
+                    IdPlantacion = selectedCosecha.IdPlantacion,
+                    FechaCosecha = selectedCosecha.FechaCosecha,
+                    NumSemCosecha = selectedCosecha.NumSemCosecha,
+                };
+
+            // Asignar datos de producción
+            produccion = new ProduccionDto
+                {
+                    IdProduccion = selectedCosecha.IdProduccion,
+                    IdCosecha = selectedCosecha.IdCosecha,
+                    TipoCaja = selectedCosecha.TipoCaja,
+                    CantidadCajas = selectedCosecha.CantidadCajas,
+                    KilosProceso = selectedCosecha.KilosProceso
+                };
+
+            // Cargar los datos de los formularios correspondientes al replante seleccionado
+            cultivo = await cultivoService.GetCultivos(selectedCosecha.IdCultivo);
+            if (cultivo != null)
+            {
+                cultivo.TipoBerry = cultivo.TipoBerry;
+                cultivo.Variedad = cultivo.Variedad;
+            }
+
+            plantacion = await plantacionesService.GetPlantacionPorIdAsync(selectedCosecha.IdPlantacion);
+            if (plantacion != null)
+            {
+                plantacion.FechaPlantacion = plantacion.FechaPlantacion;
+                plantacion.NumSemPlantacion = plantacion.NumSemPlantacion;
+                plantacion.EstatusPlantacion = plantacion.EstatusPlantacion;
+            }
+
+            llave = await llavesService.GetLlave(plantacion.IdLlave);
+            if (llave != null)
+            {
+                llave.NombreLlave = llave.NombreLlave;
+                llave.Disponibilidad = llave.Disponibilidad;
+            }
+
+            rancho = await ranchoService.GetRancho(llave.IdRancho);
+            if (rancho != null)
+            {
+                rancho.NombreRancho = rancho.NombreRancho;
+                rancho.NumeroRancho = rancho.NumeroRancho;
+            }
+
+            // Actualizar el formulario con los datos obtenidos
+            deshabilitarFormulario = false;
+            deshabilitarGuardar = false;
+            deshabilitarNuevo = true;
+            deshabilitarModificar = true;
+            deshabilitarCancelar = false;
+            deshabilitarConsultar = true;
+            mostrarModalCosecha = false;
+
+            produccion.IdCosecha = selectedCosecha.IdCosecha;
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+
+            // Registrar el error inesperadohttps://0.0.0.1/#
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "SeleccionarCosecha",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+
+    private void ConfirmarEliminar(int id)
+    {
+        idCosechaEliminar = id;
+        mostrarConfirmacion = true;
+    }
+
+    private void CancelarEliminar()
+    {
+        mostrarConfirmacion = false;
+    }
+
+    private async Task EliminarCosechaConfirmado()
+    {
+        try
+        {
+            mostrarConfirmacion = false;
+
+            // Eliminar primero las producciones relacionadas
+            bool produccionesEliminadas = await cosechasService.DeleteProduccionesPorCosechaAsync(idCosechaEliminar);
+
+            if (!produccionesEliminadas)
+            {
+                MostrarMensajeModal("Error", "No se pudieron eliminar las producciones asociadas.");
+                return;
+            }
+
+            // Luego eliminar la cosecha
+            bool cosechaEliminada = await cosechasService.DeleteCosechaAsync(idCosechaEliminar);
+
+            if (cosechaEliminada)
+            {
+                await ConsultarCosechas();
+            }
+            else
+            {
+                MostrarMensajeModal("Error", "No se pudo eliminar la cosecha.");
+            }
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "EliminarCosechaConfirmado",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void RedirigirAConsulta()
+    {
+        Navigation.NavigateTo("/Movimientos/GestionCosechasConsulta");
+    }
+
+
+    // MODALES DE SELECCIÓN
+
+    // MODAL PARA SELECCIONAR PLANTACIÓN
+    // BÚSQUEDA INPUT
+    private bool mostrarModalPlantaciones = false;
+
+    private string searchTermPlantacion = string.Empty;  // Campo de búsqueda
+    private List<PlantacionesDetallesDto> filteredPlantaciones = new(); // Lista filtrada
+
+    // Función para consultar los cultivos
+    private async Task ConsultarPlantaciones()
+    {
+        try
+        {
+            // Obtiene todas las plantaciones desde el servicio
+            plantaciones = await plantacionesService.GetPlantacionesDetalles();
+
+            // Filtra las plantaciones activas
+            filteredPlantaciones = plantaciones
+                .Where(p => p.EstatusPlantacion != "Inactiva") // Excluye las inactivas
+                .OrderBy(p => p.IdPlantacion)
+                .ToList();
+
+            StateHasChanged(); // Refresca la UI
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error al consultar plantaciones: {ex.Message}");
+
+            // Registrar el error inesperado
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarPlantaciones",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    // Función para aplicar el filtro de búsqueda
+    private void AplicarFiltroPlantaciones()
+    {
+        filteredPlantaciones = string.IsNullOrEmpty(searchTermPlantacion) ?
+            plantaciones :
+            plantaciones.Where(p =>
+                p.IdPlantacion.ToString().Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+
+                p.IdCultivo.ToString().Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.TipoBerry.Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.Variedad.Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+
+                p.IdLlave.ToString().Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.NombreLlave.Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.SuperficieHa.ToString().Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.SuperficieAcres.ToString().Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.Disponibilidad.Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+
+                p.IdRancho.ToString().Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.NombreRancho.Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.NumeroRancho.Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+
+                p.FechaPlantacion.ToString("dd/MM/yyyy").Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.NumSemPlantacion.ToString().Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase) ||
+                p.EstatusPlantacion.Contains(searchTermPlantacion, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+    }
+
+    // Carga los datos del cultivo seleccionado en el formulario
+    private async Task SeleccionarPlantacion(PlantacionesDetallesDto selectedPlantacion)
+    {
+        try
+        {
+            // Asignar los datos de la plantación seleccionada
+            plantacion = new PlantacionesDetallesDto
+                {
+                    IdPlantacion = selectedPlantacion.IdPlantacion,
+                    IdCultivo = selectedPlantacion.IdCultivo,
+                    IdLlave = selectedPlantacion.IdLlave,
+                    IdVivero = selectedPlantacion.IdVivero,
+                    FechaPlantacion = selectedPlantacion.FechaPlantacion,
+                    NumSemPlantacion = selectedPlantacion.NumSemPlantacion,
+                    EstatusPlantacion = selectedPlantacion.EstatusPlantacion
+                };
+
+            // Cargar los datos del cultivo correspondiente a la plantación seleccionada
+            cultivo = await cultivoService.GetCultivos(selectedPlantacion.IdCultivo);
+            if (cultivo != null)
+            {
+                cultivo.TipoBerry = cultivo.TipoBerry;
+                cultivo.Variedad = cultivo.Variedad;
+            }
+
+            // Cargar los datos de la llave correspondiente a la plantación seleccionada
+            llave = await llavesService.GetLlave(selectedPlantacion.IdLlave);
+            if (llave != null)
+            {
+                llave.NombreLlave = llave.NombreLlave;
+                llave.Disponibilidad = llave.Disponibilidad;
+            }
+
+            // Cargar los datos del rancho correspondiente a la plantación seleccionada
+            rancho = await ranchoService.GetRancho(selectedPlantacion.IdRancho);
+            if (rancho != null)
+            {
+                rancho.NombreRancho = rancho.NombreRancho;
+                rancho.NumeroRancho = rancho.NumeroRancho;
+            }
+
+            // Actualizar el formulario con los datos obtenidos
+            deshabilitarFormulario = false;
+            deshabilitarGuardar = false;
+            deshabilitarNuevo = true;
+            deshabilitarModificar = true;
+            deshabilitarCancelar = false;
+            deshabilitarConsultar = true;
+            mostrarModalPlantaciones = false;
+
+            cosecha.IdPlantacion = selectedPlantacion.IdPlantacion;
+            
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error al seleccionar plantación: {ex.Message}");
+
+            // Registrar el error inesperado
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "SeleccionarPlantacion",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+
+    private void AbrirModalPlantacion()
+    {
+        mostrarModalPlantaciones = true;
+    }
+
+    private void CerrarModalPlantacion()
+    {
+        mostrarModalPlantaciones = false;
+        searchTermPlantacion = string.Empty;
+    }
+
+    private void CalcularSemanaCosecha(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out DateTime fecha))
+        {
+            cosecha.FechaCosecha = fecha;
+
+            var cultura = System.Globalization.CultureInfo.CurrentCulture;
+            var calendario = cultura.Calendar;
+
+            int semana = calendario.GetWeekOfYear(
+                fecha,
+                System.Globalization.CalendarWeekRule.FirstFourDayWeek,
+                DayOfWeek.Monday
+            );
+
+            cosecha.NumSemCosecha = semana;
+
+            StateHasChanged(); // Actualiza la interfaz
+        }
+    }
+}

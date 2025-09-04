@@ -1,0 +1,42 @@
+﻿@page "/Ayuda/Utilidades/BitacoraErrores"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4"><i class="bi bi-bug-fill"></i> Bitácora de errores</h2>
+
+    <p>
+        La <strong>Bitácora de errores</strong> permite consultar los errores que han ocurrido durante el uso del sistema. Esta pantalla está pensada para administradores o desarrolladores que requieren revisar fallos técnicos y su contexto.
+    </p>
+
+    <h4 class="fw-bold mt-4">¿Qué puedes hacer aquí?</h4>
+    <ul>
+        <li>Buscar errores específicos mediante un campo de texto libre.</li>
+        <li>Visualizar información detallada como el mensaje, procedimiento, línea, usuario y fecha del error.</li>
+        <li>Desplazarte horizontal y verticalmente para explorar la tabla completa.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Elementos de la pantalla</h4>
+    <ul>
+        <li><strong>Campo de búsqueda:</strong> Escribe cualquier palabra clave para filtrar los errores.</li>
+        <li><strong>Botón Buscar:</strong> Aplica el filtro ingresado en el campo de búsqueda.</li>
+        <li><strong>Tabla de errores:</strong> Muestra cada error con sus respectivos datos relevantes.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Ejemplo visual</h4>
+    <div class="mb-4">
+        <img src="images/Ayuda/Utilidades/BitacoraErrores.png" alt="Bitácora de errores"
+             style="max-width: 700px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Vista general de la bitácora. Puedes buscar por cualquier palabra contenida en el mensaje o datos del error. La tabla es desplazable y facilita la lectura de errores extensos.
+        </p>
+    </div>
+
+    <h4 class="fw-bold mt-4">Consejos de uso</h4>
+    <ul>
+        <li>Usa palabras clave como nombres de procedimientos o partes del mensaje de error.</li>
+        <li>Si el error no se muestra, asegúrate de que esté dentro del historial y revisa la ortografía del filtro.</li>
+        <li>Consulta esta bitácora después de reportes de fallos para identificar rápidamente su causa.</li>
+    </ul>
+</div>
+
+@code {
+}

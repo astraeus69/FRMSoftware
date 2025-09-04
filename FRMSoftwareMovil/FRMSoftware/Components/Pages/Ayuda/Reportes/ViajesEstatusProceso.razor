@@ -1,0 +1,50 @@
+﻿@page "/Ayuda/Reportes/ReporteViajeEstatusProceso"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4 text-center"><i class="bi bi-truck"></i> Reporte de Viajes de Proceso Agrupados por Estatus</h2>
+
+    <p>Este reporte muestra los viajes de proceso organizados según su estado de aprobación (Aceptado, Pendiente, Rechazado, etc.). Incluye información detallada sobre las tarimas, la cosecha, la producción, el cultivo, el rancho, el empleado y el vehículo relacionados con cada viaje.</p>
+
+    <h4 class="fw-bold mt-4">Opciones de exportación</h4>
+    <ul>
+        <li><strong>Descargar PDF:</strong> Obtén un archivo con el diseño completo del reporte, ideal para impresión.</li>
+        <li><strong>Descargar Excel:</strong> Exporta los datos para analizarlos en hojas de cálculo y realizar consultas adicionales.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Descripción de la tabla de viajes</h4>
+    <p>La tabla está organizada por grupos según el estatus de aprobación. Para cada viaje se muestra información relevante como:</p>
+    <ul>
+        <li>Datos generales del viaje: ID, fecha de salida, número de semana y estatus.</li>
+        <li>Detalles de las tarimas: ID, cantidad de cajas y licencia.</li>
+        <li>Información sobre kilos de proceso, cuando corresponde.</li>
+        <li>Datos de cosecha: ID, fecha y número de semana.</li>
+        <li>Información de producción: ID, tipo de caja, cantidad de cajas y kilos.</li>
+        <li>Detalles del cultivo: ID, tipo de berry y variedad.</li>
+        <li>Datos del rancho: ID, nombre y número.</li>
+        <li>Información del empleado responsable: ID, nombre y teléfono.</li>
+        <li>Datos del vehículo: ID, placas, modelo y marca.</li>
+    </ul>
+
+    <div class="my-4">
+        <img src="images/Ayuda/Reportes/ViajesProcesoEstatus01.png" alt="Tabla del reporte de viajes de proceso por estatus" class="img-fluid rounded shadow-sm" style="border: 1px solid #ccc;" />
+        <p class="text-muted mt-2">Ejemplo de la tabla con agrupación por estatus y detalles de cada viaje.</p>
+    </div>
+
+    <h4 class="fw-bold mt-4">Gráfica de cajas por estatus</h4>
+    <p>El gráfico de barras horizontal muestra la cantidad de cajas procesadas para cada estatus de viaje.</p>
+    <ul>
+        <li>Permite visualizar rápidamente la distribución de cajas según el estatus.</li>
+        <li>Ayuda a supervisar la eficiencia del proceso de aprobación y detectar posibles retrasos.</li>
+    </ul>
+
+    <div class="my-4 d-flex justify-content-center">
+        <img src="images/Ayuda/Reportes/ViajesProcesoEstatus02.png" alt="Gráfica de cajas por estatus de viajes de proceso" class="img-fluid rounded shadow-sm" style="max-width: 800px; border: 1px solid #ccc;" />
+    </div>
+
+    <h4 class="fw-bold mt-4">Recomendaciones para usar el reporte</h4>
+    <ul>
+        <li>Utiliza los filtros para consultar viajes en fechas específicas o con estatus pendientes o rechazados.</li>
+        <li>Analiza la gráfica para planificar mejoras en el flujo de trabajo de validación.</li>
+        <li>Exporta los datos para presentaciones, auditorías o reportes de productividad.</li>
+    </ul>
+</div>

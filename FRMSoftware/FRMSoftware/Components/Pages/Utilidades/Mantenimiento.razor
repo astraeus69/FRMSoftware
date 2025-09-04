@@ -1,0 +1,98 @@
+﻿@page "/Utilidades/Mantenimiento"
+@using FRMSoftware.Data
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+
+@inject FRMSoftware.Data.UserSession UserSession
+
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="margin-top:20px">
+        <h2 class="text-center fw-bold" style="margin-bottom: 20px">Bitácora de errores</h2>
+
+        <!-- Filtro de búsqueda -->
+        <div class="row mb-3 align-items-center">
+            <div class="col-auto">
+                <input @bind="searchTerm" placeholder="Buscar errores..." class="form-control" />
+            </div>
+            <div class="col-auto">
+                <button class="btn fixed-size-btn" @onclick="AplicarFiltro">Buscar</button>
+            </div>
+        </div>
+
+        <!-- Contenedor de la tabla con scroll -->
+        <div style="max-height: 70vh; max-width: 100%; overflow: auto;">
+            <table class="table table-striped table-bordered error-logs-table w-100" style="min-width: 600px;">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 5%;">ID</th>
+                        <th style="width: 10%;">Usuario</th>
+                        <th style="width: 50%;">Mensaje de Error</th>
+                        <th style="width: 15%;">Procedimiento</th>
+                        <th style="width: 20%; word-wrap: break-word; white-space: normal;">Línea</th>
+                        <th style="width: 10%;">Fecha y Hora</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var error in filteredErrorLogs)
+                    {
+                        <tr>
+                            <td>@error.Id</td>
+                            <td>@error.UserName</td>
+                            <td>@error.ErrorMessage</td>
+                            <td>@error.ErrorProcedure</td>
+                            <td>@error.ErrorLine</td>
+                            <td>@error.ErrorTime.ToString("dd-MM-yyyy HH:mm:ss")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private List<ErrorLogDto> errorLogsList = new(); // Lista completa de errores
+    private string searchTerm = string.Empty;  // Campo de búsqueda
+    private List<ErrorLogDto> filteredErrorLogs = new(); // Lista filtrada
+
+    // Se llama al inicializar para cargar los registros de error
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarErrorLogs();
+    }
+
+    private async Task ConsultarErrorLogs()
+    {
+        try
+        {
+            errorLogsList = await errorLogs.GetErrorLogsAsync();
+            filteredErrorLogs = errorLogsList.OrderByDescending(e => e.ErrorTime).ToList();
+            StateHasChanged(); // Refresca la UI después de la consulta
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarErrorLogs",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void AplicarFiltro()
+    {
+        filteredErrorLogs = string.IsNullOrEmpty(searchTerm) ?
+            errorLogsList :
+            errorLogsList.Where(e => e.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                                     e.ErrorMessage.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                                     e.ErrorProcedure.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                                     e.ErrorLine.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                                     e.ErrorTime.ToString("dd-MM-yyyy HH:mm:ss").Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            
+            ).ToList();
+    }
+
+}

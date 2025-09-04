@@ -1,0 +1,121 @@
+﻿@page "/Utilidades/Restauracion"
+
+@using FRMSoftware.Data
+
+@inject FRMSoftware.Services.Utilidades.RestauracionService RestauracionService
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+<div class="container d-flex justify-content-center align-items-center vh-100">
+    <div class="row w-100 justify-content-center">
+        <div class="col-xl-6 col-lg-8 col-md-10 col-sm-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h3 class="text-center my-4 fw-bold">Restaurar base de datos</h3>
+
+                    <div class="mb-3">
+                        <label for="archivoSql" class="form-label">Seleccionar archivo .sql:</label>
+                        <InputFile id="archivoSql" class="form-control" OnChange="SeleccionarArchivo" accept=".sql" @key="inputFileKey" />
+                    </div>
+
+                    <div class="d-flex justify-content-center mt-3">
+                        <button class="btn fixed-size-btn" type="button" id= "restoreButton" disabled="@(!archivoValido)" @onclick="RestaurarBaseDeDatos">
+                            Restaurar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para mostrar mensajes -->
+@if (mostrarMensajeModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@mensajeTitulo</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarMensajeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@mensajeContenido</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-red" @onclick="CerrarMensajeModal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    // MENSAJES
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+    private IBrowserFile archivoSeleccionado;
+    private bool archivoValido = false;
+    private string mensaje = "";
+
+    // Clave única para forzar la actualización del InputFile
+    private string inputFileKey = Guid.NewGuid().ToString();
+
+    private void SeleccionarArchivo(InputFileChangeEventArgs e)
+    {
+        archivoSeleccionado = e.File;
+        archivoValido = archivoSeleccionado != null;
+    }
+
+    private async Task RestaurarBaseDeDatos()
+    {
+        try
+        {
+            if (archivoSeleccionado != null)
+            {
+                mensaje = "Restaurando la base de datos...";
+                var (success, responseMessage) = await RestauracionService.RestaurarBaseDeDatosAsync(archivoSeleccionado);
+                mensaje = responseMessage;
+
+                // Forzar la actualización del InputFile, cambiando el key
+                inputFileKey = Guid.NewGuid().ToString();
+
+                archivoValido = false;
+
+                MostrarMensajeModal("Éxito", mensaje);
+            }
+
+
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+
+            // Registrar el error inesperado
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "SeleccionarViaje",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+
+    }
+
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    private void CerrarMensajeModal()
+    {
+        mostrarMensajeModal = false;
+    }
+}

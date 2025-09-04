@@ -1,0 +1,103 @@
+﻿@page "/Ayuda/Ayuda"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4"><i class="bi bi-question-circle"></i> Centro de Ayuda</h2>
+
+ <div class="mb-5">
+        <h4 class="fw-bold">Ayuda general</h4>
+        <p>Descripción breve de botones y controles comunes presentes en todo el sistema.</p>
+        <ul>
+            <li>
+                <strong>Botones generales:</strong> permiten agregar, editar o consultar registros. 
+                <NavLink href="Ayuda/AyudaGeneral/BotonesGenerales" class="ms-2 btn-link">Saber más</NavLink>
+            </li>
+            <li>
+                <strong>Botones de búsqueda:</strong> filtran los datos mostrados en tablas.
+                <NavLink href="Ayuda/AyudaGeneral/BotonBusqueda" class="ms-2 btn-link">Saber más</NavLink>
+            </li>
+            <li>
+                <strong>Búsqueda por periodo:</strong> define un rango de fechas para filtrar información.
+                <NavLink href="Ayuda/AyudaGeneral/BusquedaPeriodo" class="ms-2 btn-link">Saber más</NavLink>
+            </li>
+            <li>
+                <strong>Filtrado por cajas o proceso:</strong> separan los datos de tipo caja o proceso.
+                <NavLink href="Ayuda/AyudaGeneral/FiltradoCajasProceso" class="ms-2 btn-link">Saber más</NavLink>
+            </li>
+            <li>
+                <strong>Descargar PDF o Excel:</strong> exportan los datos visibles según el formato elegido.
+            </li>
+            <li>
+                <strong>Cerrar sesión:</strong> finaliza la sesión actual y redirige al inicio de sesión.
+            </li>
+        </ul>
+    </div>
+    <div class="mb-5">
+        <h4 class="fw-bold">Inicio</h4>
+        <p>Página principal del sistema. Desde aquí puedes navegar a todas las secciones y consultar accesos rápidos.</p>
+    </div>
+
+    <div class="mb-5">
+        <h4 class="fw-bold">Perfil</h4>
+        <p>Administra tu perfil personal: datos, contraseña y sesión activa.</p>
+        <NavLink href="Ayuda/Perfil/Perfil" class="btn-link">Ver ayuda de perfil</NavLink>
+    </div>
+
+    <div class="mb-5">
+        <h4 class="fw-bold">Catálogos</h4>
+        <p>Secciones para la gestión de registros maestros como empleados, cultivos, viveros y más.</p>
+        <ul>
+            <li><NavLink href="Ayuda/Catalogos/Usuarios">Usuarios</NavLink></li>
+            <li><NavLink href="Ayuda/Catalogos/Empleados">Empleados</NavLink></li>
+            <li><NavLink href="Ayuda/Catalogos/Cultivos">Cultivos</NavLink></li>
+            <li><NavLink href="Ayuda/Catalogos/Viveros">Viveros</NavLink></li>
+            <li><NavLink href="Ayuda/Catalogos/Ranchos">Ranchos</NavLink></li>
+            <li><NavLink href="Ayuda/Catalogos/Vehiculos">Vehículos</NavLink></li>
+        </ul>
+    </div>
+
+    <div class="mb-5">
+        <h4 class="fw-bold">Movimientos</h4>
+        <p>Módulos operativos para registrar acciones en campo como cosechas, podas, viajes y ventas.</p>
+        <ul>
+            <li><NavLink href="Ayuda/Movimientos/GestionLlaves">Gestión de llaves</NavLink></li>
+            <li><NavLink href="Ayuda/Movimientos/GestionPlantaciones">Gestión de plantaciones</NavLink></li>
+            <li><NavLink href="Ayuda/Movimientos/GestionReplantes">Gestión de replantes</NavLink></li>
+            <li><NavLink href="Ayuda/Movimientos/GestionPodas">Gestión de podas</NavLink></li>
+            <li><NavLink href="Ayuda/Movimientos/GestionCosechas">Gestión de cosechas</NavLink></li>
+            <li><NavLink href="Ayuda/Movimientos/RegistroJarras">Registro de jarras</NavLink></li>
+            <li><NavLink href="Ayuda/Movimientos/GestionViajes">Gestión de viajes</NavLink></li>
+            <li><NavLink href="Ayuda/Movimientos/ClasificarProceso">Clasificar proceso</NavLink></li>
+            <li><NavLink href="Ayuda/Movimientos/RegistroVentas">Registro de ventas</NavLink></li>
+        </ul>
+    </div>
+
+    <div class="mb-5">
+        <h4 class="fw-bold">Utilidades</h4>
+        <p>Herramientas administrativas como copias de seguridad, bitácora de errores y restauración de datos.</p>
+        <ul>
+            <li><NavLink href="Ayuda/Utilidades/BitacoraErrores">Bitácora de errores</NavLink></li>
+            <li><NavLink href="Ayuda/Utilidades/CopiaSeguridad">Copia de seguridad</NavLink></li>
+            <li><NavLink href="Ayuda/Utilidades/Restauracion">Restaurar base de datos</NavLink></li>
+            <li><NavLink href="Ayuda/Utilidades/Historicos">Históricos</NavLink></li>
+        </ul>
+    </div>
+
+    <div class="mb-5">
+        <h4 class="fw-bold">Reportes</h4>
+        <p>Sección para la consulta de estadísticas y análisis por cultivo, llave, periodo o estatus.</p>
+        <ul>
+            <li><NavLink href="Ayuda/Reportes/ReporteProduccionPorLlave">Producción por llave</NavLink></li>
+            <li><NavLink href="Ayuda/Reportes/ReporteProcesoPorLlave">Proceso por llave</NavLink></li>
+            <li><NavLink href="Ayuda/Reportes/ReportePlantacionesPorCultivoVariedad">Plantaciones por cultivo y variedad</NavLink></li>
+            <li><NavLink href="Ayuda/Reportes/ReporteProduccionCultivoVariedad">Producción por cultivo y variedad</NavLink></li>
+            <li><NavLink href="Ayuda/Reportes/ReporteProduccionPeriodo">Producción por periodo</NavLink></li>
+            <li><NavLink href="Ayuda/Reportes/ReporteProcesoCultivoVariedad">Proceso por cultivo y variedad</NavLink></li>
+            <li><NavLink href="Ayuda/Reportes/ReporteReplantesPorCultivoVariedad">Replantes por cultivo y variedad</NavLink></li>
+            <li><NavLink href="Ayuda/Reportes/ReporteViajesCajasPeriodo">Viajes de cajas por periodo</NavLink></li>
+            <li><NavLink href="Ayuda/Reportes/ReporteViajesProcesoPeriodo">Viajes de proceso por periodo</NavLink></li>
+            <li><NavLink href="Ayuda/Reportes/ReporteViajeEstatusCajas">Viajes de cajas por estatus</NavLink></li>
+            <li><NavLink href="Ayuda/Reportes/ReporteViajeEstatusProceso">Viajes de proceso por estatus</NavLink></li>
+            <li><NavLink href="Ayuda/Reportes/ReporteVentasPeriodo">Ventas por periodo</NavLink></li>
+        </ul>
+    </div>
+</div>

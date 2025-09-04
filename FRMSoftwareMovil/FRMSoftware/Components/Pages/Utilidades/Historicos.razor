@@ -1,0 +1,144 @@
+﻿@page "/Utilidades/Historicos"
+
+@using FRMSoftware.Data
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Services.Utilidades.TraspasoHistoricoService historicoService
+
+@inject FRMSoftware.Data.UserSession UserSession
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <div class="row justify-content-center align-items-start mt-4">
+        <h2 class="text-center fw-bold" style="margin-bottom: 20px">Traspaso de datos históricos</h2>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+
+                <EditForm Model="traspaso" OnValidSubmit="EjecutarTraspaso">
+                    <h3 class="text-center my-4 fw-bold">Seleccione el año</h3>
+
+                    <!-- Selector de Año -->
+                    <div class="mb-1">
+                        <label for="AñoTraspaso" class="form-label">Año de traspaso:</label>
+                        <InputSelect id="AñoTraspaso" class="form-control" @bind-Value="traspaso.AñoTraspaso">
+                            <option disabled selected value="">Seleccione un año:</option>
+                            @if (añosDisponibles != null)
+                            {
+                                @foreach (var año in añosDisponibles)
+                                {
+                                    <option value="@año">@año</option>
+                                }
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <div class="d-flex justify-content-center">
+                        <button class="btn fixed-size-btn btn-seleccion mx-2" type="submit" disabled="@deshabilitarGuardar">
+                            Ejecutar traspaso
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (mostrarMensajeModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@mensajeTitulo</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarMensajeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@mensajeContenido</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-red" @onclick="CerrarMensajeModal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private Traspaso traspaso = new Traspaso();
+    private List<int>? añosDisponibles;
+    private List<string> mensajesTraspaso = new List<string>();  // Nueva lista para mostrar los mensajes
+
+    private bool deshabilitarGuardar => traspaso.AñoTraspaso == 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            añosDisponibles = await historicoService.GetAniosPlantacionesAsync();
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "OnInitializedAsync",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task EjecutarTraspaso()
+    {
+        try
+        {
+            // Llamamos al servicio
+            mensajesTraspaso = await historicoService.TraspasarTodoAsync(traspaso.AñoTraspaso, "Usuario");
+
+            // Mostrar los mensajes en el modal
+            if (mensajesTraspaso.Any(m => m.Contains("ERROR")))
+            {
+                MostrarMensajeModal("Error en el Traspaso", string.Join("<br>", mensajesTraspaso));
+            }
+            else
+            {
+                MostrarMensajeModal("Traspaso realizado", "Los datos se han traspasado exitosamente.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "EjecutarTraspaso",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+
+            MostrarMensajeModal("Error", "Hubo un problema al ejecutar el traspaso.");
+        }
+    }
+
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    private void CerrarMensajeModal()
+    {
+        mostrarMensajeModal = false;
+    }
+
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+    public class Traspaso
+    {
+        public int AñoTraspaso { get; set; }
+    }
+}

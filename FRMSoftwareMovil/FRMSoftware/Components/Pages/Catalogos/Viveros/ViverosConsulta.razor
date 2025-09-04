@@ -1,0 +1,143 @@
+﻿@page "/Catalogos/ViverosConsulta"
+@using FRMSoftware.Data
+@inject Services.Catalogos.ViverosService viveroService
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+@inject NavigationManager Navigation
+
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="margin-top:20px">
+        <h2 class="text-center fw-bold" style="margin-bottom: 20px">Consulta de viveros</h2>
+        <!-- Contenedor para alinear horizontalmente -->
+        <div class="row mb-3 align-items-center">
+            <div class="col-auto">
+                <input @bind="searchTerm" placeholder="Buscar viveros..." class="form-control" />
+            </div>
+            <div class="col-auto">
+                <button class="btn fixed-size-btn" @onclick="AplicarFiltro">Buscar</button>
+            </div>
+        </div>
+
+
+        <!-- Contenedor de la tabla con scroll -->
+        <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+            <table class="table table-striped table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID Vivero</th>
+                        <th>Nombre del vivero</th>
+                        <th>Código del vivero</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in filteredViveros)
+                    {
+                        <tr>
+                            <td>@item.IdVivero</td>
+                            <td>@item.NombreVivero</td>
+                            <td>@item.CodigoVivero</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Botones -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+        <button class="btn fixed-size-btn mx-2" @onclick="RedirigirViveros">Regresar</button>
+    </div>
+</div>
+
+@code {
+    private List<ViverosDto> viveros = new(); // Lista completa de viveros
+    private string searchTerm = string.Empty;  // Campo de búsqueda
+    private List<ViverosDto> filteredViveros = new(); // Lista filtrada
+
+    // Se llama al inicializar para cargar los viveros
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarViveros(); // Llamada al servicio para obtener los viveros
+    }
+
+    private async Task ConsultarViveros()
+    {
+        try
+        {
+            viveros = await viveroService.GetViverosAsync();
+
+            filteredViveros = viveros.OrderBy(v => v.IdVivero).ToList(); // Inicializa con la lista completa
+            StateHasChanged(); // Refresca la UI después de consultar los viveros
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en los logs
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Nombre, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarViveros",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+
+    private void AplicarFiltro()
+    {
+        filteredViveros = string.IsNullOrEmpty(searchTerm) ?
+            viveros :
+            viveros.Where(v => v.NombreVivero.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                              v.CodigoVivero.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    // Redirigir a la página de consulta de viveros
+    private void RedirigirViveros()
+    {
+        Navigation.NavigateTo("/Catalogos/Viveros");
+    }
+
+    private async Task DescargarPDF_Viveros()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarPDF_Viveros");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarPDF - Viveros",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task DescargarExcel_Viveros()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarExcel_Viveros");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarExcel - Viveros",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    [Inject] private IJSRuntime JS { get; set; }
+}

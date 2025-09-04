@@ -1,0 +1,293 @@
+﻿@page "/Movimientos/GestionPlantacionesConsulta"
+@using FRMSoftware.Data
+@inject FRMSoftware.Services.Movimientos.GestionPlantacionesService plantacionesService
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+@inject NavigationManager Navigation
+
+
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="margin-top:20px">
+        <h2 class="text-center fw-bold" style="margin-bottom: 20px">Consulta de plantaciones</h2>
+
+        <div style="height: 140px">
+            <!-- Botones para seleccionar tipo de búsqueda -->
+            <div class="d-flex mb-3">
+                <div class="toggle-container">
+                    <div class="toggle-slider" style='left: @(busquedaGeneral ? "0%" : "50%")'></div>
+                    <button class="toggle-btn @(busquedaGeneral ? "active" : "")" @onclick="() => CambiarTipoBusqueda(true)">
+                        Búsqueda general
+                    </button>
+                    <button class="toggle-btn @(!busquedaGeneral ? "active" : "")" @onclick="() => CambiarTipoBusqueda(false)">
+                        Búsqueda por período
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenedor para búsqueda general (texto) -->
+            @if (busquedaGeneral)
+            {
+                <div class="row mb-3 align-items-center">
+                    <div class="col-auto">
+                        <input @bind="searchTerm" placeholder="Buscar plantaciones..." class="form-control" />
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn fixed-size-btn" @onclick="AplicarFiltro">Buscar</button>
+                    </div>
+                </div>
+            }
+
+            <!-- Contenedor para búsqueda por período (fechas) -->
+            @if (!busquedaGeneral)
+            {
+                <div class="row mb-3 align-items-center">
+                    <div class="col-auto">
+                        <label>Desde:</label>
+                        <InputDate class="form-control" @bind-Value="fechaInicio" />
+                    </div>
+                    <div class="col-auto">
+                        <label>Hasta:</label>
+                        <InputDate class="form-control" @bind-Value="fechaFin" />
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn fixed-size-btn" style="margin-top: 25px" @onclick="AplicarFiltro">Buscar</button>
+                    </div>
+                </div>
+            }
+        </div>
+
+
+        <!-- Contenedor de la tabla con scroll -->
+        <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+            <table class="table table-striped table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID Plantación</th>
+                        <th>Cantidad de plantas</th>
+                        <th>Plantas por metro</th>
+                        <th>Fecha de plantación</th>
+                        <th>Número de semana</th>
+                        <th>Estatus de plantación</th>
+
+                        <th>ID Cultivo</th>
+                        <th>Tipo de berry</th>
+                        <th>Variedad</th>
+
+                        <th>ID Vivero</th>
+                        <th>Nombre del vivero</th>
+                        <th>Código del vivero</th>
+
+                        <th>ID Rancho</th>
+                        <th>Nombre del rancho</th>
+                        <th>Número del rancho</th>
+
+                        <th>ID Llave</th>
+                        <th>Nombre de llave</th>
+                        <th>Superficie (HA)</th>
+                        <th>Superficie (Acres)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in filteredPlantaciones)
+                    {
+                        <tr>
+                            <td>@item.IdPlantacion</td>
+                            <td>@item.CantidadPlantas</td>
+                            <td>@item.PlantasPorMetro</td>
+                            <td>@item.FechaPlantacion.ToString("dd/MM/yyyy")</td>
+                            <td>@item.NumSemPlantacion</td>
+                            <td>@item.EstatusPlantacion</td>
+
+                            <td>@item.IdCultivo</td>
+                            <td>@item.TipoBerry</td>
+                            <td>@item.Variedad</td>
+
+                            <td>@item.IdVivero</td>
+                            <td>@item.NombreVivero</td>
+                            <td>@item.CodigoVivero</td>
+
+                            <td>@item.IdRancho</td>
+                            <td>@item.NombreRancho</td>
+                            <td>@item.NumeroRancho</td>
+
+                            <td>@item.IdLlave</td>
+                            <td>@item.NombreLlave</td>
+                            <td>@item.SuperficieHa</td>
+                            <td>@item.SuperficieAcres</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Botón de regreso -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+        <button class="btn fixed-size-btn mx-2" @onclick="RedirigirPlantaciones">Regresar</button>
+    </div>
+</div>
+
+
+
+@code {
+    private List<PlantacionesDetallesDto> plantaciones = new();
+
+    // BÚSQUEDA INPUT
+    private string searchTerm = string.Empty;  // Campo de búsqueda
+    private List<PlantacionesDetallesDto> filteredPlantaciones = new(); // Lista filtrada
+
+    private DateTime? fechaInicio;
+    private DateTime? fechaFin;
+
+    // MENSAJES
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarPlantacion();
+
+    }
+
+    private async Task ConsultarPlantacion()
+    {
+        try
+        {
+            // Obtener las plantaciones desde el servicio
+            plantaciones = await plantacionesService.GetPlantacionesDetalles();
+
+            // Ordenar las plantaciones por IdPlantacion
+            filteredPlantaciones = plantaciones.OrderBy(p => p.IdPlantacion).ToList();
+
+            // Refrescar la UI
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en la base de datos
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarPlantacion",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+
+
+    private void AplicarFiltro()
+    {
+        filteredPlantaciones =
+            plantaciones.Where(p =>
+
+                // Filtro de fechas
+                (!fechaInicio.HasValue || p.FechaPlantacion.Date >= fechaInicio.Value.Date) &&
+                (!fechaFin.HasValue || p.FechaPlantacion.Date <= fechaFin.Value.Date) &&
+
+                (string.IsNullOrEmpty(searchTerm) ||
+                    p.IdPlantacion.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+
+                    p.IdCultivo.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.TipoBerry.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.Variedad.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+
+                    p.IdLlave.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.NombreLlave.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.SuperficieHa.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.SuperficieAcres.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.Disponibilidad.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+
+                    p.IdRancho.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.NombreRancho.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.NumeroRancho.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+
+                    p.IdVivero.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.NombreVivero.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.CodigoVivero.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+
+                    p.CantidadPlantas.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.PlantasPorMetro.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.FechaPlantacion.ToString("dd/MM/yyyy").Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.EstatusPlantacion.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                )
+            ).ToList();
+    }
+
+    private bool busquedaGeneral = true; // true = búsqueda general, false = por período
+
+    private void CambiarTipoBusqueda(bool esGeneral)
+    {
+        busquedaGeneral = esGeneral;
+        // Limpiar filtros al cambiar de tipo
+        if (esGeneral)
+        {
+            fechaInicio = null;
+            fechaFin = null;
+        }
+        else
+        {
+            searchTerm = string.Empty;
+        }
+    }
+
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+
+    private void RedirigirPlantaciones()
+    {
+        Navigation.NavigateTo("/Movimientos/GestionPlantaciones");
+    }
+
+    private async Task DescargarPDF_GestionPlantaciones()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarPDF_GestionPlantaciones");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarPDF - GestionPlantaciones",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task DescargarExcel_GestionPlantaciones()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarExcel_GestionPlantaciones");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarExcel - GestionPlantaciones",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    [Inject] private IJSRuntime JS { get; set; }
+}

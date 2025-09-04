@@ -1,0 +1,223 @@
+﻿@page "/Reportes/ReporteProduccionPorLlave"
+@using FRMSoftware.Data
+@inject FRMSoftware.Services.Movimientos.GestionCosechasService cosechasService
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <!-- Logo -->
+        <img src="images/LogoFRM.png" alt="Logo FRM" style="height: 80px;" />
+
+        <!-- Información de empresa -->
+        <div class="ms-3" style="flex: 1;">
+            <div class="fw-bold fs-5">Frutillos Rojos de México S. de P. R. de R. L.</div>
+            <div class="text-muted fs-6">Calle Zapotlán 193, Lomas de San Cayetano, 49040, Ciudad Guzmán, Jalisco, México</div>
+        </div>
+
+        <!-- Fecha -->
+        <span class="fs-5 fw-semibold" style="white-space: nowrap;">
+            @DateTime.Now.ToString("dd/MM/yyyy")
+        </span>
+    </div>
+
+    <!-- Nombre del reporte -->
+    <h2 class="text-center fw-bold mb-4">Reporte de producción de cajas por llave</h2>
+
+
+
+
+    <div class="table-responsive mt-4">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID Cosecha</th>
+                    <th>Fecha de cosecha</th>
+                    <th>Número de semana</th>
+
+                    <th>ID Producción</th>
+                    <th>Tipo de clamshell</th>
+                    <th>Cantidad de cajas</th>
+                    <th>Kilos de proceso</th>
+
+                    <th>ID Plantación</th>
+                    <th>Fecha de plantación</th>
+                    <th>Número de semana</th>
+                    <th>Estatus de plantación</th>
+
+                    <th>ID Cultivo</th>
+                    <th>Tipo de berry</th>
+                    <th>Variedad</th>
+
+                    <th>ID Rancho</th>
+                    <th>Nombre del rancho</th>
+                    <th>Número del rancho</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var grupoCosechas in cosechasAgrupadas)
+                {
+                    <tr class="table-success fw-bold llave-fila">
+                        <td colspan="17" class="text-start">
+                            (ID: @grupoCosechas.Key.IdLlave) &nbsp;&nbsp;
+                            Llave: @grupoCosechas.Key.NombreLlave &nbsp;&nbsp;
+                            Superficie (ha): @grupoCosechas.Key.SuperficieHa &nbsp;&nbsp;
+                            Superficie (acres): @grupoCosechas.Key.SuperficieAcres
+                        </td>
+                    </tr>
+
+                    @foreach (var cosecha in grupoCosechas)
+                    {
+                        <tr>
+                            <td>@cosecha.IdCosecha</td>
+                            <td>@cosecha.FechaCosecha.ToString("dd/MM/yyyy")</td>
+                            <td>@cosecha.NumSemCosecha</td>
+
+                            <td>@cosecha.IdProduccion</td>
+                            <td>@cosecha.TipoCaja</td>
+                            <td>@cosecha.CantidadCajas</td>
+                            <td>@cosecha.KilosProceso</td>
+
+                            <td>@cosecha.IdPlantacion</td>
+                            <td>@cosecha.FechaPlantacion.ToString("dd/MM/yyyy")</td>
+                            <td>@cosecha.NumSemPlantacion</td>
+                            <td>@cosecha.EstatusPlantacion</td>
+
+                            <td>@cosecha.IdCultivo</td>
+                            <td>@cosecha.TipoBerry</td>
+                            <td>@cosecha.Variedad</td>
+
+                            <td>@cosecha.IdRancho</td>
+                            <td>@cosecha.NombreRancho</td>
+                            <td>@cosecha.NumeroRancho</td>
+                        </tr>
+                    }
+
+                    // Fila de total por grupo
+                    var totalCajas = grupoCosechas.Sum(c => c.CantidadCajas);
+
+                    <tr class="fw-bold text-end total-fila">
+                        <td colspan="5" class="text-end">Total de cajas producidas para la llave: @grupoCosechas.Key.NombreLlave</td>
+                        <td class="text-start">@totalCajas</td>
+                        <td colspan="11"></td>
+                    </tr>
+                }
+
+                @{
+                    // Suma total general
+                    var totalGeneral = cosechasAgrupadas.SelectMany(g => g).Sum(c => c.CantidadCajas);
+                }
+
+                <tr class="fw-bold text-end table-primary total-general-fila">
+                    <td colspan="5" class="text-end">Total general de cajas producidas:</td>
+                    <td class="text-start">@totalGeneral</td>
+                    <td colspan="11"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Gráfica -->
+    <h3 class="text-center mt-5 fw-bold">Gráfica de cajas por llave</h3>
+    <div class="d-flex justify-content-center">
+        <canvas id="chartCajasPorLlave" width="800" height="400"></canvas>
+    </div>
+</div>
+
+
+@code {
+    private List<CosechasProduccionDto> cosechas = new();
+    private List<IGrouping<(int IdLlave, string NombreLlave, decimal? SuperficieHa, decimal? SuperficieAcres), CosechasProduccionDto>> cosechasAgrupadas = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            cosechas = await cosechasService.GetCosechasProduccionAsync();
+
+            cosechasAgrupadas = cosechas
+                .GroupBy(c => (c.IdLlave, c.NombreLlave, c.SuperficieHa, c.SuperficieAcres))
+                .ToList();
+
+            await GenerarGrafica();
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "OnInitializedAsync - ReporteProduccionPorLlave",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task GenerarGrafica()
+    {
+        try
+        {
+            var dataLabels = cosechasAgrupadas.Select(g => g.Key.NombreLlave).ToList();
+            var dataValues = cosechasAgrupadas.Select(g => g.Sum(c => c.CantidadCajas ?? 0)).ToList();
+
+            var labelsJson = System.Text.Json.JsonSerializer.Serialize(dataLabels);
+            var valuesJson = System.Text.Json.JsonSerializer.Serialize(dataValues);
+
+            await JS.InvokeVoidAsync("generarGraficaProduccionLlaves", labelsJson, valuesJson);
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "GenerarGrafica - ReporteProduccionPorLlave",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task DescargarPDF()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarPDF_ProduccionLlaves");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarPDF - ReporteProduccionPorLlave",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task DescargarExcel()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarExcel_ProduccionLlaves");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarExcel - ReporteProduccionPorLlave",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    [Inject]
+    private IJSRuntime JS { get; set; }
+}

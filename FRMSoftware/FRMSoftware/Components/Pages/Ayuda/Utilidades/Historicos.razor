@@ -1,0 +1,35 @@
+﻿@page "/Ayuda/Utilidades/Historicos"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4"><i class="bi bi-arrow-left-right"></i> Traspaso de datos históricos</h2>
+
+    <p>El módulo de <strong>Traspaso de datos</strong> permite trasladar información clave de un año al siguiente. Esta herramienta es útil para conservar configuraciones o estructuras que deben mantenerse activas al inicio de un nuevo ciclo.</p>
+
+    <h4 class="fw-bold mt-4">¿Cómo funciona?</h4>
+    <ul>
+        <li>Selecciona el <strong>año</strong> desde el cual se realizará el traspaso de información.</li>
+        <li>Una vez elegido el año, presiona <strong>Ejecutar traspaso</strong>.</li>
+        <li>El sistema realizará automáticamente la copia de datos necesarios al nuevo año.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Ejemplos visuales</h4>
+
+    <h5 class="mt-4">Formulario de traspaso</h5>
+    <div class="mb-4">
+        <img src="images/Ayuda/Utilidades/Historicos.png" alt="Formulario para seleccionar año de traspaso"
+             style="max-width: 600px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">
+            Selecciona el año desde el cual se desean trasladar los datos. El botón <strong>Ejecutar traspaso</strong> solo se activa cuando se ha elegido un valor válido.
+        </p>
+    </div>
+
+    <h4 class="fw-bold mt-4">Recomendaciones</h4>
+    <ul>
+        <li>Antes de ejecutar el traspaso, asegúrate de haber generado una copia de seguridad.</li>
+        <li>Este proceso puede tardar algunos segundos dependiendo de la cantidad de datos involucrados.</li>
+        <li>No actualices ni cierres la página durante la ejecución del proceso.</li>
+    </ul>
+</div>
+
+@code {
+}

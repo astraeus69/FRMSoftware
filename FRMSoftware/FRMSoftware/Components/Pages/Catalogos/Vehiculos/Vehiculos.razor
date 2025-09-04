@@ -1,0 +1,437 @@
+﻿@page "/Catalogos/Vehiculos"
+@using FRMSoftware.Data
+@inject Services.Catalogos.VehiculosService vehiculoService
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+@inject NavigationManager Navigation
+
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="margin-top:20px">
+        <div class="col-md-6 d-none d-xl-flex align-items-center justify-content-center">
+            <img src="images/Catalogos/VehiculosFRM.png" alt="Imagen de Vehículos" class="img-fluid" />
+        </div>
+
+        <div class="col-xl-6">
+            <EditForm Model="vehiculo" OnValidSubmit="GrabarRegistro" id="vehiculoForm">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="text-center my-4 fw-bold">Vehículos</h3>
+
+                        <div class="mb-1">
+                            <label for="Placas" class="form-label">Placas:</label>
+                            <InputText id="Placas" class="form-control" @bind-Value="vehiculo.Placas" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => vehiculo.Placas)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Modelo" class="form-label">Modelo:</label>
+                            <InputText id="Modelo" class="form-control" @bind-Value="vehiculo.Modelo" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => vehiculo.Modelo)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Marca" class="form-label">Marca:</label>
+                            <InputText id="Marca" class="form-control" @bind-Value="vehiculo.Marca" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => vehiculo.Marca)" class="text-danger" />
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+
+<!-- Botones -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Editor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="NuevoRegistro" disabled="@deshabilitarNuevo">Nuevo</button>
+            <button class="btn fixed-size-btn mx-2" type="submit" form="vehiculoForm" disabled="@deshabilitarGuardar">Guardar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="AbrirModal" disabled="@deshabilitarModificar">Modificar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="Cancelar" disabled="@deshabilitarCancelar">Cancelar</button>
+        }
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Consultor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="RedirigirAConsulta" disabled="@deshabilitarConsultar">Consultar</button>
+        }
+
+    </div>
+</div>
+
+
+<!-- MODAL para mostrar la tabla -->
+@if (mostrarModal)
+{
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" style="font-weight: bold;">Lista de vehículos</h3>
+                        <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Contenedor para alinear horizontalmente -->
+                        <div class="row mb-3 align-items-center">
+                            <div class="col-auto">
+                                <input @bind="searchTerm" placeholder="Buscar vehículos..." class="form-control" />
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn fixed-size-btn" @onclick="AplicarFiltro">Buscar</button>
+                            </div>
+                        </div>
+
+                        <!-- Contenedor de la tabla con scroll -->
+                        <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                            <table class="table table-striped table-bordered">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th style="width: 10%;">Acciones</th>
+
+                                        <th style="width: 4%;">ID</th>
+                                        <th style="width: 26%;">Placas</th>
+                                        <th style="width: 30%;">Modelo</th>
+                                        <th style="width: 30%;">Marca</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var item in filteredVehiculos)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn editar" @onclick="() => SeleccionarVehiculo(item)">Editar</button>
+                                                @if (UserSession.Rol == "Admin")
+                                                {
+                                                    <button class="btn btn-red editar" @onclick="() => ConfirmarEliminar(item.IdVehiculo)">Eliminar</button>
+                                                }
+                                            </div>
+                                        </td>
+
+
+                                        <td>@item.IdVehiculo</td>
+                                        <td>@item.Placas</td>
+                                        <td>@item.Modelo</td>
+                                        <td>@item.Marca</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+}
+
+<!-- Modal de confirmación de eliminación -->
+@if (mostrarConfirmacion)
+{
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmar Eliminación</h5>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Está seguro de que desea eliminar este vehículo?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn" @onclick="CancelarEliminar">Cancelar</button>
+                        <button class="btn btn-red" @onclick="EliminarVehiculoConfirmado">Eliminar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+}
+
+
+<!-- Modal para mostrar mensajes -->
+@if (mostrarMensajeModal)
+{
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <!-- Agregar modal-dialog-centered -->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">@mensajeTitulo</h5>
+                        <button type="button" class="btn-close" @onclick="CerrarMensajeModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>@mensajeContenido</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-red" @onclick="CerrarMensajeModal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+}
+
+@code {
+    private VehiculosDto vehiculo = new VehiculosDto();
+    private List<VehiculosDto> vehiculos = new();
+
+    // MODALES
+    private bool mostrarModal = false;
+    private bool mostrarConfirmacion = false;
+
+    // FORMULARIO
+    private bool deshabilitarFormulario = true;
+
+    // BOTONES
+    private bool deshabilitarNuevo = false;
+    private bool deshabilitarGuardar = true;
+    private bool deshabilitarModificar = false;
+    private bool deshabilitarCancelar = true;
+    private bool deshabilitarConsultar = false;
+    private int idVehiculoEliminar;
+
+    // BÚSQUEDA INPUT
+    private string searchTerm = string.Empty;  // Campo de búsqueda
+    private List<VehiculosDto> filteredVehiculos = new(); // Lista filtrada
+
+    // VEHÍCULOS DUPLICADOS
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarVehiculos();
+    }
+
+    // Actualiza la lista de vehículos
+    private async Task ConsultarVehiculos()
+    {
+        try
+        {
+            vehiculos = await vehiculoService.GetVehiculosAsync();
+
+            if (vehiculos == null || !vehiculos.Any())
+            {
+                MostrarMensajeModal("Información", "No se encontraron vehículos.");
+                return;
+            }
+
+            filteredVehiculos = vehiculos.OrderBy(v => v.IdVehiculo).ToList();
+            StateHasChanged(); // Refresca la UI
+        }
+        catch (Exception ex)
+        {
+            // Mostrar mensaje de error y registrar en los logs
+            MostrarMensajeModal("Error", $"Error al consultar los vehículos: {ex.Message}");
+
+            // Registrar el error en la base de datos
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarVehiculos",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void AplicarFiltro()
+    {
+        if (string.IsNullOrEmpty(searchTerm))
+        {
+            filteredVehiculos = vehiculos;
+        }
+        else
+        {
+            searchTerm = searchTerm.Trim();
+
+            filteredVehiculos = vehiculos.Where(v =>
+                v.Placas.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                v.Modelo.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                v.Marca.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+        }
+    }
+
+    private void NuevoRegistro()
+    {
+        vehiculo = new VehiculosDto();
+        deshabilitarFormulario = false;
+        deshabilitarGuardar = false;
+        deshabilitarNuevo = true;
+        deshabilitarModificar = true;
+        deshabilitarCancelar = false;
+        deshabilitarConsultar = true;
+    }
+
+    private void Cancelar()
+    {
+        vehiculo = new VehiculosDto();
+        deshabilitarFormulario = true;
+        deshabilitarGuardar = true;
+        deshabilitarNuevo = false;
+        deshabilitarModificar = false;
+        deshabilitarConsultar = false;
+        deshabilitarCancelar = true;
+    }
+
+    private async Task GrabarRegistro()
+    {
+        bool success;
+        string message;
+
+        try
+        {
+            // Verifica si es un nuevo vehículo o una actualización
+            if (vehiculo.IdVehiculo == 0)
+            {
+                var result = await vehiculoService.CreateVehiculoAsync(vehiculo);
+                success = result.Success;
+                message = result.Message;
+            }
+            else
+            {
+                success = await vehiculoService.UpdateVehiculoAsync(vehiculo.IdVehiculo, vehiculo);
+                message = success ? "Actualización exitosa." : "Error al actualizar el registro.";
+            }
+
+            // Si la operación fue exitosa, se consulta nuevamente la lista de vehículos
+            if (success)
+            {
+                await ConsultarVehiculos();
+                deshabilitarFormulario = true;
+                deshabilitarGuardar = true;
+                deshabilitarNuevo = false;
+                deshabilitarModificar = false;
+                deshabilitarCancelar = true;
+                deshabilitarConsultar = false;
+                vehiculo = new VehiculosDto();  // Limpiar formulario
+
+                // Mostrar mensaje de éxito
+                MostrarMensajeModal("Éxito", message);
+            }
+            else
+            {
+                // Mostrar mensaje de error
+                MostrarMensajeModal("Error", message);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Mostrar mensaje de error detallado
+            MostrarMensajeModal("Error", $"Error al grabar el vehículo: {ex.Message}");
+
+            // Registrar el error en los logs
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "GrabarRegistroVehiculos",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    // Mostrar modal de mensajes
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    private void CerrarMensajeModal()
+    {
+        mostrarMensajeModal = false;
+    }
+
+    // Modal control
+    private void AbrirModal()
+    {
+        mostrarModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+        searchTerm = string.Empty;
+
+    }
+
+    // Editar vehículo
+    private void SeleccionarVehiculo(VehiculosDto selectedVehiculo)
+    {
+        vehiculo = new VehiculosDto
+            {
+                IdVehiculo = selectedVehiculo.IdVehiculo,
+                Placas = selectedVehiculo.Placas,
+                Modelo = selectedVehiculo.Modelo,
+                Marca = selectedVehiculo.Marca
+            };
+
+        deshabilitarFormulario = false;
+        deshabilitarGuardar = false;
+        deshabilitarNuevo = true;
+        deshabilitarModificar = true;
+        deshabilitarCancelar = false;
+        deshabilitarConsultar = true;
+        mostrarModal = false;
+    }
+
+    private void ConfirmarEliminar(int id)
+    {
+        idVehiculoEliminar = id;
+        mostrarConfirmacion = true;
+    }
+
+    private void CancelarEliminar()
+    {
+        mostrarConfirmacion = false;
+    }
+
+    private async Task EliminarVehiculoConfirmado()
+    {
+        try
+        {
+            mostrarConfirmacion = false;
+            bool success = await vehiculoService.DeleteVehiculoAsync(idVehiculoEliminar);
+
+            if (success)
+            {
+                await ConsultarVehiculos();
+                MostrarMensajeModal("Éxito", "El vehículo ha sido eliminado exitosamente.");
+            }
+            else
+            {
+                MostrarMensajeModal("Error", "Error al eliminar el vehículo.");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Mostrar mensaje de error detallado
+            MostrarMensajeModal("Error", $"Error al eliminar el vehículo: {ex.Message}");
+
+            // Registrar el error en los logs
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "EliminarVehiculoConfirmado",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void RedirigirAConsulta()
+    {
+        Navigation.NavigateTo("/Catalogos/VehiculosConsulta");
+    }
+}

@@ -1,0 +1,485 @@
+﻿@page "/Catalogos/Usuarios"
+@using FRMSoftware.Data
+@inject Services.Catalogos.UsuariosService usuarioService
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+@inject NavigationManager Navigation
+
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="margin-top:20px">
+        <div class="col-md-6 d-none d-xl-flex align-items-center justify-content-center">
+            <img src="images/Catalogos/UsuariosFRM.png" alt="Imagen de Usuarios" class="img-fluid" />
+        </div>
+
+        <div class="col-xl-6">
+            <EditForm Model="usuario" OnValidSubmit="GrabarRegistro" id="usuarioForm">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="text-center my-4 fw-bold">Usuarios</h3>
+
+                        <div class="mb-1">
+                            <label for="Usuario" class="form-label">Usuario:</label>
+                            <InputText id="Usuario" class="form-control" @bind-Value="usuario.Usuario" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => usuario.Usuario)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Contrasena" class="form-label">Contraseña:</label>
+                            <InputText id="Contrasena" class="form-control" @bind-Value="usuario.Contrasena" type="password" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => usuario.Contrasena)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Nombre" class="form-label">Nombre:</label>
+                            <InputText id="Nombre" class="form-control" @bind-Value="usuario.Nombre" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => usuario.Nombre)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Telefono" class="form-label">Teléfono:</label>
+                            <InputText id="Telefono" class="form-control" @bind-Value="usuario.Telefono" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => usuario.Telefono)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Email" class="form-label">Correo electrónico:</label>
+                            <InputText id="Email" class="form-control" @bind-Value="usuario.Email" disabled="@deshabilitarFormulario" />
+                            <ValidationMessage For="@(() => usuario.Email)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Rol" class="form-label">Rol:</label>
+                            <select id="Rol" class="form-control" @bind="usuario.Rol" disabled="@deshabilitarFormulario">
+                                <option disabled selected value="">Seleccione un rol:</option>
+                                @if(UserSession.Rol.Equals("Admin"))
+                                {
+                                    <option value="Admin">Admin</option>
+                                }
+                                <option value="Editor">Editor</option>
+                                <option value="Consultor">Consultor</option>
+                            </select>
+                            <ValidationMessage For="@(() => usuario.Rol)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="Estatus" class="form-label">Estatus:</label>
+                            <select id="Estatus" class="form-control" @bind="usuario.Estatus" disabled="@deshabilitarFormulario">
+                                <option disabled selected value="">Seleccione un estatus:</option>
+                                <option value="Activo">Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                            <ValidationMessage For="@(() => usuario.Estatus)" class="text-danger" />
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+<!-- Botones -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Editor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="NuevoRegistro" disabled="@deshabilitarNuevo">Nuevo</button>
+            <button class="btn fixed-size-btn mx-2" type="submit" form="usuarioForm" disabled="@deshabilitarGuardar">Guardar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="AbrirModal" disabled="@deshabilitarModificar">Modificar</button>
+            <button class="btn fixed-size-btn mx-2" @onclick="Cancelar" disabled="@deshabilitarCancelar">Cancelar</button>
+        }
+
+        @if (UserSession.Rol == "Admin" || UserSession.Rol == "Consultor")
+        {
+            <button class="btn fixed-size-btn mx-2" @onclick="RedirigirAConsulta" disabled="@deshabilitarConsultar">Consultar</button>
+        }
+
+    </div>
+</div>
+
+<!-- MODAL para mostrar la tabla -->
+@if (mostrarModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="font-weight: bold;">Lista de usuarios</h3>
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Contenedor para alinear horizontalmente -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <input @bind="searchTerm" placeholder="Buscar usuarios..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltro">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor de la tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 10%;">Acciones</th>
+
+                                    <th>ID</th>
+                                    <th>Usuario</th>
+                                    <th>Nombre</th>
+                                    <th style ="width: 10%;">Teléfono</th>
+                                    <th style="width: 20%;">Correo electrónico</th>
+                                    <th style="width: 10%;">Rol</th>
+                                    <th style="width: 8%;">Estatus</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in filteredUsuarios)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                @if (!item.Rol.Equals("Admin"))
+                                                {
+                                                    <button class="btn editar" @onclick="() => SeleccionarUsuario(item)">Editar</button>
+                                                    <button class="btn btn-red editar" @onclick="() => ConfirmarEliminar(item.IdUsuario)">Eliminar</button>
+                                                }
+                                            </div>
+                                        </td>
+
+                                        <td>@item.IdUsuario</td>
+                                        <td>@item.Usuario</td>
+                                        <td>@item.Nombre</td>
+                                        <td>@item.Telefono</td>
+                                        <td>@item.Email</td>
+                                        <td>@item.Rol</td>
+                                        <td>@item.Estatus</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal de confirmación de eliminación -->
+@if (mostrarConfirmacion)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro de que desea eliminar este usuario?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" @onclick="CancelarEliminar">Cancelar</button>
+                    <button class="btn btn-red" @onclick="EliminarUsuarioConfirmado">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal para mostrar mensajes -->
+@if (mostrarMensajeModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@mensajeTitulo</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarMensajeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@mensajeContenido</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-red" @onclick="CerrarMensajeModal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private UsuariosDto usuario = new UsuariosDto();
+    private List<UsuariosDto> usuarios = new();
+
+    // MODALES
+    private bool mostrarModal = false;
+    private bool mostrarConfirmacion = false;
+
+    // FORMULARIO
+    private bool deshabilitarFormulario = true;
+
+    // BOTONES
+    private bool deshabilitarNuevo = false;
+    private bool deshabilitarGuardar = true;
+    private bool deshabilitarModificar = false;
+    private bool deshabilitarCancelar = true;
+    private bool deshabilitarConsultar = false;
+    private int idUsuarioEliminar;
+
+    // BÚSQUEDA INPUT
+    private string searchTerm = string.Empty;  // Campo de búsqueda
+    private List<UsuariosDto> filteredUsuarios = new(); // Lista filtrada
+
+    // CULTIVOS DUPLICADOS
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarUsuarios();
+    }
+
+    // Actualiza la lista de usuarios
+    private async Task ConsultarUsuarios()
+    {
+        try
+        {
+            //throw new Exception("Error de prueba generado manualmente");
+
+            usuarios = await usuarioService.GetUsuariosAsync();
+
+            if (usuarios == null || !usuarios.Any())
+            {
+                MostrarMensajeModal("Información", "No se encontraron usuarios.");
+                return;
+            }
+
+            filteredUsuarios = usuarios.OrderBy(u => u.IdUsuario).ToList();
+            StateHasChanged(); // Refresca la UI
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error", $"Error al consultar usuarios: {ex.Message}");
+
+            // Registrar el error en la base de datos
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarUsuarios",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void AplicarFiltro()
+    {
+        if (string.IsNullOrEmpty(searchTerm))
+        {
+            filteredUsuarios = usuarios;
+        }
+        else
+        {
+            searchTerm = searchTerm.Trim();
+
+            filteredUsuarios = usuarios.Where(u =>
+                u.Usuario.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                u.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                u.Telefono.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                u.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                u.Rol.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                u.Estatus.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+        }
+    }
+
+    private void NuevoRegistro()
+    {
+        usuario = new UsuariosDto();
+        deshabilitarFormulario = false;
+        deshabilitarGuardar = false;
+        deshabilitarNuevo = true;
+        deshabilitarModificar = true;
+        deshabilitarCancelar = false;
+        deshabilitarConsultar = true;
+    }
+
+    private void Cancelar()
+    {
+        // Restablece el formulario y los botones a su estado inicial
+        usuario = new UsuariosDto();
+        deshabilitarFormulario = true;
+        deshabilitarGuardar = true;
+        deshabilitarNuevo = false;
+        deshabilitarModificar = false;
+        deshabilitarConsultar = false; // Habilitar consultar nuevamente
+        deshabilitarCancelar = true;
+    }
+
+    private async Task GrabarRegistro()
+    {
+        try
+        {
+            bool success;
+            string message;
+
+            if (usuario.IdUsuario == 0)
+            {
+                // Si no tiene un IdUsuario, es un nuevo registro
+                var result = await usuarioService.CreateUsuarioAsync(usuario);
+                success = result.Success;
+                message = result.Message;
+            }
+            else
+            {
+                // Si tiene un IdUsuario, es una actualización
+                success = await usuarioService.UpdateUsuarioAsync(usuario.IdUsuario, usuario);
+                message = success ? "Actualización exitosa." : "Error al actualizar el registro.";
+            }
+
+            if (success)
+            {
+                await ConsultarUsuarios();
+                deshabilitarFormulario = true;
+                deshabilitarGuardar = true;
+                deshabilitarNuevo = false;
+                deshabilitarModificar = false;
+                deshabilitarCancelar = true;
+                deshabilitarConsultar = false; // Habilitar consultar nuevamente
+                usuario = new UsuariosDto(); // Limpiar formulario
+
+                // Mostrar mensaje de éxito
+                MostrarMensajeModal("Éxito", message);
+            }
+            else
+            {
+                // Mostrar mensaje de error o duplicidad
+                MostrarMensajeModal("Error", message);
+            }
+        }
+        catch (Exception ex)
+        {
+            // En caso de error, mostrar mensaje y registrar en los logs
+            MostrarMensajeModal("Error", $"Error al guardar el registro: {ex.Message}");
+
+            // Registrar el error en la base de datos
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "GrabarRegistroUsuarios",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    // Método para mostrar el modal de mensajes
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    // Método para cerrar el modal de mensajes
+    private void CerrarMensajeModal()
+    {
+        mostrarMensajeModal = false;
+    }
+
+    // CONTROL DE MODALES
+    private void AbrirModal()
+    {
+        mostrarModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+        searchTerm = string.Empty;
+
+    }
+
+    // MODIFICAR USUARIO (Editar)
+    private void SeleccionarUsuario(UsuariosDto selectedUsuario)
+    {
+        usuario = new UsuariosDto
+        {
+            IdUsuario = selectedUsuario.IdUsuario,
+            Usuario = selectedUsuario.Usuario,
+            Nombre = selectedUsuario.Nombre,
+            Telefono = selectedUsuario.Telefono,
+            Email = selectedUsuario.Email,
+            Rol = selectedUsuario.Rol,
+            Estatus = selectedUsuario.Estatus,
+            Contrasena = ""// Añadir Contraseña
+        };
+
+        deshabilitarFormulario = false;
+        deshabilitarGuardar = false;
+        deshabilitarNuevo = true;
+        deshabilitarModificar = true;
+        deshabilitarCancelar = false;
+        deshabilitarConsultar = true;
+        mostrarModal = false; // Cierra el modal
+    }
+
+    private void ConfirmarEliminar(int id)
+    {
+        idUsuarioEliminar = id;
+        mostrarConfirmacion = true;
+    }
+
+    private void CancelarEliminar()
+    {
+        mostrarConfirmacion = false;
+    }
+
+    private async Task EliminarUsuarioConfirmado()
+    {
+        try
+        {
+            mostrarConfirmacion = false;
+            bool success = await usuarioService.DeleteUsuarioAsync(idUsuarioEliminar);
+
+            if (success)
+            {
+                await ConsultarUsuarios();
+                MostrarMensajeModal("Éxito", "Usuario eliminado correctamente.");
+            }
+            else
+            {
+                MostrarMensajeModal("Error", "Error al eliminar el usuario.");
+            }
+        }
+        catch (Exception ex)
+        {
+            // En caso de error, mostrar mensaje y registrar en los logs
+            MostrarMensajeModal("Error", $"Error al eliminar el usuario: {ex.Message}");
+
+            // Registrar el error en la base de datos
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "EliminarUsuarioConfirmado",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    // Redirigir a la página de consulta
+    private void RedirigirAConsulta()
+    {
+        Navigation.NavigateTo("/Catalogos/UsuariosConsulta");
+    }
+}

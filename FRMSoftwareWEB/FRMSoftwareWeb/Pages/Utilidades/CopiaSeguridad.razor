@@ -1,0 +1,117 @@
+﻿@page "/Utilidades/CopiaSeguridad"
+
+@using FRMSoftware.Data
+
+@inject FRMSoftware.Services.Utilidades.CopiaSeguridadService CopiaSeguridadService
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+
+<div class="container d-flex justify-content-center align-items-center vh-100">
+    <div class="row w-100 justify-content-center">
+        <div class="col-xl-6 col-lg-8 col-md-10 col-sm-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h3 class="text-center my-4 fw-bold">Copia de Seguridad</h3>
+
+                    <div class="d-flex justify-content-center mt-3">
+
+                        <button class="btn fixed-size-btn" type="button" @onclick="DescargarCopiaSeguridad" disabled="@procesando">
+                            Descargar
+                        </button>
+                    </div>
+
+                    @if (mostrarMensajeModal)
+                    {
+                            <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">@mensajeTitulo</h5>
+                                            <button type="button" class="btn-close" @onclick="CerrarMensajeModal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>@mensajeContenido</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                        @if (descargaExitosa)
+                                        {
+                                            <button class="btn btn-abrir-carpeta" @onclick="AbrirCarpeta">Abrir carpeta</button>
+                                        }
+                                            <button class="btn btn-red" @onclick="CerrarMensajeModal">Cerrar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool procesando = false;
+    private bool mostrarMensajeModal = false;
+    private bool descargaExitosa = false; // Variable para controlar la visibilidad del botón
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+    private string ultimaRutaDescarga = string.Empty;
+
+
+    private async Task DescargarCopiaSeguridad()
+    {
+        try
+        {
+            procesando = true;
+            var (success, mensaje) = await CopiaSeguridadService.DescargarCopiaSeguridadAsync();
+            procesando = false;
+
+            mensajeTitulo = success ? "Éxito" : "Error";
+            mensajeContenido = mensaje;
+            mostrarMensajeModal = true;
+
+            if (success)
+            {
+                ultimaRutaDescarga = CopiaSeguridadService.ObtenerUltimaRutaDescarga();
+                descargaExitosa = true; // Establecer que la descarga fue exitosa
+            }
+            else
+            {
+                descargaExitosa = false; // Si hubo un error, el botón no debe mostrarse
+            }
+        }
+        catch (Exception ex)
+        {
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+
+            // Registrar el error inesperado
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Nombre del usuario autenticado
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarCopiaSeguridad",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+    private void AbrirCarpeta()
+    {
+        CopiaSeguridadService.AbrirCarpetaDescarga();
+    }
+
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    private void CerrarMensajeModal()
+    {
+        mostrarMensajeModal = false;
+    }
+
+}

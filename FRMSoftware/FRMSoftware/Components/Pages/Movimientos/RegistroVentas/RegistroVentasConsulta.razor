@@ -1,0 +1,434 @@
+﻿@page "/Movimientos/RegistroVentasConsulta"
+@using FRMSoftware.Data
+@inject FRMSoftware.Services.Movimientos.VentasService ventasService
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+@inject NavigationManager Navigation
+
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="margin-top:20px">
+        <h2 class="text-center fw-bold" style="margin-bottom: 20px">Consulta de ventas</h2>
+
+        <div style="height: 130px">
+            <!-- Botones para seleccionar tipo de búsqueda -->
+            <div class="d-flex mb-3">
+                <div class="toggle-container">
+                    <div class="toggle-slider" style='left: @(busquedaGeneral ? "0%" : "50%")'></div>
+                    <button class="toggle-btn @(busquedaGeneral ? "active" : "")" @onclick="() => CambiarTipoBusqueda(true)">
+                        Búsqueda general
+                    </button>
+                    <button class="toggle-btn @(!busquedaGeneral ? "active" : "")" @onclick="() => CambiarTipoBusqueda(false)">
+                        Búsqueda por período
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenedor para búsqueda general (texto) -->
+            @if (busquedaGeneral)
+            {
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <input @bind="searchTermVentas" placeholder="Buscar ventas..." class="form-control" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" @onclick="AplicarFiltroVentas">Buscar</button>
+                        </div>
+                    </div>
+            }
+
+            <!-- Contenedor para búsqueda por período (fechas) -->
+            @if (!busquedaGeneral)
+            {
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <label>Desde:</label>
+                            <InputDate class="form-control" @bind-Value="fechaInicio" />
+                        </div>
+                        <div class="col-auto">
+                            <label>Hasta:</label>
+                            <InputDate class="form-control" @bind-Value="fechaFin" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn fixed-size-btn" style="margin-top: 25px" @onclick="AplicarFiltroVentas">Buscar</button>
+                        </div>
+                    </div>
+            }
+        </div>
+
+        <!-- Botones deslizantes para alternar entre tablas -->
+        <div class="d-flex justify-content-center mb-3">
+            <div class="toggle-container">
+                <div class="toggle-slider" style='left: @(tablaActual == 1 ? "0%" : "50%")'></div>
+                <button class="toggle-btn @(tablaActual == 1 ? "active" : "")" @onclick="() => FiltrarVentas(1)">
+                    Consulta de cajas
+                </button>
+                <button class="toggle-btn @(tablaActual == 2 ? "active" : "")" @onclick="() => FiltrarVentas(2)">
+                    Consulta de proceso
+                </button>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mb-3">
+            <button class="btn" @onclick="DescargarPDF_RegistroVentas">Descargar PDF</button>
+            <button class="btn" @onclick="DescargarExcel_RegistroVentas">Descargar Excel</button>
+        </div>
+
+        <!-- Contenedor de la tabla con scroll -->
+        <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+            <table class="table table-striped table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID Venta</th>
+                        <th>Fecha de facturación</th>
+                        <th>Total de venta</th>
+                        <th>Precio del dólar</th>
+
+                        <th>ID Viaje</th>
+                        <th>Fecha de salida</th>
+                        <th>Número de semana</th>
+
+                        <th>ID Rancho</th>
+                        <th>Nombre del rancho</th>
+                        <th>Número del rancho</th>
+
+                        <th>ID Cultivo</th>
+                        <th>Tipo de berry</th>
+                        <th>Variedad</th>
+
+                        @if (tablaActual != 2)
+                        {
+                            <th>ID Tarima</th>
+                            <th>Cantidad de cajas</th>
+                            <th>Licencia</th>
+                        }
+                        @if (tablaActual != 1)
+                        {
+                            <th>Kilos proceso</th>
+                        }
+
+                        <th>Fecha de recepción</th>
+                        <th>Precio de venta</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var ventaGrupo in filteredVentas.GroupBy(v => v.IdVenta))
+                    {
+                        bool esPrimeraFilaVenta = true;
+                        int filasTotalVenta = ventaGrupo.Count();
+
+                        // Agrupamos por viaje dentro de cada venta
+                        var viajesPorVenta = ventaGrupo.GroupBy(v => v.IdViaje);
+
+                        @foreach (var viajeGrupo in viajesPorVenta)
+                        {
+                            bool esPrimeraFilaViaje = true;
+                            int filasViaje = viajeGrupo.Count();
+
+                            @foreach (var item in viajeGrupo)
+                            {
+                                <tr>
+                                    @if (esPrimeraFilaVenta)
+                                    {
+                                        <td rowspan="@filasTotalVenta">@item.IdVenta</td>
+                                        <td rowspan="@filasTotalVenta">@item.FechaFacturacion.ToString("dd/MM/yyyy")</td>
+                                        <td rowspan="@filasTotalVenta">@item.TotalVenta</td>
+                                        <td rowspan="@filasTotalVenta">@item.PrecioDolar</td>
+
+                                        esPrimeraFilaVenta = false;
+                                    }
+
+                                    @if (esPrimeraFilaViaje)
+                                    {
+                                        <td rowspan="@filasViaje">@item.IdViaje</td>
+                                        <td rowspan="@filasViaje">@item.FechaSalida.ToString("dd/MM/yyyy")</td>
+                                        <td rowspan="@filasViaje">@item.NumSemViaje</td>
+
+                                        <td rowspan="@filasViaje">@item.IdRancho</td>
+                                        <td rowspan="@filasViaje">@item.NombreRancho</td>
+                                        <td rowspan="@filasViaje">@item.NumeroRancho</td>
+
+                                        <td rowspan="@filasViaje">@item.IdCultivo</td>
+                                        <td rowspan="@filasViaje">@item.TipoBerry</td>
+                                        <td rowspan="@filasViaje">@item.Variedad</td>
+
+                                        esPrimeraFilaViaje = false;
+                                    }
+
+                                    @if (tablaActual != 2)
+                                    {
+                                        <td>@item.IdTarima</td>
+                                        <td>@item.CantidadCajasViaje</td>
+                                        <td>@item.Licencia</td>
+                                    }
+
+                                    @if (tablaActual != 1)
+                                    {
+                                        <td>@item.KilosProcesoViaje</td>
+                                    }
+
+                                    <td>@item.FechaRecepcion.ToString("dd/MM/yyyy")</td>
+                                    <td>@item.PrecioVentaTarima</td>
+                                </tr>
+                            }
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para mostrar mensajes -->
+@if (mostrarMensajeModal)
+{
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0, 0, 0, 0.5);">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <!-- Agregar modal-dialog-centered -->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">@mensajeTitulo</h5>
+                        <button type="button" class="btn-close" @onclick="CerrarMensajeModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>@mensajeContenido</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-red" @onclick="CerrarMensajeModal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+}
+
+
+<!-- Botón de regreso -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+        <button class="btn fixed-size-btn mx-2" @onclick="RedirigirViajes">Regresar</button>
+    </div>
+</div>
+
+@code {
+    private VentasDto venta = new VentasDto();
+    private VentasDetallesDto ventas = new VentasDetallesDto();
+    private List<VentasDetallesDto> ventasDetalles = new();
+    private List<VentasDetallesCompletosDto> ventasDC = new();
+
+    // BUSQUEDA INPUT
+    private string searchTermVentas = string.Empty;
+    private List<VentasDetallesCompletosDto> filteredVentas = new();
+
+    // FORMULARIO TARIMAS
+    private bool mostrarTarima = false;
+    private bool mostrarKilosProceso = false;
+    private bool MostarFormularioTarimas = false;
+
+    // MODAL PROCESO
+    bool mostrarModalTarimasProceso = false; // Controla la visibilidad del modal de tarimas o proceso
+
+    // MENSAJES
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+    private DateTime? fechaInicio;
+    private DateTime? fechaFin;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarVentas();
+    }
+
+    private async Task ConsultarVentas()
+    {
+        try
+        {
+            ventasDC = await ventasService.GetVentasDCAsync();
+            filteredVentas = ventasDC.OrderBy(c => c.IdVenta).ToList(); // Inicializa  con la lista completa
+            FiltrarVentas(1); // Filtra la tabla de ventas por defecto
+            StateHasChanged(); // Fuerza el refresco de la UI después de consultar
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error en la base de datos usando el servicio ErrorLogService
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarViajesDetalles",
+                    ErrorLine = ex.StackTrace?.Split('\n').FirstOrDefault(),
+                    ErrorTime = DateTime.UtcNow
+                });
+
+            // Mostrar el mensaje de error al usuario
+            MostrarMensajeModal("Error inesperado", $"Error: {ex.Message}");
+        }
+    }
+
+    private void AplicarFiltroVentas()
+    {
+        var listaBase = ventasDC;
+
+        // Aplicar el filtro según la tabla seleccionada
+        if (tablaActual == 1)
+        {
+            listaBase = listaBase.Where(v => v.KilosProcesoViaje == 0).ToList();
+        }
+        else if (tablaActual == 2)
+        {
+            listaBase = listaBase.Where(v => v.CantidadCajasViaje == 0 && v.Licencia == 0).ToList();
+        }
+
+        // 2. Aplicar filtro de fechas (siempre se aplica)
+        if (fechaInicio.HasValue)
+        {
+            listaBase = listaBase.Where(v => v.FechaFacturacion >= DateOnly.FromDateTime(fechaInicio.Value)).ToList();
+        }
+        if (fechaFin.HasValue)
+        {
+            listaBase = listaBase.Where(v => v.FechaFacturacion <= DateOnly.FromDateTime(fechaFin.Value)).ToList();
+        }
+
+        // Aplicar búsqueda sobre la lista filtrada
+        filteredVentas = string.IsNullOrEmpty(searchTermVentas)
+            ? listaBase
+            : listaBase.Where(v =>
+
+                // Datos de venta
+                v.IdVenta.ToString().Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase) ||
+                v.FechaFacturacion.ToString("dd/MM/yyyy").Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase) ||
+                v.TotalVenta.ToString().Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase) ||
+                v.PrecioDolar.ToString().Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase) ||
+
+                // Datos del Viaje
+                v.IdViaje.ToString().Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase) ||
+                v.FechaSalida.ToString("dd/MM/yyyy").Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase) ||
+                v.NumSemViaje.ToString().Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase) ||
+                v.CantidadCajasViaje.ToString().Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase) ||
+                v.Licencia.ToString().Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase) ||
+                v.KilosProcesoViaje.ToString().Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase) ||
+
+                // Datos del Cultivo
+                v.IdCultivo.ToString().Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase) ||
+                (v.TipoBerry?.Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (v.Variedad?.Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase) ?? false) ||
+
+                // Datos del Rancho
+                v.IdRancho.ToString().Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase) ||
+                (v.NombreRancho?.Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (v.NumeroRancho?.Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase) ?? false) ||
+
+                v.FechaRecepcion.ToString("dd/MM/yyyy").Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase) ||
+                v.PrecioVentaTarima.ToString().Contains(searchTermVentas, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+    }
+
+
+    private bool busquedaGeneral = true; // true = búsqueda general, false = por período
+
+    private void CambiarTipoBusqueda(bool esGeneral)
+    {
+        busquedaGeneral = esGeneral;
+        // Limpiar filtros al cambiar de tipo
+        if (esGeneral)
+        {
+            fechaInicio = null;
+            fechaFin = null;
+        }
+        else
+        {
+            searchTermVentas = string.Empty;
+        }
+    }
+
+
+    private int tablaActual = 1; // 1 para cajas, 2 para proceso
+
+    private void FiltrarVentas(int opcion)
+    {
+        tablaActual = opcion;
+
+        if (opcion == 1)
+        {
+            // Filtrar solo los que tienen KilosProcesoViajes en 0
+            filteredVentas = ventasDC.Where(v => v.KilosProcesoViaje == 0).ToList();
+
+            mostrarModalTarimasProceso = false;
+            searchTermVentas = string.Empty; // Limpiar el campo de búsqueda
+            fechaFin = null;
+            fechaInicio = null;
+
+        }
+        else if (opcion == 2)
+        {
+            // Filtrar solo los que tienen CantidadCajasViaje y Licencia en 0 o vacío
+            filteredVentas = ventasDC.Where(v => v.CantidadCajasViaje == 0 && v.Licencia == 0).ToList();
+
+            mostrarModalTarimasProceso = true;
+            searchTermVentas = string.Empty; // Limpiar el campo de búsqueda
+            fechaFin = null;
+            fechaInicio = null;
+
+        }
+    }
+
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+    private void CerrarMensajeModal()
+    {
+        mostrarMensajeModal = false;
+    }
+
+    private void RedirigirViajes()
+    {
+        Navigation.NavigateTo("/Movimientos/RegistroVentas");
+    }
+
+    private async Task DescargarPDF_RegistroVentas()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarPDF_RegistroVentas");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarPDF - RegistroVentas",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task DescargarExcel_RegistroVentas()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarExcel_RegistroVentas");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarExcel - RegistroVentas",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    [Inject] private IJSRuntime JS { get; set; }
+
+}

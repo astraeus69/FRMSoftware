@@ -1,0 +1,160 @@
+﻿@page "/Catalogos/RanchosConsulta"
+@using FRMSoftware.Data
+@inject Services.Catalogos.RanchosService ranchoService
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+@inject NavigationManager Navigation
+
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="margin-top:20px">
+        <h2 class="text-center fw-bold" style="margin-bottom: 20px">Consulta de ranchos</h2>
+
+        <!-- Contenedor para alinear horizontalmente -->
+        <div class="row mb-3 align-items-center">
+            <div class="col-auto">
+                <input @bind="searchTerm" placeholder="Buscar ranchos..." class="form-control" />
+            </div>
+            <div class="col-auto">
+                <button class="btn fixed-size-btn" @onclick="AplicarFiltro">Buscar</button>
+            </div>
+        </div>
+
+        <!-- Contenedor de la tabla con scroll -->
+        <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+            <table class="table table-striped table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID Rancho</th>
+                        <th>Nombre Rancho</th>
+                        <th>Número Rancho</th>
+                        <th>Superficie (HA)</th>
+                        <th>Superficie (Acres)</th>
+                        <th>Dirección</th>
+                        <th>CP</th>
+                        <th>Municipio</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in filteredRanchos)
+                    {
+                        <tr>
+                            <td>@item.IdRancho</td>
+                            <td>@item.NombreRancho</td>
+                            <td>@item.NumeroRancho</td>
+                            <td>@item.SuperficieHa</td>
+                            <td>@item.SuperficieAcres</td>
+                            <td>@item.Direccion</td>
+                            <td>@item.CP</td>
+                            <td>@item.Municipio</td>
+                            <td>@item.Estado</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Botones -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+        <button class="btn fixed-size-btn mx-2" @onclick="RedirigirRanchos">Regresar</button>
+    </div>
+</div>
+
+@code {
+    private List<RanchosDto> ranchos = new(); // Lista completa de ranchos
+    private string searchTerm = string.Empty;  // Campo de búsqueda
+    private List<RanchosDto> filteredRanchos = new(); // Lista filtrada
+
+    // Se llama al inicializar para cargar los ranchos
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarRanchos(); // Llamada al servicio para obtener los ranchos
+    }
+
+    private async Task ConsultarRanchos()
+    {
+        try
+        {
+            ranchos = await ranchoService.GetRanchosAsync();
+
+            // Ordenar la lista de ranchos
+            filteredRanchos = ranchos.OrderBy(r => r.IdRancho).ToList();
+            StateHasChanged(); // Fuerza el refresco de la UI después de consultar los ranchos
+        }
+        catch (Exception ex)
+        {
+
+            // Registrar el error en la base de datos para su seguimiento
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarRanchos",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void AplicarFiltro()
+    {
+        filteredRanchos = string.IsNullOrEmpty(searchTerm) ?
+            ranchos :
+            ranchos.Where(r => r.NombreRancho.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                               r.NumeroRancho.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                               r.Direccion.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                               r.CP.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                               r.Municipio.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                               r.Estado.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    // Redirigir a la página de consulta de ranchos
+    private void RedirigirRanchos()
+    {
+        Navigation.NavigateTo("/Catalogos/Ranchos");
+    }
+
+    private async Task DescargarPDF_Ranchos()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarPDF_Ranchos");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarPDF - Ranchos",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task DescargarExcel_Ranchos()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarExcel_Ranchos");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarExcel - Ranchos",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    [Inject] private IJSRuntime JS { get; set; }
+}

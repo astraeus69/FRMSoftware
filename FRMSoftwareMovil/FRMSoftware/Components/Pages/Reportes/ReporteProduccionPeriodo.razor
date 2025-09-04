@@ -1,0 +1,326 @@
+﻿@page "/Reportes/ReporteProduccionPeriodo"
+@using FRMSoftware.Data
+@inject FRMSoftware.Services.Movimientos.GestionCosechasService cosechasService
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+<div class="container">
+    <!-- Encabezado -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <img src="images/LogoFRM.png" alt="Logo FRM" style="height: 80px;" />
+        <div class="ms-3" style="flex: 1;">
+            <div class="fw-bold fs-5">Frutillos Rojos de México S. de P. R. de R. L.</div>
+            <div class="text-muted fs-6">Calle Zapotlán 193, Lomas de San Cayetano, 49040, Ciudad Guzmán, Jalisco, México</div>
+        </div>
+        <span class="fs-5 fw-semibold">@DateTime.Now.ToString("dd/MM/yyyy")</span>
+    </div>
+
+    <h2 class="text-center fw-bold mb-4">Reporte de producción por periodo</h2>
+
+    <!-- Filtros -->
+    <div class="d-flex justify-content-start gap-2 mb-3">
+        <input type="date" class="form-control" @bind="FechaInicio" />
+        <input type="date" class="form-control" @bind="FechaFin" />
+        <button class="btn" @onclick="FiltrarDatos">Filtrar</button>
+    </div>
+
+
+
+    <!-- Tabla -->
+    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+        <table class="table table-striped table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID Cosecha</th>
+                    <th>Fecha de cosecha</th>
+                    <th>Número de semana</th>
+
+                    <th>ID Producción</th>
+                    <th>Tipo de clamshell</th>
+                    <th>Cantidad de cajas</th>
+                    <th>Kilos de proceso</th>
+
+                    <th>ID Plantación</th>
+                    <th>Fecha de plantación</th>
+                    <th>Número de semana</th>
+                    <th>Estatus de plantación</th>
+
+                    <th>ID Cultivo</th>
+                    <th>Tipo de berry</th>
+                    <th>Variedad</th>
+
+                    <th>ID Rancho</th>
+                    <th>Nombre del rancho</th>
+                    <th>Número del rancho</th>
+
+                    <th>ID Llave</th>
+                    <th>Nombre de llave</th>
+                    <th>Superficie (HA)</th>
+                    <th>Superficie (Acres)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var grupo in cosechasAgrupadas)
+                {
+                        <tr class="table-success fw-bold">
+                            <td colspan="21" class="text-start">Cultivo: @grupo.Key</td>
+                        </tr>
+                    @foreach (var item in grupo.OrderBy(c => c.Variedad))
+                    {
+                                <tr>
+                                    <td>@item.IdCosecha</td>
+                                    <td>@item.FechaCosecha.ToString("dd/MM/yyyy")</td>
+                                    <td>@item.NumSemCosecha</td>
+
+                                    <td>@item.IdProduccion</td>
+                                    <td>@item.TipoCaja</td>
+                                    <td>@item.CantidadCajas</td>
+                                    <td>@item.KilosProceso</td>
+
+                                    <td>@item.IdPlantacion</td>
+                                    <td>@item.FechaPlantacion.ToString("dd/MM/yyyy")</td>
+                                    <td>@item.NumSemPlantacion</td>
+                                    <td>@item.EstatusPlantacion</td>
+
+                                    <td>@item.IdCultivo</td>
+                                    <td>@item.TipoBerry</td>
+                                    <td>@item.Variedad</td>
+
+                                    <td>@item.IdRancho</td>
+                                    <td>@item.NombreRancho</td>
+                                    <td>@item.NumeroRancho</td>
+
+                                    <td>@item.IdLlave</td>
+                                    <td>@item.NombreLlave</td>
+                                    <td>@item.SuperficieHa</td>
+                                    <td>@item.SuperficieAcres</td>
+                                </tr>
+                    }
+
+                    var totalCajasGrupo = grupo.Sum(c => c.CantidadCajas ?? 0);
+                        <tr class="fw-bold text-end">
+                            <td colspan="5" class="text-end">Total de cajas:</td>
+                            <td class="text-start">@totalCajasGrupo</td>
+                            <td colspan="15"></td>
+                        </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @foreach (var item in cosechasAgrupadas.Select((grupo, index) => new { grupo, index }))
+    {
+            <h4 class="text-center mt-5 fw-bold">Gráfica de variedades - @item.grupo.Key</h4>
+            <div class="d-flex justify-content-center">
+                <canvas id="chartCultivo_@item.index" width="800" height="400" data-nombre="@item.grupo.Key"></canvas>
+            </div>
+    }
+
+</div>
+
+@code {
+    private List<CosechasProduccionDto> cosechas = new();
+    private List<IGrouping<string, CosechasProduccionDto>> cosechasAgrupadas = new();
+    private DateOnly FechaInicio = DateOnly.FromDateTime(DateTime.Today.AddMonths(-1));
+    private DateOnly FechaFin = DateOnly.FromDateTime(DateTime.Today);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await CargarDatos();
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "OnInitializedAsync - ReporteProduccionPeriodo",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await Task.Delay(1000);
+                await GenerarGraficaProduccionPorPeriodo();
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                    {
+                        UserName = UserSession.Usuario,
+                        ErrorMessage = ex.Message,
+                        ErrorProcedure = "OnAfterRenderAsync - ReporteProduccionPeriodo",
+                        ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                        ErrorTime = DateTime.UtcNow
+                    });
+            }
+        }
+    }
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            cosechas = await cosechasService.GetCosechasProduccionAsync();
+            FiltrarYAgrupar();
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "CargarDatos - ReporteProduccionPeriodo",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void FiltrarYAgrupar()
+    {
+        try
+        {
+            var filtradas = cosechas
+                .Where(e => DateOnly.FromDateTime(e.FechaCosecha) >= FechaInicio && DateOnly.FromDateTime(e.FechaCosecha) <= FechaFin)
+                .ToList();
+
+            cosechasAgrupadas = filtradas
+                .GroupBy(c => c.TipoBerry)
+                .OrderBy(g => g.Key)
+                .ToList();
+
+            var datosGrafica = cosechasAgrupadas
+                .Select(g => new
+                {
+                    Cultivo = g.Key,
+                    Total = g.Sum(c => c.CantidadCajas ?? 0)
+                }).ToList();
+        }
+        catch (Exception ex)
+        {
+            _ = errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "FiltrarYAgrupar - ReporteProduccionPeriodo",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task FiltrarDatos()
+    {
+        try
+        {
+            FiltrarYAgrupar();
+            await Task.Delay(1000);
+            await GenerarGraficaProduccionPorPeriodo();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "FiltrarDatos - ReporteProduccionPeriodo",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task GenerarGraficaProduccionPorPeriodo()
+    {
+        try
+        {
+            int index = 0;
+            foreach (var grupo in cosechasAgrupadas)
+            {
+                var cultivo = grupo.Key;
+                var agrupadoPorVariedad = grupo
+                    .Where(p => !string.IsNullOrEmpty(p.Variedad))
+                    .GroupBy(p => p.Variedad)
+                    .OrderBy(g => g.Key)
+                    .ToList();
+
+                var labels = agrupadoPorVariedad.Select(g => g.Key).ToList();
+                var values = agrupadoPorVariedad.Select(g => g.Sum(p => p.CantidadCajas ?? 0)).ToList();
+
+                var labelsJson = System.Text.Json.JsonSerializer.Serialize(labels);
+                var valuesJson = System.Text.Json.JsonSerializer.Serialize(values);
+                var idCanvas = $"chartCultivo_{index}";
+
+                await JS.InvokeVoidAsync("generarGraficaProduccionPeriodo", idCanvas, labelsJson, valuesJson, index);
+
+                index++;
+            }
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "GenerarGraficaProduccionPorPeriodo",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task DescargarPDF()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarPDF_ProduccionPeriodo");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarPDF - ReporteProduccionPeriodo",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task DescargarExcel()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarExcel_ProduccionPeriodo");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarExcel - ReporteProduccionPeriodo",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    [Inject] private IJSRuntime JS { get; set; }
+}

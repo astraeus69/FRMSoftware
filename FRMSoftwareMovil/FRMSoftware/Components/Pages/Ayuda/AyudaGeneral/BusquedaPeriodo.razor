@@ -1,0 +1,36 @@
+﻿@page "/Ayuda/AyudaGeneral/BusquedaPeriodo"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4"><i class="bi bi-calendar-range"></i> Búsqueda por Período</h2>
+
+    <p>Este módulo permite alternar entre dos tipos de búsqueda: una búsqueda general por texto y una búsqueda por período de fechas. Es útil para filtrar datos dentro de un rango de tiempo específico.</p>
+
+    <h4 class="fw-bold mt-4">Funcionamiento</h4>
+    <p>Antes de aplicar filtros por fechas, el usuario debe elegir el tipo de búsqueda mediante el control deslizante:</p>
+    <ul>
+        <li><strong>Búsqueda general:</strong> Activa los campos de texto para buscar por nombre, código, etc.</li>
+        <li><strong>Búsqueda por período:</strong> Muestra los campos de fecha <strong>Desde</strong> y <strong>Hasta</strong>, junto con un botón para aplicar el filtro.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Campos de búsqueda</h4>
+    <ul>
+        <li><strong>Desde:</strong> Fecha de inicio del rango a consultar.</li>
+        <li><strong>Hasta:</strong> Fecha final del rango a consultar.</li>
+        <li><strong>Buscar:</strong> Aplica el filtro y muestra los registros que se encuentran dentro del rango especificado.</li>
+    </ul>
+
+    <div class="mb-4">
+        <img src="images/Ayuda/AyudaGeneral/BusquedaPeriodo.png" alt="Búsqueda por período" style="max-width: 400px; width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px;" />
+        <p class="mt-2 text-muted">Vista del selector de búsqueda y los campos de filtro por fechas.</p>
+    </div>
+
+    <h4 class="fw-bold mt-4">Consejos de uso</h4>
+    <ul>
+        <li>Si no se selecciona un rango válido (por ejemplo, la fecha inicial es mayor que la final), el sistema puede mostrar advertencias o no devolver resultados.</li>
+        <li>Este filtro es especialmente útil en reportes y módulos que manejan fechas como registros de movimientos, cosechas, ventas, etc.</li>
+        <li>Para volver a la búsqueda tradicional, pulsa nuevamente el botón <strong>Búsqueda general</strong>.</li>
+    </ul>
+</div>
+
+@code {
+}

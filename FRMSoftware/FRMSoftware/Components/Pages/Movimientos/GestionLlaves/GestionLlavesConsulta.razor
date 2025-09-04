@@ -1,0 +1,183 @@
+﻿@page "/Movimientos/GestionLlavesConsulta"
+@using FRMSoftware.Data
+@inject FRMSoftware.Services.Movimientos.GestionLlavesService llavesService
+
+@inject FRMSoftware.Services.Utilidades.ErrorLogService errorLogs
+@inject FRMSoftware.Data.UserSession UserSession
+
+@inject NavigationManager Navigation
+
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="margin-top:20px">
+        <h2 class="text-center fw-bold" style="margin-bottom: 20px">Consulta de llaves</h2>
+
+        <!-- Contenedor para alinear horizontalmente -->
+        <div class="row mb-3 align-items-center">
+            <div class="col-auto">
+                <input @bind="searchTerm" placeholder="Buscar llaves..." class="form-control" />
+            </div>
+            <div class="col-auto">
+                <button class="btn fixed-size-btn" @onclick="AplicarFiltro">Buscar</button>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mb-3">
+            <button class="btn" @onclick="DescargarPDF_GestionLlaves">Descargar PDF</button>
+            <button class="btn" @onclick="DescargarExcel_GestionLlaves">Descargar Excel</button>
+        </div>
+
+        <!-- Contenedor de la tabla con scroll -->
+        <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+            <table class="table table-striped table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID Llave</th>
+                        <th>ID Rancho</th>
+                        <th>Nombre de rancho</th>
+                        <th>Número de rancho</th>
+                        <th>Nombre de llave</th>
+                        <th>Superficie (HA)</th>
+                        <th>Superficie (Acres)</th>
+                        <th>Cantidad de túneles</th>
+                        <th>Disponibilidad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in filteredLlaves)
+                    {
+                            <tr>
+                                <td>@item.IdLlave</td>
+                                <td>@item.IdRancho</td>
+                                <td>@item.NombreRancho</td>
+                                <td>@item.NumeroRancho</td>
+                                <td>@item.NombreLlave</td>
+                                <td>@item.SuperficieHa</td>
+                                <td>@item.SuperficieAcres</td>
+                                <td>@item.CantidadTuneles</td>
+                                <td>@item.Disponibilidad</td>
+                            </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Botón de regreso -->
+<div class="container-fluid">
+    <div class="buttons fixed-bottom bg-white d-flex justify-content-center ms-auto botones-responsive">
+        <button class="btn fixed-size-btn mx-2" @onclick="RedirigirLlaves">Regresar</button>
+    </div>
+</div>
+
+@code {
+    private List<LlaveConRanchoDto> llaves = new();
+    private string searchTerm = string.Empty;
+    private List<LlaveConRanchoDto> filteredLlaves = new();
+
+    // MENSAJES
+    private bool mostrarMensajeModal = false;
+    private string mensajeTitulo = string.Empty;
+    private string mensajeContenido = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsultarLlaves();
+    }
+
+    private async Task ConsultarLlaves()
+    {
+        try
+        {
+            llaves = await llavesService.GetLlavesConRancho();
+
+            filteredLlaves = llaves.OrderBy(l => l.IdLlave).ToList(); // Inicializa con la lista completa
+            StateHasChanged(); // Fuerza el refresco de la UI después de consultar los llaves
+        }
+        catch (Exception ex)
+        {
+
+            // Registrar el error inesperado
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario, // Reemplazar con el nombre del usuario real
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "ConsultarLlaves",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private void AplicarFiltro()
+    {
+        filteredLlaves = string.IsNullOrEmpty(searchTerm) ?
+            llaves :
+            llaves.Where(l =>
+                l.IdLlave.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                l.IdRancho.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                l.NombreRancho.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                l.NumeroRancho.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                l.NombreLlave.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                (l.SuperficieHa != null && l.SuperficieHa.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                (l.SuperficieAcres != null && l.SuperficieAcres.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                l.CantidadTuneles.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                l.Disponibilidad.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+    }
+
+    private void MostrarMensajeModal(string titulo, string contenido)
+    {
+        mensajeTitulo = titulo;
+        mensajeContenido = contenido;
+        mostrarMensajeModal = true;
+    }
+
+
+    private void RedirigirLlaves()
+    {
+        Navigation.NavigateTo("/Movimientos/GestionLlaves");
+    }
+
+
+    private async Task DescargarPDF_GestionLlaves()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarPDF_GestionLlaves");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarPDF - GestionLlaves",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    private async Task DescargarExcel_GestionLlaves()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("descargarExcel_GestionLlaves");
+        }
+        catch (Exception ex)
+        {
+            await errorLogs.CreateErrorLogAsync(new ErrorLogDto
+                {
+                    UserName = UserSession.Usuario,
+                    ErrorMessage = ex.Message,
+                    ErrorProcedure = "DescargarExcel - GestionLlaves",
+                    ErrorLine = new System.Diagnostics.StackTrace(true).GetFrame(0)?.GetFileLineNumber().ToString(),
+                    ErrorTime = DateTime.UtcNow
+                });
+        }
+    }
+
+    [Inject] private IJSRuntime JS { get; set; }
+}

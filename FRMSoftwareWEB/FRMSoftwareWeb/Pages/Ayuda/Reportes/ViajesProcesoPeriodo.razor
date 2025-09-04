@@ -1,0 +1,71 @@
+﻿@page "/Ayuda/Reportes/ReporteViajesProcesoPeriodo"
+
+<div class="container py-5" style="min-height: calc(100vh - 3.5rem); overflow-y: auto;">
+    <h2 class="fw-bold mb-4 text-center"><i class="bi bi-truck"></i> Reporte de Viajes de Proceso por Periodo</h2>
+
+    <p>Este reporte detalla los viajes de proceso realizados dentro de un periodo específico, mostrando la cantidad de kilos procesados, el estado de aprobación, y todos los datos relacionados con las cosechas, producción, vehículos y personal involucrado.</p>
+
+    <h4 class="fw-bold mt-4">Filtros del Reporte</h4>
+    <ul>
+        <li><strong>Fecha de inicio y fin:</strong> Permiten delimitar el periodo de análisis.</li>
+        <li><strong>Botón "Filtrar":</strong> Aplica los filtros seleccionados para actualizar los datos mostrados.</li>
+    </ul>
+
+
+    <h4 class="fw-bold mt-4">Exportación</h4>
+    <ul>
+        <li><strong>Descargar PDF:</strong> Exporta el reporte con estilos y formato listo para impresión.</li>
+        <li><strong>Descargar Excel:</strong> Permite análisis de datos y respaldo en hojas de cálculo.</li>
+    </ul>
+
+    <h4 class="fw-bold mt-4">Tabla de Viajes</h4>
+    <p>La tabla muestra los viajes agrupados por ID de viaje y producción, incluyendo kilos procesados, tarimas, cosechas y demás detalles logísticos.</p>
+
+    <ul>
+        <li><strong>Viaje:</strong> ID, fecha de salida, número de semana, estado de aprobación</li>
+        <li><strong>Tarima:</strong> ID, cantidad de cajas y licencia (condicional)</li>
+        <li><strong>Kilos de proceso:</strong> Por cada viaje y también un total general al final</li>
+        <li><strong>Producción:</strong> ID, tipo de clamshell, cajas y kilos procesados</li>
+        <li><strong>Cosecha:</strong> ID, fecha y semana</li>
+        <li><strong>Cultivo:</strong> ID, berry y variedad</li>
+        <li><strong>Rancho:</strong> ID, nombre y número</li>
+        <li><strong>Empleado:</strong> ID, nombre y teléfono</li>
+        <li><strong>Vehículo:</strong> ID, placas, modelo y marca</li>
+    </ul>
+
+    <div class="my-4">
+        <img src="images/Ayuda/Reportes/ViajesProcesoPeriodo01.png" alt="Tabla de viajes de proceso por periodo" class="img-fluid rounded shadow-sm" style="border: 1px solid #ccc;" />
+        <p class="text-muted mt-2">Vista de la tabla con información agrupada por viaje y producción, incluyendo kilos de proceso.</p>
+    </div>
+
+    <h4 class="fw-bold mt-4">Gráfica de Proceso por Periodo</h4>
+    <p>Esta gráfica de línea permite visualizar la evolución de los kilos procesados durante el periodo seleccionado.</p>
+
+    <ul>
+        <li>Ideal para detectar días o semanas con mayor carga de procesamiento.</li>
+        <li>Ayuda a analizar la eficiencia y regularidad en la operación del área de proceso.</li>
+    </ul>
+
+    <div class="my-4 d-flex justify-content-center">
+        <img src="images/Ayuda/Reportes/ViajesProcesoPeriodo02.png" alt="Gráfica de proceso por periodo" class="img-fluid rounded shadow-sm" style="max-width: 800px; border: 1px solid #ccc;" />
+    </div>
+
+    <h4 class="fw-bold mt-4">Gráfica de Viajes de Proceso Aceptados vs Rechazados</h4>
+    <p>Representa en un gráfico de pastel la proporción de viajes de proceso que fueron aceptados o rechazados.</p>
+
+    <ul>
+        <li>Ayuda a evaluar el porcentaje de viajes aprobados en el área de proceso.</li>
+        <li>Permite detectar fallos o inconsistencias en la validación de viajes.</li>
+    </ul>
+
+    <div class="my-4 d-flex justify-content-center">
+        <img src="images/Ayuda/Reportes/ViajesProcesoPeriodo03.png" alt="Gráfica de estado de viajes de proceso" class="img-fluid rounded shadow-sm" style="max-width: 600px; border: 1px solid #ccc;" />
+    </div>
+
+    <h4 class="fw-bold mt-4">Recomendaciones de uso</h4>
+    <ul>
+        <li>Revisa el total de kilos procesados para planificar la capacidad operativa futura.</li>
+        <li>Exporta periódicamente como evidencia de cumplimiento o para informes de producción.</li>
+        <li>Verifica los viajes rechazados para mejorar los procesos de revisión y validación.</li>
+    </ul>
+</div>
